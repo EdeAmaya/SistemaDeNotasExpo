@@ -3,36 +3,59 @@ import {Schema, model} from "mongoose";
 const projectSchema = new Schema({
     projectId: {
         type: String,
-        require: true,
-        maxLength: 7
+        required: true,
+        maxLength: 7,
+        unique: true,
+        trim: true
     },
 
     projectName: {
         type: String,
-        require: true
+        required: true,
+        trim: true
     },
 
     googleSitesLink: {
-        type: String
+        type: String,
+        trim: true
     },
 
     idLevel: {
         type: Schema.Types.ObjectId,
         ref: "Level",
-        require: true
+        required: true
     },
 
     idSection: {
         type: Schema.Types.ObjectId,
         ref: "Section",
-        require: true
+        // No es required porque en bachillerato puede ser null
     },
 
+    // NUEVO: Campo para especialidad (bachillerato)
+    selectedSpecialty: {
+        type: Schema.Types.ObjectId,
+        ref: "Specialty",
+        // No es required porque en básica puede ser null
+    },
+
+    teamNumber: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 99
+    },
+
+    assignedStudents: [{
+        type: Schema.Types.ObjectId,
+        ref: "Student"
+    }],
+
     status: {
-    type: String,
-    enum: ['Activo', 'Inactivo'],
-    default: 'Activo'
-   }
+        type: String,
+        enum: ['Activo', 'Inactivo'],
+        default: 'Activo'
+    }
 
 }, {
     timestamps: true,

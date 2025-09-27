@@ -1,154 +1,146 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../context/AuthContext'; // Adaptado a tu lógica
-// import { useNavigation } from '@react-navigation/native'; // Para React Native navigation
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Home, Users, GraduationCap, Triangle, ClipboardList, LogOut } from 'lucide-react';
 
-const NavBar = ({ currentRoute = 'Dashboard' }) => {
-  const { logout, authCokie } = useAuth(); // Tu lógica de autenticación
-  // const navigation = useNavigation(); // Para navegación
-  const progress = 30; // Esto vendría del contexto global
+const NavBar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const progress = 30;
   
   const menuItems = [
     {
       id: 'dashboard',
       title: 'Inicio',
-      icon: 'home-outline',
-      iconActive: 'home',
-      route: 'Dashboard'
-    },
-    {
-      id: 'notes',
-      title: 'Notas',
-      icon: 'document-text-outline', 
-      iconActive: 'document-text',
-      route: 'Notes'
-    },
-    {
-      id: 'categories',
-      title: 'Categorías',
-      icon: 'pricetag-outline',
-      iconActive: 'pricetag', 
-      route: 'Categories'
+      icon: Home,
+      route: '/'
     },
     {
       id: 'users',
       title: 'Usuarios',
-      icon: 'people-outline',
-      iconActive: 'people',
-      route: 'Users'
+      icon: Users,
+      route: '/users'
     },
     {
-      id: 'activities',
-      title: 'Actividades',
-      icon: 'calendar-outline',
-      iconActive: 'calendar',
-      route: 'Activities'
+      id: 'students',
+      title: 'Estudiantes',
+      icon: GraduationCap,
+      route: '/students'
+    },
+    {
+      id: 'projects',
+      title: 'Proyectos',
+      icon: Triangle,
+      route: '/projects'
+    },
+    {
+      id: 'evaluations',
+      title: 'Evaluaciones',
+      icon: ClipboardList,
+      route: '/evaluations'
     }
   ];
 
   const handleNavigation = (route) => {
-    console.log(`Navegando a: ${route}`);
-    // navigation.navigate(route); // Para React Native
-    // O tu lógica de navegación personalizada
+    navigate(route);
   };
 
   const handleLogout = () => {
-    logout();
     console.log('Cerrando sesión...');
-    // navigation.navigate('Login'); // Redirigir al login
   };
 
-  // No mostrar navbar si no está autenticado
-  if (!authCokie) return null;
-
   return (
-    <View className="w-64 bg-gray-900 h-full">
+    <div className="w-64 bg-gray-900 h-full flex flex-col">
       {/* Header con Logo */}
-      <View className="pt-8 pb-6 px-6 border-b border-gray-800">
-        <TouchableOpacity 
-          onPress={() => handleNavigation('Dashboard')}
-          className="items-center mb-4"
+      <div className="pt-8 pb-6 px-6">
+        <button 
+          onClick={() => handleNavigation('/')}
+          className="w-full flex flex-col items-center mb-4 bg-transparent border-none cursor-pointer"
         >
-          {/* Logo Circular */}
-          <View className="w-16 h-16 bg-red-600 rounded-full items-center justify-center mb-3">
-            <View className="w-12 h-12 bg-white rounded-full items-center justify-center">
-              <Text className="text-red-600 font-bold text-lg">📝</Text>
-            </View>
-          </View>
+          {/* Logo Circular - Salesianos Ricaldone */}
+          <div className="w-20 h-20 mb-4">
+            <div className="w-full h-full rounded-full border-4 border-blue-400 bg-gradient-to-r from-yellow-400 via-red-500 to-red-600 flex items-center justify-center relative overflow-hidden">
+              {/* Silueta de Don Bosco */}
+              <div className="w-12 h-12 bg-black rounded-full relative">
+                <div className="absolute top-1 left-2 w-8 h-8 bg-yellow-300 rounded-full opacity-80"></div>
+                <div className="absolute top-2 left-3 w-2 h-2 bg-black rounded-full"></div>
+                <div className="absolute bottom-1 left-1 w-10 h-4 bg-black rounded-t-full"></div>
+              </div>
+              {/* Texto circular pequeño */}
+              <div className="absolute top-1 text-[6px] text-white font-bold">
+                SALESIANOS RICALDONE
+              </div>
+              <div className="absolute bottom-1 text-[6px] text-white font-bold">
+                SAN SALVADOR
+              </div>
+            </div>
+          </div>
           
           {/* Nombre del Sistema */}
-          <Text className="text-white text-center">
-            <Text className="font-light">Sistema de</Text>
-            {'\n'}
-            <Text className="font-bold">Notas</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <div className="text-white text-center">
+            <div className="font-medium text-lg">Salesianos</div>
+            <div className="font-bold text-lg">Ricaldone</div>
+          </div>
+        </button>
+      </div>
 
       {/* Navegación */}
-      <View className="flex-1 pt-6">
+      <div className="flex-1 px-3">
         {menuItems.map((item) => {
-          const isActive = currentRoute === item.route;
+          const isActive = location.pathname === item.route;
+          const IconComponent = item.icon;
           
           return (
-            <TouchableOpacity
+            <button
               key={item.id}
-              onPress={() => handleNavigation(item.route)}
-              className={`flex-row items-center px-6 py-4 mx-3 rounded-lg mb-1 ${
-                isActive ? 'bg-gray-800' : ''
+              onClick={() => handleNavigation(item.route)}
+              className={`w-full flex items-center px-4 py-3 mb-2 rounded-lg bg-transparent border-none cursor-pointer transition-colors ${
+                isActive ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
               }`}
             >
-              <Ionicons 
-                name={isActive ? item.iconActive : item.icon} 
-                size={20} 
-                color={isActive ? '#F3F4F6' : '#9CA3AF'} 
-              />
-              <Text className={`ml-3 font-medium ${
-                isActive ? 'text-gray-100' : 'text-gray-400'
-              }`}>
+              <IconComponent size={20} className="mr-3" />
+              <span className="font-medium text-sm">
                 {item.title}
-              </Text>
-            </TouchableOpacity>
+              </span>
+            </button>
           );
         })}
-      </View>
+      </div>
 
       {/* Progreso */}
-      <View className="px-6 py-4 border-t border-gray-800">
-        <Text className="text-white font-semibold mb-3">Progreso Expo</Text>
-        
-        {/* Barra de Progreso */}
-        <View className="bg-gray-700 rounded-full h-2 mb-2">
-          <View 
-            className="bg-red-600 h-2 rounded-full"
-            style={{ width: `${progress}%` }}
-          />
-        </View>
-        
-        {/* Porcentaje */}
-        <Text className="text-red-500 font-bold text-lg text-center">
-          {progress}%
-        </Text>
-      </View>
+      <div className="px-6 py-4">
+        <div className="bg-gray-800 rounded-lg p-4">
+          <div className="text-white font-medium mb-3 text-center text-sm">
+            Progreso Expo
+          </div>
+          
+          {/* Barra de Progreso */}
+          <div className="bg-gray-600 rounded-full h-2 mb-3">
+            <div 
+              className="bg-red-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          
+          {/* Porcentaje */}
+          <div className="text-red-500 font-bold text-xl text-center">
+            {progress}%
+          </div>
+        </div>
+      </div>
 
       {/* Botón Cerrar Sesión */}
-      <View className="px-6 py-4 border-t border-gray-800">
-        <TouchableOpacity
-          onPress={handleLogout}
-          className="flex-row items-center py-3"
+      <div className="px-3 pb-4">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center px-4 py-3 bg-transparent border-none cursor-pointer hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
         >
-          <Ionicons 
-            name="log-out-outline" 
-            size={20} 
-            color="#9CA3AF" 
-          />
-          <Text className="ml-3 text-gray-400 font-medium">
+          <LogOut size={20} className="mr-3" />
+          <span className="font-medium text-sm">
             Cerrar Sesión
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          </span>
+        </button>
+      </div>
+    </div>
   );
 };
 

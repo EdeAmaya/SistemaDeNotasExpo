@@ -3,29 +3,30 @@ import {Schema, model} from "mongoose";
 const studentSchema = new Schema({
     studentCode: {
         type: Number,
-        require: true
+        required: true,
+        unique: true 
     },
 
     name: {
         type: String,
-        require: true
+        required: true
     },
 
     lastName: {
         type: String,
-        require: true
+        required: true
     },
 
     idLevel: {
         type: Schema.Types.ObjectId,
         ref: "Level",
-        require: true
+        required: true
     },
 
     idSection: {
         type: Schema.Types.ObjectId,
         ref: "Section",
-        require: true
+        required: true
     },
 
     idSpecialty: {
@@ -34,8 +35,8 @@ const studentSchema = new Schema({
     },
 
     projectId: {
-    type: Schema.Types.ObjectId,
-    ref: "Project"
+        type: Schema.Types.ObjectId,
+        ref: "Project"
     }
 
 }, {

@@ -1,11 +1,15 @@
 import React from "react";
 import {
-  BrowserRouter as Router,
   Route,
   Routes,
 } from "react-router-dom";
 
-import Dashboard from "../pages/Dashboard";
+import Dashboard from "../pages/Dashboard/Dashboard";
+import Users from "../pages/Users/Users";
+import Students from "../pages/Students/Students";
+import Projects from "../pages/Projects/Projects";
+import Evaluations from "../pages/Evaluations/Evaluations";
+import NavBar from "./Sidebar";
 
 function Navigation() {
   return (
@@ -16,9 +20,9 @@ function Navigation() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/users" element={<Users />} />
-          <Route path="/notes" element={<Notes />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/activities" element={<Activities />} />
+          <Route path="/students" element={<Students />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/evaluations" element={<Evaluations />} />
         </Routes>
       </div>
     </div>
