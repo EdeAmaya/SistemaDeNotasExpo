@@ -1,52 +1,108 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Users, GraduationCap, Triangle, ClipboardList, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const NavBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
   const progress = 30;
   
-  const menuItems = [
+  // Menús base disponibles para todos los usuarios autenticados
+  const baseMenuItems = [
     {
       id: 'dashboard',
       title: 'Inicio',
       icon: Home,
-      route: '/'
-    },
+      route: '/',
+      roles: ['Admin', 'Docente', 'Evaluador', 'Estudiante']
+    }
+  ];
+
+  // Menús administrativos (solo para ciertos roles)
+  const adminMenuItems = [
     {
       id: 'users',
       title: 'Usuarios',
       icon: Users,
-      route: '/users'
+      route: '/users',
+      roles: ['Admin']
     },
     {
       id: 'students',
       title: 'Estudiantes',
       icon: GraduationCap,
-      route: '/students'
+      route: '/students',
+      roles: ['Admin', 'Docente']
     },
     {
       id: 'projects',
       title: 'Proyectos',
       icon: Triangle,
-      route: '/projects'
+      route: '/projects',
+      roles: ['Admin', 'Docente', 'Evaluador']
     },
     {
       id: 'evaluations',
       title: 'Evaluaciones',
       icon: ClipboardList,
-      route: '/evaluations'
+      route: '/evaluations',
+      roles: ['Admin', 'Docente', 'Evaluador']
     }
   ];
+
+  // Filtrar menús según el rol del usuario
+  const getFilteredMenuItems = () => {
+    if (!user) return [];
+    
+    const userRole = user.role;
+    const allMenuItems = [...baseMenuItems, ...adminMenuItems];
+    
+    return allMenuItems.filter(item => 
+      item.roles.includes(userRole)
+    );
+  };
+
+  const menuItems = getFilteredMenuItems();
 
   const handleNavigation = (route) => {
     navigate(route);
   };
 
-  const handleLogout = () => {
-    console.log('Cerrando sesión...');
+  const handleLogout = async () => {
+    if (window.confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+      try {
+        const result = await logout();
+        if (result.success) {
+          toast.success(result.message || 'Sesión cerrada exitosamente');
+          navigate('/login');
+        } else {
+          toast.error(result.message || 'Error al cerrar sesión');
+        }
+      } catch (error) {
+        toast.error('Error de conexión');
+      }
+    }
   };
+
+  const getRoleInfo = (role) => {
+    switch(role) {
+      case 'Admin':
+        return { icon: '👑', color: 'text-purple-400', label: 'Administrador' };
+      case 'Docente':
+        return { icon: '👨‍🏫', color: 'text-green-400', label: 'Docente' };
+      case 'Evaluador':
+        return { icon: '👨‍💼', color: 'text-blue-400', label: 'Evaluador' };
+      case 'Estudiante':
+        return { icon: '🎓', color: 'text-yellow-400', label: 'Estudiante' };
+      default:
+        return { icon: '👤', color: 'text-gray-400', label: role };
+    }
+  };
+
+  const roleInfo = user ? getRoleInfo(user.role) : { icon: '👤', color: 'text-gray-400', label: 'Usuario' };
 
   return (
     <div className="w-64 bg-gray-900 h-full flex flex-col">
@@ -82,6 +138,30 @@ const NavBar = () => {
           </div>
         </button>
       </div>
+
+      {/* Información del Usuario */}
+      {user && (
+        <div className="px-6 mb-4">
+          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <div className="flex items-center space-x-3">
+              <div className="flex-shrink-0">
+                <span className={`text-2xl ${roleInfo.color}`}>{roleInfo.icon}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-medium text-sm truncate">
+                  {user.name} {user.lastName}
+                </p>
+                <p className={`text-xs font-medium ${roleInfo.color}`}>
+                  {roleInfo.label}
+                </p>
+                {user.isVerified === false && (
+                  <p className="text-red-400 text-xs">No verificado</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Navegación */}
       <div className="flex-1 px-3">
@@ -132,7 +212,7 @@ const NavBar = () => {
       <div className="px-3 pb-4">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center px-4 py-3 bg-transparent border-none cursor-pointer hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
+          className="w-full flex items-center px-4 py-3 bg-transparent border-none cursor-pointer hover:bg-red-700/20 rounded-lg text-gray-400 hover:text-red-400 transition-colors"
         >
           <LogOut size={20} className="mr-3" />
           <span className="font-medium text-sm">

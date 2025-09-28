@@ -11,7 +11,7 @@ const useDataProjects = () => {
     const [idLevel, setIdLevel] = useState("");
     const [idSection, setIdSection] = useState("");
     const [status, setStatus] = useState("Activo");
-    const [teamNumber, setTeamNumber] = useState(1); // Cambiado: por defecto 1
+    const [teamNumber, setTeamNumber] = useState(1);
     const [assignedStudents, setAssignedStudents] = useState([]);
     const [selectedSpecialty, setSelectedSpecialty] = useState("");
 
@@ -21,7 +21,9 @@ const useDataProjects = () => {
     const fetchProjects = async () => {
         setLoading(true);
         try {
-            const response = await fetch(API);
+            const response = await fetch(API, {
+                credentials: 'include' // ← AGREGADO
+            });
             if (!response.ok) {
                 throw new Error("Error al obtener los proyectos");
             }
@@ -38,7 +40,9 @@ const useDataProjects = () => {
     // Verificar si un ID de proyecto es único
     const checkProjectId = async (projId, excludeId = null) => {
         try {
-            const response = await fetch(API);
+            const response = await fetch(API, {
+                credentials: 'include' // ← AGREGADO
+            });
             if (response.ok) {
                 const allProjects = await response.json();
                 
@@ -92,17 +96,18 @@ const useDataProjects = () => {
                 projectName: projectName.trim(),
                 googleSitesLink: googleSitesLink.trim() || null,
                 idLevel,
-                idSection: idSection || null, // Puede ser null para bachillerato
-                selectedSpecialty: selectedSpecialty || null, // Puede ser null para básica
+                idSection: idSection || null,
+                selectedSpecialty: selectedSpecialty || null,
                 status,
-                teamNumber: teamNumber, // NUEVO: Enviar número de equipo
+                teamNumber: teamNumber,
                 assignedStudents: assignedStudents || []
             };
 
-            console.log('Enviando proyecto:', newProject); // Debug
+            console.log('Enviando proyecto:', newProject);
 
             const response = await fetch(API, {
                 method: "POST",
+                credentials: 'include', // ← AGREGADO
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -134,6 +139,7 @@ const useDataProjects = () => {
         try {
             const response = await fetch(`${API}/${projectId}`, {
                 method: "DELETE",
+                credentials: 'include', // ← AGREGADO
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -155,7 +161,7 @@ const useDataProjects = () => {
 
     // Preparar proyecto para edición
     const updateProject = (project) => {
-        console.log('Cargando proyecto para editar:', project); // Debug
+        console.log('Cargando proyecto para editar:', project);
         
         setId(project._id);
         setProjectId(project.projectId);
@@ -164,7 +170,7 @@ const useDataProjects = () => {
         setIdLevel(project.idLevel?._id || project.idLevel || "");
         setIdSection(project.idSection?._id || project.idSection || "");
         setStatus(project.status || "Activo");
-        setTeamNumber(project.teamNumber || 1); // NUEVO: Cargar número de equipo
+        setTeamNumber(project.teamNumber || 1);
         setAssignedStudents(project.assignedStudents || []);
         
         // Cargar especialidad si existe
@@ -197,17 +203,18 @@ const useDataProjects = () => {
                 projectName: projectName.trim(),
                 googleSitesLink: googleSitesLink.trim() || null,
                 idLevel,
-                idSection: idSection || null, // Puede ser null para bachillerato
-                selectedSpecialty: selectedSpecialty || null, // Puede ser null para básica
+                idSection: idSection || null,
+                selectedSpecialty: selectedSpecialty || null,
                 status,
-                teamNumber: teamNumber, // NUEVO: Enviar número de equipo
+                teamNumber: teamNumber,
                 assignedStudents: assignedStudents || []
             };
 
-            console.log('Editando proyecto:', editProject); // Debug
+            console.log('Editando proyecto:', editProject);
 
             const response = await fetch(`${API}/${id}`, {
                 method: "PUT",
+                credentials: 'include', // ← AGREGADO
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -243,7 +250,7 @@ const useDataProjects = () => {
         setIdLevel("");
         setIdSection("");
         setStatus("Activo");
-        setTeamNumber(1); // NUEVO: Resetear a 1
+        setTeamNumber(1);
         setAssignedStudents([]);
         setSelectedSpecialty("");
     };

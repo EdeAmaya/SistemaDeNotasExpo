@@ -18,7 +18,9 @@ const useDataUsers = () => {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const response = await fetch(API);
+            const response = await fetch(API, {
+                credentials: 'include' // ← AGREGADO
+            });
             if (!response.ok) {
                 throw new Error("Error al obtener los usuarios");
             }
@@ -53,6 +55,7 @@ const useDataUsers = () => {
 
             const response = await fetch(API, {
                 method: "POST",
+                credentials: 'include', // ← AGREGADO
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -77,6 +80,7 @@ const useDataUsers = () => {
         try {
             const response = await fetch(`${API}/${userId}`, {
                 method: "DELETE",
+                credentials: 'include', // ← AGREGADO
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -130,6 +134,7 @@ const useDataUsers = () => {
 
             const response = await fetch(`${API}/${id}`, {
                 method: "PUT",
+                credentials: 'include', // ← AGREGADO
                 headers: {
                     "Content-Type": "application/json",
                 },

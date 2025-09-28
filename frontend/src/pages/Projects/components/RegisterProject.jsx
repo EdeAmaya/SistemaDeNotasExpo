@@ -262,10 +262,18 @@ const RegisterProject = ({
       
       try {
         const [levelsResponse, sectionsResponse, specialtiesResponse, studentsResponse] = await Promise.all([
-          fetch('http://localhost:4000/api/levels'),
-          fetch('http://localhost:4000/api/sections'),
-          fetch('http://localhost:4000/api/specialties'),
-          fetch('http://localhost:4000/api/students')
+          fetch('http://localhost:4000/api/levels', {
+            credentials: 'include'
+          }),
+          fetch('http://localhost:4000/api/sections', {
+            credentials: 'include'
+          }),
+          fetch('http://localhost:4000/api/specialties', {
+            credentials: 'include'
+          }),
+          fetch('http://localhost:4000/api/students', {
+            credentials: 'include'
+          })
         ]);
 
         if (levelsResponse.ok) {

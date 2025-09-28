@@ -117,7 +117,9 @@ const RegisterStudent = ({
     setIsCheckingCode(true);
     
     try {
-      const response = await fetch(`http://localhost:4000/api/students`);
+      const response = await fetch(`http://localhost:4000/api/students`, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const allStudents = await response.json();
         
@@ -173,10 +175,18 @@ const RegisterStudent = ({
       try {
         // Cargar todos los catálogos en paralelo
         const [levelsResponse, sectionsResponse, specialtiesResponse, projectsResponse] = await Promise.all([
-          fetch('http://localhost:4000/api/levels'),
-          fetch('http://localhost:4000/api/sections'),
-          fetch('http://localhost:4000/api/specialties'),
-          fetch('http://localhost:4000/api/projects')
+          fetch('http://localhost:4000/api/levels', {
+            credentials: 'include'
+          }),
+          fetch('http://localhost:4000/api/sections', {
+            credentials: 'include'
+          }),
+          fetch('http://localhost:4000/api/specialties', {
+            credentials: 'include'
+          }),
+          fetch('http://localhost:4000/api/projects', {
+            credentials: 'include'
+          })
         ]);
 
         // Procesar respuesta de niveles
@@ -415,7 +425,7 @@ const RegisterStudent = ({
             {/* Campo Sección */}
             <div className="group">
               <label className="flex items-center space-x-2 text-green-800 font-bold text-lg mb-3">
-                <span className="bg-green-600 text-white p-1 rounded-full text-sm">📁</span>
+                <span className="bg-green-600 text-white p-1 rounded-full text-sm">📄</span>
                 <span>Sección</span>
               </label>
               <div className="relative">

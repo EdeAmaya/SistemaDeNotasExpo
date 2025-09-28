@@ -19,7 +19,9 @@ const useDataStudents = () => {
     const fetchStudents = async () => {
         setLoading(true);
         try {
-            const response = await fetch(API);
+            const response = await fetch(API, {
+                credentials: 'include' // ← AGREGADO
+            });
             if (!response.ok) {
                 throw new Error("Error al obtener los estudiantes");
             }
@@ -41,7 +43,9 @@ const useDataStudents = () => {
                 url += `?excludeId=${excludeId}`;
             }
             
-            const response = await fetch(url);
+            const response = await fetch(url, {
+                credentials: 'include' // ← AGREGADO
+            });
             if (response.ok) {
                 const result = await response.json();
                 return result;
@@ -82,6 +86,7 @@ const useDataStudents = () => {
 
             const response = await fetch(API, {
                 method: "POST",
+                credentials: 'include', // ← AGREGADO
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -113,6 +118,7 @@ const useDataStudents = () => {
         try {
             const response = await fetch(`${API}/${studentId}`, {
                 method: "DELETE",
+                credentials: 'include', // ← AGREGADO
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -173,6 +179,7 @@ const useDataStudents = () => {
 
             const response = await fetch(`${API}/${id}`, {
                 method: "PUT",
+                credentials: 'include', // ← AGREGADO
                 headers: {
                     "Content-Type": "application/json",
                 },
