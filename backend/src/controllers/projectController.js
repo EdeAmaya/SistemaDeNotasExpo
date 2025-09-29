@@ -1,6 +1,7 @@
 const projectController = {};
 
 import projectModel from "../models/Project.js";
+import ActivityLogger from "../utils/activityLogger.js"; // ← NUEVO IMPORT
 
 //Select
 projectController.getProjects = async (req,res) => {
@@ -8,7 +9,7 @@ projectController.getProjects = async (req,res) => {
     const projects = await projectModel.find()
       .populate("idLevel")
       .populate("idSection")
-      .populate("selectedSpecialty") // NUEVO: Popular especialidad
+      .populate("selectedSpecialty")
       .populate("assignedStudents")
     res.json(projects)
   } catch (error) {
@@ -19,7 +20,6 @@ projectController.getProjects = async (req,res) => {
 //Insert
 projectController.insertProject = async (req,res) => {
   try {
-    // ACTUALIZADO: Agregar teamNumber y selectedSpecialty
     const {
       projectId, 
       projectName, 
@@ -32,7 +32,6 @@ projectController.insertProject = async (req,res) => {
       assignedStudents
     } = req.body;
 
-    // Validación: Verificar que teamNumber esté presente
     if (!teamNumber || teamNumber < 1) {
       return res.status(400).json({
         error: "INVALID_TEAM_NUMBER",
@@ -40,7 +39,6 @@ projectController.insertProject = async (req,res) => {
       });
     }
 
-    // Verificar ID duplicado
     const existingProject = await projectModel.findOne({ 
       projectId: projectId.trim() 
     });
@@ -57,16 +55,26 @@ projectController.insertProject = async (req,res) => {
       projectName: projectName.trim(), 
       googleSitesLink: googleSitesLink ? googleSitesLink.trim() : null, 
       idLevel, 
-      idSection: idSection || null, // Puede ser null para bachillerato
-      selectedSpecialty: selectedSpecialty || null, // Puede ser null para básica
-      teamNumber: parseInt(teamNumber), // NUEVO: Guardar número de equipo
+      idSection: idSection || null,
+      selectedSpecialty: selectedSpecialty || null,
+      teamNumber: parseInt(teamNumber),
       status: status || 'Activo',
       assignedStudents: assignedStudents || []
     });
 
     const savedProject = await newProject.save();
     
-    // Responder con el proyecto guardado
+    // ← NUEVO: LOG DE ACTIVIDAD
+    await ActivityLogger.log(
+      req.user._id,
+      'CREATE_PROJECT',
+      `Creó el proyecto "${savedProject.projectName}"`,
+      'Project',
+      savedProject._id,
+      { projectId: savedProject.projectId },
+      req
+    );
+    
     res.status(201).json({
       message: "Proyecto guardado exitosamente",
       project: savedProject
@@ -75,7 +83,6 @@ projectController.insertProject = async (req,res) => {
   } catch (error) {
     console.error("Error al insertar proyecto:", error);
     
-    // Manejar errores de validación de Mongoose
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         error: "VALIDATION_ERROR",
@@ -84,7 +91,6 @@ projectController.insertProject = async (req,res) => {
       });
     }
     
-    // Manejar errores de duplicado
     if (error.code === 11000) {
       return res.status(400).json({
         error: "DUPLICATE_PROJECT_ID",
@@ -112,6 +118,17 @@ projectController.deleteProject = async(req,res) => {
       });
     }
     
+    // ← NUEVO: LOG DE ACTIVIDAD
+    await ActivityLogger.log(
+      req.user._id,
+      'DELETE_PROJECT',
+      `Eliminó el proyecto "${deletedProject.projectName}"`,
+      'Project',
+      deletedProject._id,
+      { projectId: deletedProject.projectId },
+      req
+    );
+    
     res.json({
       message: "Proyecto eliminado exitosamente",
       deletedProject: deletedProject
@@ -129,7 +146,6 @@ projectController.deleteProject = async(req,res) => {
 //Update
 projectController.updateProject = async(req,res) => {
   try {
-    // ACTUALIZADO: Agregar teamNumber y selectedSpecialty
     const {
       projectId, 
       projectName, 
@@ -142,7 +158,6 @@ projectController.updateProject = async(req,res) => {
       assignedStudents
     } = req.body;
 
-    // Validación: Verificar que teamNumber esté presente
     if (!teamNumber || teamNumber < 1) {
       return res.status(400).json({
         error: "INVALID_TEAM_NUMBER",
@@ -150,7 +165,6 @@ projectController.updateProject = async(req,res) => {
       });
     }
 
-    // Verificar que el proyecto existe
     const existingProject = await projectModel.findById(req.params.id);
     if (!existingProject) {
       return res.status(404).json({
@@ -159,10 +173,9 @@ projectController.updateProject = async(req,res) => {
       });
     }
 
-    // Verificar ID duplicado (excluyendo el proyecto actual)
     const duplicateProject = await projectModel.findOne({ 
       projectId: projectId.trim(),
-      _id: { $ne: req.params.id } // Excluir el proyecto actual
+      _id: { $ne: req.params.id }
     });
     
     if (duplicateProject) {
@@ -179,16 +192,27 @@ projectController.updateProject = async(req,res) => {
         projectName: projectName.trim(), 
         googleSitesLink: googleSitesLink ? googleSitesLink.trim() : null, 
         idLevel, 
-        idSection: idSection || null, // Puede ser null para bachillerato
-        selectedSpecialty: selectedSpecialty || null, // Puede ser null para básica
-        teamNumber: parseInt(teamNumber), // NUEVO: Actualizar número de equipo
+        idSection: idSection || null,
+        selectedSpecialty: selectedSpecialty || null,
+        teamNumber: parseInt(teamNumber),
         status: status || 'Activo',
         assignedStudents: assignedStudents || []
       },
       { 
-        new: true, // Retornar el documento actualizado
-        runValidators: true // Ejecutar validaciones del esquema
+        new: true,
+        runValidators: true
       }
+    );
+
+    // ← NUEVO: LOG DE ACTIVIDAD
+    await ActivityLogger.log(
+      req.user._id,
+      'UPDATE_PROJECT',
+      `Editó el proyecto "${updatedProject.projectName}"`,
+      'Project',
+      updatedProject._id,
+      { projectId: updatedProject.projectId },
+      req
     );
 
     res.json({
@@ -199,7 +223,6 @@ projectController.updateProject = async(req,res) => {
   } catch (error) {
     console.error("Error al actualizar proyecto:", error);
     
-    // Manejar errores de validación de Mongoose
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         error: "VALIDATION_ERROR",
@@ -208,7 +231,6 @@ projectController.updateProject = async(req,res) => {
       });
     }
     
-    // Manejar errores de duplicado
     if (error.code === 11000) {
       return res.status(400).json({
         error: "DUPLICATE_PROJECT_ID",

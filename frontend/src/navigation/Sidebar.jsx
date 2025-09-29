@@ -2,13 +2,61 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Users, GraduationCap, Triangle, ClipboardList, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import useStages from '../hooks/useStages';
 import toast from 'react-hot-toast';
 
 const NavBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const progress = 30;
+  
+  // Usar el hook de etapas
+  const { currentStage, calculateProgress, loading: stagesLoading } = useStages();
+  
+  // Calcular progreso dinámico
+  const progress = calculateProgress();
+  
+  // Función para obtener el color y texto según el progreso
+  const getProgressInfo = (progressValue) => {
+    if (progressValue <= 20) {
+      return {
+        color: 'bg-red-500',
+        bgColor: 'bg-red-600',
+        textColor: 'text-red-500',
+        label: 'Progreso Expo'
+      };
+    } else if (progressValue <= 40) {
+      return {
+        color: 'bg-yellow-500',
+        bgColor: 'bg-yellow-600',
+        textColor: 'text-yellow-500',
+        label: 'Progreso Expo'
+      };
+    } else if (progressValue <= 60) {
+      return {
+        color: 'bg-orange-500',
+        bgColor: 'bg-orange-600',
+        textColor: 'text-orange-500',
+        label: 'Progreso Expo'
+      };
+    } else if (progressValue <= 80) {
+      return {
+        color: 'bg-blue-500',
+        bgColor: 'bg-blue-600',
+        textColor: 'text-blue-500',
+        label: 'Progreso Expo'
+      };
+    } else {
+      return {
+        color: 'bg-green-500',
+        bgColor: 'bg-green-600',
+        textColor: 'text-green-500',
+        label: 'Progreso Expo'
+      };
+    }
+  };
+
+  const progressInfo = getProgressInfo(progress);
   
   // Menús base disponibles para todos los usuarios autenticados
   const baseMenuItems = [
@@ -186,24 +234,28 @@ const NavBar = () => {
         })}
       </div>
 
-      {/* Progreso */}
+      {/* Progreso - SOLO LA BARRA CAMBIA DE COLOR */}
       <div className="px-6 py-4">
         <div className="bg-gray-800 rounded-lg p-4">
           <div className="text-white font-medium mb-3 text-center text-sm">
             Progreso Expo
           </div>
           
-          {/* Barra de Progreso */}
+          {/* Barra de Progreso - Solo la barra interior cambia de color */}
           <div className="bg-gray-600 rounded-full h-2 mb-3">
             <div 
-              className="bg-red-500 h-2 rounded-full transition-all duration-300"
+              className={`${progressInfo.color} h-2 rounded-full transition-all duration-500 ease-in-out`}
               style={{ width: `${progress}%` }}
             />
           </div>
           
-          {/* Porcentaje */}
-          <div className="text-red-500 font-bold text-xl text-center">
-            {progress}%
+          {/* Porcentaje - Color dinámico según el progreso */}
+          <div className={`${progressInfo.textColor} font-bold text-xl text-center`}>
+            {stagesLoading ? (
+              <div className="animate-pulse">--</div>
+            ) : (
+              `${progress}%`
+            )}
           </div>
         </div>
       </div>

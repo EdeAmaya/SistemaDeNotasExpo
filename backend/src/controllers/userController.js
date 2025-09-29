@@ -1,5 +1,6 @@
 import userModel from "../models/User.js";
 import bcryptjs from "bcryptjs";
+import ActivityLogger from "../utils/activityLogger.js"; // ← NUEVO IMPORT
 
 const userController = {};
 
@@ -33,21 +34,17 @@ userController.insertUser = async (req, res) => {
   try {
     const { name, lastName, email, password, role, isVerified } = req.body;
 
-    // Validaciones básicas
     if (!name || !lastName || !email || !password || !role) {
       return res.status(400).json({ message: "Todos los campos son requeridos" });
     }
 
-    // Verificar si el email ya existe
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "El correo electrónico ya está registrado" });
     }
 
-    // Hashear la contraseña
     const hashedPassword = await bcryptjs.hash(password, 10);
 
-    // Crear nuevo usuario
     const newUser = new userModel({
       name: name.trim(),
       lastName: lastName.trim(),
@@ -57,10 +54,20 @@ userController.insertUser = async (req, res) => {
       isVerified: isVerified || false
     });
 
-    await newUser.save();
+    const savedUser = await newUser.save();
 
-    // Respuesta sin contraseña
-    const userResponse = await userModel.findById(newUser._id).select('-password');
+    // ← NUEVO: LOG DE ACTIVIDAD
+    await ActivityLogger.log(
+      req.user._id,
+      'CREATE_USER',
+      `Creó nuevo usuario "${savedUser.name} ${savedUser.lastName}" con rol ${savedUser.role}`,
+      'User',
+      savedUser._id,
+      { email: savedUser.email, role: savedUser.role },
+      req
+    );
+
+    const userResponse = await userModel.findById(savedUser._id).select('-password');
     
     res.status(201).json({
       message: "Usuario creado exitosamente",
@@ -94,6 +101,17 @@ userController.deleteUser = async (req, res) => {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
+    // ← NUEVO: LOG DE ACTIVIDAD
+    await ActivityLogger.log(
+      req.user._id,
+      'DELETE_USER',
+      `Eliminó al usuario "${deletedUser.name} ${deletedUser.lastName}"`,
+      'User',
+      deletedUser._id,
+      { email: deletedUser.email, role: deletedUser.role },
+      req
+    );
+
     res.json({ message: "Usuario eliminado exitosamente" });
   } catch (error) {
     console.error('Error al eliminar usuario:', error);
@@ -107,13 +125,11 @@ userController.updateUser = async (req, res) => {
     const { id } = req.params;
     let { name, lastName, email, password, role, isVerified } = req.body;
 
-    // Buscar usuario actual
     const currentUser = await userModel.findById(id);
     if (!currentUser) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    // Preparar datos de actualización
     let updateData = {
       name: name?.trim() || currentUser.name,
       lastName: lastName?.trim() || currentUser.lastName,
@@ -121,7 +137,6 @@ userController.updateUser = async (req, res) => {
       isVerified: isVerified !== undefined ? isVerified : currentUser.isVerified
     };
 
-    // Verificar si el email cambió y si ya existe
     if (email && email !== currentUser.email) {
       const existsEmail = await userModel.findOne({ 
         email: email.toLowerCase().trim(), 
@@ -133,16 +148,25 @@ userController.updateUser = async (req, res) => {
       updateData.email = email.toLowerCase().trim();
     }
 
-    // Solo actualizar contraseña si se proporciona
     if (password && password.trim()) {
       updateData.password = await bcryptjs.hash(password, 10);
     }
 
-    // Actualizar usuario
     const updatedUser = await userModel.findByIdAndUpdate(
       id, 
       updateData, 
       { new: true, select: '-password' }
+    );
+
+    // ← NUEVO: LOG DE ACTIVIDAD
+    await ActivityLogger.log(
+      req.user._id,
+      'UPDATE_USER',
+      `Editó al usuario "${updatedUser.name} ${updatedUser.lastName}"`,
+      'User',
+      updatedUser._id,
+      { email: updatedUser.email, role: updatedUser.role },
+      req
     );
 
     res.json({

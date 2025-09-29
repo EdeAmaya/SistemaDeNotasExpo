@@ -15,6 +15,8 @@ import specialtiesRoutes from "./src/routes/specialties.js";
 import studentsRoutes from "./src/routes/students.js";
 import projectsRoutes from "./src/routes/projects.js";
 import activitiesRoutes from "./src/routes/activities.js";
+import stagesRoutes from "./src/routes/stages.js";
+import userActivitiesRoutes from "./src/routes/userActivities.js";
 
 // Importar middlewares
 import { authenticateToken } from "./src/middlewares/auth.js";
@@ -82,6 +84,8 @@ app.use("/api/specialties", authenticateToken, specialtiesRoutes);
 app.use("/api/students", authenticateToken, studentsRoutes);
 app.use("/api/projects", authenticateToken, projectsRoutes);
 app.use("/api/activities", authenticateToken, activitiesRoutes);
+app.use("/api/stages", authenticateToken, stagesRoutes);
+app.use("/api/user-activities", authenticateToken, userActivitiesRoutes);
 
 // Ruta de verificación de estado de autenticación
 app.get("/api/auth/verify", authenticateToken, (req, res) => {

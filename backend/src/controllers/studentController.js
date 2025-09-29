@@ -1,9 +1,9 @@
 const studentController = {};
 
 import studentModel from "../models/Student.js";
+import ActivityLogger from "../utils/activityLogger.js"; // ← NUEVO IMPORT
 
 //Select
-
 studentController.getStudents = async (req,res) => {
   try {
     const students = await studentModel.find()
@@ -24,7 +24,7 @@ studentController.getStudents = async (req,res) => {
 studentController.checkStudentCode = async (req, res) => {
   try {
     const { studentCode } = req.params;
-    const { excludeId } = req.query; // Para excluir un estudiante específico (útil en edición)
+    const { excludeId } = req.query;
     
     let query = { studentCode: parseInt(studentCode) };
     if (excludeId) {
@@ -58,12 +58,10 @@ studentController.checkStudentCode = async (req, res) => {
 };
 
 //Insert
-
 studentController.insertStudent = async (req,res) => {
   try {
     const { studentCode, name, lastName, idLevel, idSection, idSpecialty, projectId } = req.body;
     
-    // Verificar si el código ya existe antes de crear
     const existingStudent = await studentModel.findOne({ studentCode: parseInt(studentCode) });
     if (existingStudent) {
       return res.status(400).json({
@@ -84,6 +82,17 @@ studentController.insertStudent = async (req,res) => {
     
     const savedStudent = await newStudent.save();
     
+    // ← NUEVO: LOG DE ACTIVIDAD
+    await ActivityLogger.log(
+      req.user._id,
+      'CREATE_STUDENT',
+      `Registró al estudiante "${savedStudent.name} ${savedStudent.lastName}"`,
+      'Student',
+      savedStudent._id,
+      { studentCode: savedStudent.studentCode },
+      req
+    );
+    
     res.status(201).json({
       message: "Estudiante registrado exitosamente",
       student: savedStudent
@@ -91,7 +100,6 @@ studentController.insertStudent = async (req,res) => {
     
   } catch (error) {
     if (error.code === 11000) {
-      // Error de duplicado de MongoDB
       res.status(400).json({
         message: "El código de estudiante ya existe. Por favor, use un código diferente.",
         error: "DUPLICATE_CODE"
@@ -111,7 +119,6 @@ studentController.insertStudent = async (req,res) => {
 };
 
 //Delete
-
 studentController.deleteStudent = async(req,res) => {
   try {
     const deletedStudent = await studentModel.findByIdAndDelete(req.params.id);
@@ -121,6 +128,17 @@ studentController.deleteStudent = async(req,res) => {
         message: "Estudiante no encontrado"
       });
     }
+    
+    // ← NUEVO: LOG DE ACTIVIDAD
+    await ActivityLogger.log(
+      req.user._id,
+      'DELETE_STUDENT',
+      `Eliminó al estudiante "${deletedStudent.name} ${deletedStudent.lastName}"`,
+      'Student',
+      deletedStudent._id,
+      { studentCode: deletedStudent.studentCode },
+      req
+    );
     
     res.json({
       message: "Estudiante eliminado exitosamente",
@@ -135,17 +153,15 @@ studentController.deleteStudent = async(req,res) => {
 };
 
 //Update
-
 studentController.updateStudent = async(req,res) => {
   try {
     const { studentCode, name, lastName, idLevel, idSection, idSpecialty, projectId } = req.body;
     const studentId = req.params.id;
     
-    // Verificar si el nuevo código ya existe en otro estudiante
     if (studentCode) {
       const existingStudent = await studentModel.findOne({ 
         studentCode: parseInt(studentCode),
-        _id: { $ne: studentId } // Excluir el estudiante actual
+        _id: { $ne: studentId }
       });
       
       if (existingStudent) {
@@ -177,6 +193,17 @@ studentController.updateStudent = async(req,res) => {
         message: "Estudiante no encontrado"
       });
     }
+    
+    // ← NUEVO: LOG DE ACTIVIDAD
+    await ActivityLogger.log(
+      req.user._id,
+      'UPDATE_STUDENT',
+      `Editó al estudiante "${updatedStudent.name} ${updatedStudent.lastName}"`,
+      'Student',
+      updatedStudent._id,
+      { studentCode: updatedStudent.studentCode },
+      req
+    );
     
     res.json({
       message: "Estudiante actualizado exitosamente",
