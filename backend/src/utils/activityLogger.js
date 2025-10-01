@@ -12,13 +12,48 @@ const ActivityLogger = {
                 targetId,
                 metadata,
                 ipAddress: req?.ip || req?.connection?.remoteAddress,
-                userAgent: req?.get('User-Agent')
+                userAgent: req?.get('User-Agent'),
+                lastHeartbeat: new Date(),
+                isActive: true
             });
             
             await logEntry.save();
             console.log(`📝 Log registrado: ${description} - Usuario: ${userId}`);
         } catch (error) {
             console.error('❌ Error registrando actividad:', error);
+        }
+    },
+
+    // ← NUEVO: Registrar heartbeat (señal de vida)
+    heartbeat: async (userId, isUserActive = true, req = null) => {
+        try {
+            // Buscar el último heartbeat del usuario
+            let heartbeat = await ActivityLog.findOne({
+                userId,
+                action: 'HEARTBEAT'
+            }).sort({ lastHeartbeat: -1 });
+
+            if (heartbeat) {
+                // Actualizar heartbeat existente
+                heartbeat.lastHeartbeat = new Date();
+                heartbeat.isActive = isUserActive;
+                await heartbeat.save();
+            } else {
+                // Crear nuevo heartbeat
+                const logEntry = new ActivityLog({
+                    userId,
+                    action: 'HEARTBEAT',
+                    actionDescription: 'Usuario conectado',
+                    targetModel: 'Presence',
+                    lastHeartbeat: new Date(),
+                    isActive: isUserActive,
+                    ipAddress: req?.ip || req?.connection?.remoteAddress,
+                    userAgent: req?.get('User-Agent')
+                });
+                await logEntry.save();
+            }
+        } catch (error) {
+            console.error('❌ Error registrando heartbeat:', error);
         }
     },
 
@@ -51,7 +86,7 @@ const ActivityLogger = {
         }
     },
 
-    // NUEVO: Obtener usuarios activos (conectados recientemente)
+    // ← ACTUALIZADO: Obtener usuarios conectados con estado de presencia
     getConnectedUsers: async (hoursAgo = 2) => {
         try {
             const timeThreshold = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
@@ -59,14 +94,19 @@ const ActivityLogger = {
             const activities = await ActivityLog.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: timeThreshold },
-                        action: 'LOGIN' // Solo logins para determinar conectados
+                        lastHeartbeat: { $gte: timeThreshold },
+                        action: { $in: ['LOGIN', 'HEARTBEAT'] }
                     }
+                },
+                {
+                    $sort: { lastHeartbeat: -1 }
                 },
                 {
                     $group: {
                         _id: '$userId',
-                        lastLoginTime: { $last: '$createdAt' }
+                        lastHeartbeat: { $first: '$lastHeartbeat' },
+                        isActive: { $first: '$isActive' },
+                        action: { $first: '$action' }
                     }
                 },
                 {
@@ -83,11 +123,37 @@ const ActivityLogger = {
                 {
                     $match: {
                         'user.isVerified': true,
-                        'user.role': { $in: ['Docente', 'Evaluador'] } // Sin admins en conectados
+                        'user.role': { $in: ['Docente', 'Evaluador'] }
                     }
                 },
                 {
-                    $sort: { lastLoginTime: -1 }
+                    $project: {
+                        user: 1,
+                        lastHeartbeat: 1,
+                        isActive: 1,
+                        // Calcular estado de presencia
+                        presenceStatus: {
+                            $cond: {
+                                if: {
+                                    $gte: [
+                                        '$lastHeartbeat',
+                                        new Date(Date.now() - 60 * 1000) // Últimos 60 segundos
+                                    ]
+                                },
+                                then: {
+                                    $cond: {
+                                        if: '$isActive',
+                                        then: 'online', // Verde: activo y reciente
+                                        else: 'away'    // Naranja: inactivo pero conectado
+                                    }
+                                },
+                                else: 'offline' // Gris: sin heartbeat reciente
+                            }
+                        }
+                    }
+                },
+                {
+                    $sort: { lastHeartbeat: -1 }
                 },
                 {
                     $limit: 8
@@ -101,23 +167,20 @@ const ActivityLogger = {
         }
     },
 
-    // NUEVO: Obtener actividades recientes con filtro por rol
+    // Obtener actividades recientes con filtro por rol
     getRecentActivitiesByRole: async (userRole, limit = 10) => {
         try {
             let matchCondition = {
-                action: { $ne: 'LOGIN' } // Excluir logins de actividades
+                action: { $ne: 'HEARTBEAT' } // ← ACTUALIZADO: Excluir heartbeats de actividades
             };
 
-            // Si es admin, incluir actividades de admins
             if (userRole === 'Admin') {
-                // Admin ve todas las actividades (incluyendo las suyas)
                 matchCondition = {
-                    action: { $ne: 'LOGIN' }
+                    action: { $nin: ['LOGIN', 'HEARTBEAT'] }
                 };
             } else {
-                // Otros roles solo ven actividades de Docentes y Evaluadores
                 matchCondition = {
-                    action: { $ne: 'LOGIN' }
+                    action: { $nin: ['LOGIN', 'HEARTBEAT'] }
                 };
             }
 
@@ -138,8 +201,8 @@ const ActivityLogger = {
                         ...matchCondition,
                         'user.isVerified': true,
                         'user.role': userRole === 'Admin' 
-                            ? { $in: ['Admin', 'Docente', 'Evaluador'] } // Admin ve todo
-                            : { $in: ['Docente', 'Evaluador'] } // Otros no ven admin
+                            ? { $in: ['Admin', 'Docente', 'Evaluador'] }
+                            : { $in: ['Docente', 'Evaluador'] }
                     }
                 },
                 {

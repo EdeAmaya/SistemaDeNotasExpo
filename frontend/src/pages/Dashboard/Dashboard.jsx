@@ -1,7 +1,9 @@
+// frontend/src/pages/Dashboard/Dashboard.jsx
 import React from 'react';
 import useStages from '../../hooks/useStages';
 import useConnectedUsers from '../../hooks/useConnectedUsers';
-import useRecentActivities from '../../hooks/useRecentActivities'; // NUEVO IMPORT
+import useRecentActivities from '../../hooks/useRecentActivities';
+import usePresence from '../../hooks/usePresence'; // ← NUEVO IMPORT
 
 const Dashboard = () => {
   const currentUser = "Eduardo";
@@ -10,9 +12,18 @@ const Dashboard = () => {
   const { calculateProgress, loading: stagesLoading } = useStages();
   const currentProgress = calculateProgress();
   
-  // NUEVO: Hook separado para usuarios conectados y actividades
-  const { connectedUsers, loading: usersLoading, formatTimeAgo } = useConnectedUsers();
+  // Hook de usuarios conectados con estados de presencia
+  const { 
+    connectedUsers, 
+    loading: usersLoading, 
+    formatTimeAgo,
+    getPresenceInfo // ← NUEVO: Obtener info de estado
+  } = useConnectedUsers();
+  
   const { recentActivities, loading: activitiesLoading, formatTimeAgo: formatActivityTime } = useRecentActivities();
+  
+  // ← NUEVO: Hook para mantener presencia activa
+  usePresence();
   
   const getCurrentGreeting = () => {
     const hour = new Date().getHours();
@@ -39,7 +50,6 @@ const Dashboard = () => {
     });
   };
 
-  // Función para obtener el icono del rol
   const getRoleIcon = (role) => {
     switch(role) {
       case 'Docente': return '👨‍🏫';
@@ -76,7 +86,6 @@ const Dashboard = () => {
         
         {/* Header Section */}
         <div className="flex justify-between items-start mb-8">
-          {/* Welcome Section */}
           <div className="flex-1">
             <div className="flex items-center mb-2">
               <h1 className="text-3xl font-bold text-white">
@@ -92,7 +101,6 @@ const Dashboard = () => {
             </p>
           </div>
 
-          {/* Settings Icon */}
           <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
             <span className="text-2xl text-gray-400">⚙️</span>
           </button>
@@ -139,10 +147,10 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* NUEVA SECCIÓN: Dos columnas separadas */}
+          {/* SECCIÓN: Dos columnas separadas */}
           <div className="w-96 space-y-6">
             
-            {/* Usuarios Conectados */}
+            {/* Usuarios Conectados - CON ESTADOS DE PRESENCIA */}
             <div>
               <h2 className="text-lg font-bold text-white mb-4">Usuarios conectados</h2>
               <div className="bg-gray-800 rounded-2xl p-4">
@@ -162,22 +170,35 @@ const Dashboard = () => {
                   </div>
                 ) : connectedUsers.length > 0 ? (
                   <div className="space-y-3">
-                    {connectedUsers.slice(0, 4).map((user) => (
-                      <div key={user._id} className="flex items-center justify-between">
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs">{getRoleIcon(user.role)}</span>
-                            <p className="font-semibold text-white text-sm">
-                              {user.name} {user.lastName}
+                    {connectedUsers.slice(0, 4).map((userActivity) => {
+                      const presenceInfo = getPresenceInfo(userActivity.presenceStatus);
+                      return (
+                        <div key={userActivity._id} className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs">{getRoleIcon(userActivity.role)}</span>
+                              <p className="font-semibold text-white text-sm">
+                                {userActivity.name} {userActivity.lastName}
+                              </p>
+                            </div>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <p className="text-xs text-gray-400">{userActivity.role}</p>
+                              <span className="text-xs text-gray-500">•</span>
+                              <p className="text-xs text-gray-400">{presenceInfo.label}</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end space-y-1">
+                            {/* Indicador de presencia con animación */}
+                            <div className={`w-3 h-3 rounded-full ${presenceInfo.color} ${
+                              userActivity.presenceStatus === 'online' ? 'animate-pulse' : ''
+                            } shadow-lg`}></div>
+                            <p className="text-xs text-gray-500">
+                              {formatTimeAgo(userActivity.lastHeartbeat)}
                             </p>
                           </div>
-                          <p className="text-xs text-gray-400">{user.role}</p>
                         </div>
-                        <div className={`w-2 h-2 rounded-full ${
-                          user.isOnline ? 'bg-green-500' : 'bg-gray-500'
-                        }`}></div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-2">
@@ -185,12 +206,34 @@ const Dashboard = () => {
                   </div>
                 )}
                 
-                {/* Footer usuarios conectados */}
+                {/* Footer usuarios conectados con conteo por estado */}
                 {!usersLoading && connectedUsers.length > 0 && (
                   <div className="mt-3 pt-2 border-t border-gray-700">
-                    <p className="text-xs text-gray-400 text-center">
-                      {connectedUsers.filter(u => u.isOnline).length} usuarios en línea
-                    </p>
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          <span className="text-gray-400">
+                            {connectedUsers.filter(u => u.presenceStatus === 'online').length}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                          <span className="text-gray-400">
+                            {connectedUsers.filter(u => u.presenceStatus === 'away').length}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 rounded-full bg-gray-500"></div>
+                          <span className="text-gray-400">
+                            {connectedUsers.filter(u => u.presenceStatus === 'offline').length}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-gray-500">
+                        {connectedUsers.length} total
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>

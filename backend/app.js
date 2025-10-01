@@ -19,6 +19,7 @@ import stagesRoutes from "./src/routes/stages.js";
 import userActivitiesRoutes from "./src/routes/userActivities.js";
 import rubricRoutes from "./src/routes/rubric.js";
 import evaluationsRoutes from "./src/routes/evaluations.js";
+import heartbeatRoutes from "./src/routes/heartbeat.js";
 
 // Importar middlewares
 import { authenticateToken } from "./src/middlewares/auth.js";
@@ -90,6 +91,7 @@ app.use("/api/stages", authenticateToken, stagesRoutes);
 app.use("/api/user-activities", authenticateToken, userActivitiesRoutes);
 app.use("/api/rubrics", authenticateToken, rubricRoutes);
 app.use("/api/evaluations", authenticateToken, evaluationsRoutes);
+app.use("/api/heartbeat", authenticateToken, heartbeatRoutes);
 
 // Ruta de verificación de estado de autenticación
 app.get("/api/auth/verify", authenticateToken, (req, res) => {

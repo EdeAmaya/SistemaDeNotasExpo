@@ -1,10 +1,11 @@
+// backend/src/controllers/userActivityController.js
 const userActivityController = {};
 import ActivityLogger from "../utils/activityLogger.js";
 
-// Obtener usuarios conectados (solo logins recientes)
+// Obtener usuarios conectados con estado de presencia
 userActivityController.getConnectedUsers = async (req, res) => {
     try {
-        const hoursAgo = req.query.hours || 2; // Últimas 2 horas por defecto
+        const hoursAgo = req.query.hours || 2;
         const connectedUsers = await ActivityLogger.getConnectedUsers(hoursAgo);
         
         const formattedUsers = connectedUsers.map(activity => ({
@@ -13,8 +14,8 @@ userActivityController.getConnectedUsers = async (req, res) => {
             lastName: activity.user.lastName,
             email: activity.user.email,
             role: activity.user.role,
-            lastLoginTime: activity.lastLoginTime,
-            isOnline: isRecentlyActive(activity.lastLoginTime, 30) // Últimos 30 min
+            lastHeartbeat: activity.lastHeartbeat,
+            presenceStatus: activity.presenceStatus // ← NUEVO: Estado de presencia
         }));
         
         res.json(formattedUsers);
@@ -27,11 +28,11 @@ userActivityController.getConnectedUsers = async (req, res) => {
     }
 };
 
-// NUEVO: Obtener actividades recientes con filtro por rol del usuario
+// Obtener actividades recientes con filtro por rol del usuario
 userActivityController.getRecentActivities = async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
-        const userRole = req.user.role; // Obtener rol del usuario autenticado
+        const userRole = req.user.role;
         
         const activities = await ActivityLogger.getRecentActivitiesByRole(userRole, limit);
         
@@ -60,12 +61,6 @@ userActivityController.getRecentActivities = async (req, res) => {
             error: error.message 
         });
     }
-};
-
-// Función auxiliar para determinar si está activo recientemente
-const isRecentlyActive = (lastActivityTime, minutesThreshold = 30) => {
-    const thresholdTime = new Date(Date.now() - minutesThreshold * 60 * 1000);
-    return new Date(lastActivityTime) > thresholdTime;
 };
 
 export default userActivityController;

@@ -24,7 +24,8 @@ const activityLogSchema = new Schema({
             'UPDATE_STAGE',
             'DELETE_STAGE',
             'LOGIN',
-            'LOGOUT'
+            'LOGOUT',
+            'HEARTBEAT' // ← NUEVO: Para mantener presencia activa
         ]
     },
     
@@ -35,7 +36,7 @@ const activityLogSchema = new Schema({
     
     targetModel: {
         type: String,
-        enum: ['Project', 'Student', 'User', 'Stage', 'Auth']
+        enum: ['Project', 'Student', 'User', 'Stage', 'Auth', 'Presence'] // ← NUEVO: Presence
     },
     
     targetId: {
@@ -43,7 +44,7 @@ const activityLogSchema = new Schema({
     },
     
     metadata: {
-        type: Schema.Types.Mixed // Para datos adicionales
+        type: Schema.Types.Mixed
     },
     
     ipAddress: {
@@ -52,6 +53,17 @@ const activityLogSchema = new Schema({
     
     userAgent: {
         type: String
+    },
+    
+    // ← NUEVO: Campos para presencia
+    lastHeartbeat: {
+        type: Date,
+        default: Date.now
+    },
+    
+    isActive: {
+        type: Boolean,
+        default: true
     }
 
 }, {
@@ -62,5 +74,6 @@ const activityLogSchema = new Schema({
 activityLogSchema.index({ userId: 1, createdAt: -1 });
 activityLogSchema.index({ action: 1 });
 activityLogSchema.index({ createdAt: -1 });
+activityLogSchema.index({ userId: 1, lastHeartbeat: -1 }); // ← NUEVO: Para consultas de presencia
 
 export default model("ActivityLog", activityLogSchema);

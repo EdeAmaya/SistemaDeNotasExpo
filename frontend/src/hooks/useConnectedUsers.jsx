@@ -1,3 +1,4 @@
+// frontend/src/hooks/useConnectedUsers.jsx
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
@@ -7,7 +8,7 @@ const useConnectedUsers = () => {
   const [error, setError] = useState(null);
   const { fetchWithCookies, API } = useAuth();
 
-  // Función para obtener usuarios conectados (solo logins recientes)
+  // Función para obtener usuarios conectados con su estado de presencia
   const fetchConnectedUsers = async () => {
     try {
       setLoading(true);
@@ -45,11 +46,41 @@ const useConnectedUsers = () => {
     return 'Hace más de 1 semana';
   };
 
+  // Obtener información del estado de presencia
+  const getPresenceInfo = (presenceStatus) => {
+    switch(presenceStatus) {
+      case 'online':
+        return {
+          color: 'bg-green-500',
+          label: 'En línea',
+          icon: '🟢'
+        };
+      case 'away':
+        return {
+          color: 'bg-orange-500',
+          label: 'Ausente',
+          icon: '🟠'
+        };
+      case 'offline':
+        return {
+          color: 'bg-gray-500',
+          label: 'Desconectado',
+          icon: '⚫'
+        };
+      default:
+        return {
+          color: 'bg-gray-400',
+          label: 'Desconocido',
+          icon: '❓'
+        };
+    }
+  };
+
   useEffect(() => {
     fetchConnectedUsers();
     
-    // Actualizar cada 2 minutos
-    const interval = setInterval(fetchConnectedUsers, 2 * 60 * 1000);
+    // Actualizar cada 30 segundos para reflejar cambios de estado
+    const interval = setInterval(fetchConnectedUsers, 30 * 1000);
     
     return () => clearInterval(interval);
   }, []);
@@ -59,7 +90,8 @@ const useConnectedUsers = () => {
     loading,
     error,
     refreshUsers: fetchConnectedUsers,
-    formatTimeAgo
+    formatTimeAgo,
+    getPresenceInfo
   };
 };
 
