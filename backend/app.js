@@ -17,6 +17,8 @@ import projectsRoutes from "./src/routes/projects.js";
 import activitiesRoutes from "./src/routes/activities.js";
 import stagesRoutes from "./src/routes/stages.js";
 import userActivitiesRoutes from "./src/routes/userActivities.js";
+import rubricRoutes from "./src/routes/rubric.js";
+import evaluationsRoutes from "./src/routes/evaluations.js";
 
 // Importar middlewares
 import { authenticateToken } from "./src/middlewares/auth.js";
@@ -39,7 +41,7 @@ const corsOptions = {
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log('❌ Origin no permitido:', origin);
+      console.log('Origin no permitido:', origin);
       callback(new Error('No permitido por CORS'));
     }
   },
@@ -86,6 +88,8 @@ app.use("/api/projects", authenticateToken, projectsRoutes);
 app.use("/api/activities", authenticateToken, activitiesRoutes);
 app.use("/api/stages", authenticateToken, stagesRoutes);
 app.use("/api/user-activities", authenticateToken, userActivitiesRoutes);
+app.use("/api/rubrics", authenticateToken, rubricRoutes);
+app.use("/api/evaluations", authenticateToken, evaluationsRoutes);
 
 // Ruta de verificación de estado de autenticación
 app.get("/api/auth/verify", authenticateToken, (req, res) => {
@@ -104,8 +108,8 @@ app.get("/api/auth/verify", authenticateToken, (req, res) => {
 
 // Ruta de prueba PÚBLICA (sin autenticación)
 app.get("/api/test", (req, res) => {
-  console.log('🧪 Test endpoint alcanzado');
-  console.log('🍪 Cookies en test:', req.cookies);
+  console.log('Test endpoint alcanzado');
+  console.log('Cookies en test:', req.cookies);
   res.json({ 
     message: "API del sistema de notas funcionando correctamente",
     timestamp: new Date().toISOString(),
@@ -115,7 +119,7 @@ app.get("/api/test", (req, res) => {
 
 // Middleware de manejo de errores
 app.use((err, req, res, next) => {
-  console.error('❌ Error:', err);
+  console.error('Error:', err);
   res.status(500).json({ 
     message: "Error interno del servidor",
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
