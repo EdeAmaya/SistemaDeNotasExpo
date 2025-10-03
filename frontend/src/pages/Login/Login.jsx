@@ -14,7 +14,6 @@ const Login = () => {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Redirigir si ya está autenticado
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
@@ -55,120 +54,126 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 flex items-center justify-center px-4">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <div className="mx-auto w-24 h-24 mb-6">
-            <div className="w-full h-full rounded-full border-4 border-yellow-400 bg-gradient-to-r from-yellow-400 via-red-500 to-red-600 flex items-center justify-center relative overflow-hidden shadow-2xl">
-              {/* Logo Salesianos */}
-              <div className="w-16 h-16 bg-black rounded-full relative">
-                <div className="absolute top-1 left-2 w-12 h-12 bg-yellow-300 rounded-full opacity-80"></div>
-                <div className="absolute top-2 left-3 w-3 h-3 bg-black rounded-full"></div>
-                <div className="absolute bottom-1 left-1 w-14 h-6 bg-black rounded-t-full"></div>
-              </div>
-            </div>
-          </div>
-          <h2 className="text-4xl font-black text-white mb-2">
-            Salesianos Ricaldone
-          </h2>
-          <p className="text-blue-200 text-lg font-medium">
-            Sistema de Gestión Académica
-          </p>
+    <div className="min-h-screen bg-gray-200 flex items-center justify-center relative overflow-hidden">
+      
+      {/* ESQUINA SUPERIOR IZQUIERDA - Rectángulo amarillo */}
+      <div className="absolute top-0 left-0 w-44 h-44 bg-yellow-400">
+        {/* Círculo blanco con borde */}
+        <div className="absolute top-16 left-12 w-10 h-10 border-4 border-white rounded-full"></div>
+        {/* Círculo rojo sólido */}
+        <div className="absolute top-24 left-24 w-8 h-8 bg-red-600 rounded-full"></div>
+      </div>
+
+      {/* ESQUINA SUPERIOR DERECHA - Círculo amarillo grande */}
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-yellow-400 rounded-full">
+        {/* Círculo rojo-naranja con borde dentro */}
+        <div className="absolute bottom-32 left-32 w-16 h-16 border-4 border-red-500 rounded-full"></div>
+      </div>
+
+      {/* ESQUINA INFERIOR IZQUIERDA - Círculo amarillo grande */}
+      <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-yellow-400 rounded-full"></div>
+
+      {/* ESQUINA INFERIOR DERECHA - Rectángulo amarillo */}
+      <div className="absolute bottom-0 right-0 w-80 h-80 bg-yellow-400">
+        {/* Círculo blanco con borde */}
+        <div className="absolute top-24 left-24 w-20 h-20 border-4 border-white rounded-full"></div>
+      </div>
+
+      {/* BARRA ROJA DERECHA */}
+      <div className="absolute top-0 right-0 w-20 h-full bg-red-500">
+        {/* Tres puntos blancos verticales */}
+        <div className="absolute top-40 left-6 space-y-4">
+          <div className="w-3 h-3 bg-white rounded-full"></div>
+          <div className="w-3 h-3 bg-white rounded-full"></div>
+          <div className="w-3 h-3 bg-white rounded-full"></div>
         </div>
+      </div>
 
-        {/* Formulario de Login */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border-4 border-blue-100">
-          <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold text-blue-800 mb-2">Iniciar Sesión</h3>
-            <div className="h-1 bg-gradient-to-r from-blue-600 via-blue-400 to-blue-600 rounded-full max-w-xs mx-auto"></div>
+      {/* CÍRCULOS DECORATIVOS DISPERSOS */}
+      {/* Círculo rojo borde - izquierda medio */}
+      <div className="absolute top-56 left-12 w-14 h-14 border-4 border-red-500 rounded-full"></div>
+      
+      {/* Círculo rojo sólido - centro izquierda */}
+      <div className="absolute top-96 left-80 w-16 h-16 bg-red-600 rounded-full"></div>
+      
+      {/* Círculo rojo sólido - centro derecha abajo */}
+      <div className="absolute bottom-48 right-96 w-20 h-20 bg-red-600 rounded-full"></div>
+      
+      {/* Círculo rojo borde - derecha medio */}
+      <div className="absolute top-1/2 right-64 w-16 h-16 border-4 border-red-500 rounded-full"></div>
+
+      {/* TARJETA CENTRAL */}
+      <div className="relative z-10 w-full max-w-md px-4">
+        <div className="bg-white rounded-3xl shadow-2xl p-12">
+          
+          {/* Título */}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-blue-800 mb-1">TÉCNICO</h2>
+            <h2 className="text-3xl font-bold text-blue-800 mb-6">CIENTÍFICO</h2>
+            
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">
+              ¡Bienvenido al Sistema de<br />Notas PTC!
+            </h1>
+            <p className="text-gray-600">
+              Accede al Sistema con tus credenciales.
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Campo Email */}
-            <div>
-              <label className="flex items-center space-x-2 text-blue-800 font-bold text-sm mb-2">
-                <span className="bg-blue-600 text-white p-1 rounded-full text-xs">📧</span>
-                <span>Correo Electrónico</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 text-gray-800"
-                  placeholder="usuario@ricaldone.edu.sv"
-                  required
-                />
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                  <span className="text-blue-400">✉️</span>
-                </div>
-              </div>
-            </div>
+          {/* Formulario */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            
+            {/* Campo Usuario */}
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-6 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-gray-400 bg-white text-gray-700 placeholder-gray-400"
+              placeholder="Usuario"
+              required
+            />
 
             {/* Campo Contraseña */}
-            <div>
-              <label className="flex items-center space-x-2 text-blue-800 font-bold text-sm mb-2">
-                <span className="bg-blue-600 text-white p-1 rounded-full text-xs">🔒</span>
-                <span>Contraseña</span>
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 text-gray-800"
-                  placeholder="Tu contraseña"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center text-blue-400 hover:text-blue-600"
-                >
-                  {showPassword ? '🙈' : '👁️'}
-                </button>
-              </div>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full px-6 py-3 pr-12 border border-gray-300 rounded-full focus:outline-none focus:border-gray-400 bg-white text-gray-700 placeholder-gray-400"
+                placeholder="Contraseña"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                </svg>
+              </button>
             </div>
 
-            {/* Botón de Login */}
+            {/* Botón Acceder */}
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 px-4 rounded-xl font-bold text-lg shadow-lg transform transition-all duration-300 ${
+              className={`w-full py-3 rounded-full font-bold text-white uppercase tracking-wide transition-all ${
                 isLoading
                   ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:scale-105 shadow-xl'
-              } text-white`}
+                  : 'bg-yellow-500 hover:bg-yellow-600'
+              }`}
             >
-              {isLoading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Iniciando sesión...</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center space-x-2">
-                  <span>🚀</span>
-                  <span>Iniciar Sesión</span>
-                </div>
-              )}
+              {isLoading ? 'Verificando...' : 'ACCEDER'}
             </button>
           </form>
-
-          {/* Enlaces adicionales */}
-          <div className="mt-6 text-center space-y-4">
-            <div className="text-sm text-gray-600">
-              ¿No tienes cuenta? Contacta al administrador
-            </div>
-            
-          </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center text-blue-200 text-sm">
-          <p>© 2024 Instituto Técnico Ricaldone - Salesianos de Don Bosco</p>
+        <div className="text-center mt-6 text-gray-600 text-sm">
+          © 2024 Instituto Técnico Ricaldone
         </div>
       </div>
     </div>

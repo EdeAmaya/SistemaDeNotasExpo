@@ -1,9 +1,10 @@
 import React from "react";
+import { GraduationCap, Award, Briefcase, User, Mail, Calendar, Edit2, Trash2, BookOpen, FileText, CheckCircle, XCircle } from 'lucide-react';
 
-const StudentCard = ({ student, deleteStudent, updateStudent }) => {
+const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' }) => {
   
   const handleDelete = () => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este estudiante?')) {
+    if (window.confirm(`¿Eliminar a ${student.name} ${student.lastName}?`)) {
       deleteStudent(student._id);
     }
   };
@@ -12,126 +13,253 @@ const StudentCard = ({ student, deleteStudent, updateStudent }) => {
     updateStudent(student);
   };
 
-  // Función para obtener el nombre del proyecto
-  const getProjectName = (project) => {
-    if (!project) return null;
-    return project.projectName || project.title || project.name || `Proyecto ${project.projectId || project._id}`;
-  };
-
-  // Función para obtener el nombre del nivel
   const getLevelName = (level) => {
     if (!level) return 'No asignado';
     return level.name || level.levelName || 'Nivel no definido';
   };
 
-  // Función para obtener el nombre de la sección
   const getSectionName = (section) => {
     if (!section) return 'No asignada';
     return section.name || section.sectionName || 'Sección no definida';
   };
 
-  // Función para obtener el nombre de la especialidad
   const getSpecialtyName = (specialty) => {
     if (!specialty) return null;
     return specialty.name || specialty.specialtyName || 'Especialidad no definida';
   };
 
-  return (
-    <div className="group max-w-sm mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden border-4 border-green-100 hover:border-green-300 transform hover:scale-105 transition-all duration-500 hover:shadow-3xl">
-      {/* Header del estudiante */}
-      <div className="relative bg-gradient-to-r from-green-400 to-green-600 p-6">
-        <div className="text-center">
-          <div className="bg-white rounded-full w-20 h-20 mx-auto flex items-center justify-center shadow-lg mb-4">
-            <span className="text-4xl">🎓</span>
-          </div>
-          <h2 className="text-white font-black text-xl">
-            {student.name} {student.lastName}
-          </h2>
-          <p className="text-white/90 font-medium">Código: {student.studentCode}</p>
-        </div>
+  const getProjectName = (project) => {
+    if (!project) return null;
+    return project.projectName || project.title || project.name || `Proyecto ${project.projectId || project._id}`;
+  };
+
+  // Vista de Lista (Horizontal)
+  if (viewMode === 'list') {
+    return (
+      <div className="group relative bg-white rounded-xl shadow-sm hover:shadow-lg border-2 border-gray-100 hover:border-gray-200 transition-all duration-300 overflow-hidden">
         
-        {/* Badge de proyecto */}
-        <div className="absolute top-4 right-4">
-          <span className={`px-2 py-1 text-xs font-bold rounded-full ${
-            student.projectId 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-orange-500 text-white'
-          }`}>
-            {student.projectId ? '📚 Con Proyecto' : '📋 Sin Proyecto'}
-          </span>
-        </div>
-      </div>
-      
-      <div className="px-6 py-6 bg-gradient-to-b from-white to-green-50">
-        {/* Información académica */}
-        <div className="space-y-3 mb-6">
-          <div className="bg-green-100 p-3 rounded-lg">
-            <div className="text-green-600 text-sm font-bold mb-1">📚 Nivel</div>
-            <div className="text-green-800 font-medium">
-              {getLevelName(student.idLevel)}
-            </div>
-          </div>
+        {/* Barra lateral colorida */}
+        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+          student.projectId 
+            ? 'bg-gradient-to-b from-green-500 via-green-600 to-green-700'
+            : 'bg-gradient-to-b from-orange-500 via-orange-600 to-orange-700'
+        }`}></div>
+        
+        <div className="pl-4 pr-5 py-4 flex items-center gap-5">
           
-          <div className="bg-blue-100 p-3 rounded-lg">
-            <div className="text-blue-600 text-sm font-bold mb-1">📁 Sección</div>
-            <div className="text-blue-800 font-medium">
-              {getSectionName(student.idSection)}
-            </div>
+          {/* Avatar con icono */}
+          <div className={`relative flex-shrink-0 w-16 h-16 rounded-xl ${
+            student.projectId
+              ? 'bg-gradient-to-br from-green-500 via-green-600 to-green-700'
+              : 'bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700'
+          } flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
+            <GraduationCap className="w-8 h-8 text-white" />
+            
+            {/* Indicador de proyecto */}
+            {student.projectId ? (
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center">
+                <Briefcase className="w-3 h-3 text-white" />
+              </div>
+            ) : (
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-500 rounded-full border-2 border-white flex items-center justify-center">
+                <XCircle className="w-3 h-3 text-white" />
+              </div>
+            )}
           </div>
 
-          {student.idSpecialty && (
-            <div className="bg-purple-100 p-3 rounded-lg">
-              <div className="text-purple-600 text-sm font-bold mb-1">🏆 Especialidad</div>
-              <div className="text-purple-800 font-medium">
-                {getSpecialtyName(student.idSpecialty)}
-              </div>
+          {/* Información del estudiante */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-1">
+              <h3 className="text-lg font-black text-gray-900 truncate group-hover:text-green-600 transition-colors">
+                {student.name} {student.lastName}
+              </h3>
+              
+              {/* Badge de código */}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-800 rounded-lg text-xs font-bold shadow-sm">
+                <FileText className="w-3.5 h-3.5" />
+                <span>{student.studentCode}</span>
+              </span>
             </div>
-          )}
 
-          {student.projectId && (
-            <div className="bg-yellow-100 p-3 rounded-lg">
-              <div className="text-yellow-600 text-sm font-bold mb-1">🚀 Proyecto</div>
-              <div className="text-yellow-800 font-medium">
-                {getProjectName(student.projectId)}
+            {/* Info académica */}
+            <div className="flex items-center gap-4 text-sm flex-wrap">
+              <div className="flex items-center gap-1.5 text-gray-600">
+                <BookOpen className="w-4 h-4" />
+                <span className="font-medium">{getLevelName(student.idLevel)}</span>
               </div>
-              {/* Mostrar también el ID del proyecto como información adicional */}
-              {student.projectId.projectId && (
-                <div className="text-yellow-600 text-xs mt-1">
-                  ID: {student.projectId.projectId}
+              <div className="flex items-center gap-1.5 text-gray-600">
+                <FileText className="w-4 h-4" />
+                <span className="font-medium">{getSectionName(student.idSection)}</span>
+              </div>
+              {student.idSpecialty && (
+                <div className="flex items-center gap-1.5 text-purple-600">
+                  <Award className="w-4 h-4" />
+                  <span className="font-medium text-xs">{getSpecialtyName(student.idSpecialty)}</span>
                 </div>
               )}
             </div>
-          )}
+          </div>
 
-          <div className="bg-gray-100 p-3 rounded-lg">
-            <div className="text-gray-600 text-sm font-bold mb-1">📅 Registrado</div>
-            <div className="text-gray-800 font-medium">
-              {new Date(student.createdAt).toLocaleDateString('es-ES')}
-            </div>
+          {/* Botones de acción */}
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <button
+              onClick={handleEdit}
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-sm shadow-sm hover:shadow-md transition-all duration-200"
+              title="Editar estudiante"
+            >
+              <span className="flex items-center gap-1.5">
+                <Edit2 className="w-4 h-4" />
+                <span className="hidden xl:inline">Editar</span>
+              </span>
+            </button>
+            
+            <button
+              onClick={handleDelete}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-sm shadow-sm hover:shadow-md transition-all duration-200"
+              title="Eliminar estudiante"
+            >
+              <span className="flex items-center gap-1.5">
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden xl:inline">Eliminar</span>
+              </span>
+            </button>
           </div>
         </div>
+
+        {/* Barra de progreso inferior en hover */}
+        <div className={`h-0.5 ${
+          student.projectId
+            ? 'bg-gradient-to-r from-green-500 via-green-600 to-green-700'
+            : 'bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700'
+        } transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500`}></div>
+      </div>
+    );
+  }
+
+  // Vista de Tarjetas (Grid)
+  return (
+    <div className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl border-2 border-gray-100 hover:border-gray-200 transition-all duration-300 overflow-hidden">
+      
+      {/* Header con gradiente */}
+      <div className={`relative ${
+        student.projectId
+          ? 'bg-gradient-to-r from-green-500 via-green-600 to-green-700'
+          : 'bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700'
+      } p-6 text-white`}>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="mb-3">
+              <GraduationCap className="w-12 h-12" />
+            </div>
+            <h3 className="text-xl font-black mb-1">{student.name} {student.lastName}</h3>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-xs font-bold">
+              <FileText className="w-3 h-3" />
+              {student.studentCode}
+            </div>
+          </div>
+          
+          {/* Badge de proyecto */}
+          {student.projectId ? (
+            <div className="flex-shrink-0 w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+              <Briefcase className="w-6 h-6" />
+            </div>
+          ) : (
+            <div className="flex-shrink-0 w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center shadow-lg">
+              <XCircle className="w-6 h-6" />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Body del card */}
+      <div className="p-6 space-y-4">
         
+        {/* Nivel */}
+        <div className="flex items-center gap-2 text-gray-700">
+          <BookOpen className="w-5 h-5 text-green-500" />
+          <div>
+            <div className="text-xs text-gray-500 font-semibold">Nivel</div>
+            <div className="text-sm font-bold">{getLevelName(student.idLevel)}</div>
+          </div>
+        </div>
+
+        {/* Sección */}
+        <div className="flex items-center gap-2 text-gray-700">
+          <FileText className="w-5 h-5 text-blue-500" />
+          <div>
+            <div className="text-xs text-gray-500 font-semibold">Sección</div>
+            <div className="text-sm font-bold">{getSectionName(student.idSection)}</div>
+          </div>
+        </div>
+
+        {/* Especialidad */}
+        {student.idSpecialty && (
+          <div className="flex items-center gap-2 text-gray-700">
+            <Award className="w-5 h-5 text-purple-500" />
+            <div>
+              <div className="text-xs text-gray-500 font-semibold">Especialidad</div>
+              <div className="text-sm font-bold">{getSpecialtyName(student.idSpecialty)}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Proyecto */}
+        {student.projectId ? (
+          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg bg-blue-50 border-2 border-blue-200`}>
+            <Briefcase className="w-5 h-5 text-blue-600" />
+            <div className="flex-1">
+              <div className="text-xs text-blue-600 font-semibold">Proyecto Asignado</div>
+              <div className="text-sm font-bold text-blue-800">{getProjectName(student.projectId)}</div>
+            </div>
+          </div>
+        ) : (
+          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg bg-orange-50 border-2 border-orange-200`}>
+            <XCircle className="w-5 h-5 text-orange-600" />
+            <div className="flex-1">
+              <div className="text-xs text-orange-600 font-semibold">Sin Proyecto</div>
+              <div className="text-sm font-bold text-orange-800">No asignado</div>
+            </div>
+          </div>
+        )}
+
+        {/* Fecha de creación */}
+        <div className="flex items-center gap-2 text-gray-500">
+          <Calendar className="w-5 h-5" />
+          <span className="text-xs font-medium">
+            Creado el {new Date(student.createdAt).toLocaleDateString('es-ES', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric'
+            })}
+          </span>
+        </div>
+
         {/* Botones de acción */}
-        <div className="flex gap-3">
-          <button
-            onClick={handleDelete}
-            className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-red-400 flex items-center justify-center space-x-2"
-          >
-            <span>🗑️</span>
-            <span>Eliminar</span>
-          </button>
+        <div className="flex gap-3 pt-2">
           <button
             onClick={handleEdit}
-            className="flex-1 bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-green-300 flex items-center justify-center space-x-2"
+            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2.5 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
           >
-            <span>✏️</span>
+            <Edit2 className="w-4 h-4" />
             <span>Editar</span>
+          </button>
+          
+          <button
+            onClick={handleDelete}
+            className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Eliminar</span>
           </button>
         </div>
       </div>
 
-      {/* Elemento decorativo inferior */}
-      <div className="h-2 bg-gradient-to-r from-green-600 via-green-400 to-green-600"></div>
+      {/* Footer decorativo */}
+      <div className={`h-2 ${
+        student.projectId
+          ? 'bg-gradient-to-r from-green-500 via-green-600 to-green-700'
+          : 'bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700'
+      }`}></div>
     </div>
   );
 };

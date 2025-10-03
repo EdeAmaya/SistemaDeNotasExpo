@@ -1,5 +1,5 @@
-// ====== Students.jsx (Página principal) ======
 import React, { useState } from 'react';
+import { GraduationCap, UserPlus, BookOpen, Users, Award, Briefcase, Info } from 'lucide-react';
 import ListStudents from './components/ListStudents';
 import RegisterStudent from './components/RegisterStudent';
 import useDataStudents from './hooks/useDataStudents';
@@ -8,7 +8,6 @@ const Students = () => {
   const [activeTab, setActiveTab] = useState('list');
   
   const {
-    // Estados
     students,
     loading,
     id,
@@ -19,8 +18,6 @@ const Students = () => {
     idSection,
     idSpecialty,
     projectId,
-    
-    // Setters
     setStudentCode,
     setName,
     setLastName,
@@ -28,8 +25,6 @@ const Students = () => {
     setIdSection,
     setIdSpecialty,
     setProjectId,
-    
-    // Funciones
     saveStudent,
     deleteStudent,
     updateStudent,
@@ -49,68 +44,126 @@ const Students = () => {
     setActiveTab('list');
   };
 
+  const stats = {
+    total: students.length,
+    withProject: students.filter(s => s.projectId).length,
+    withoutProject: students.filter(s => !s.projectId).length,
+    withSpecialty: students.filter(s => s.idSpecialty).length,
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 text-white py-8 shadow-2xl">
-        <div className="max-w-6xl mx-auto px-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
+      
+      {/* Header Superior */}
+      <div className="bg-white border-b-2 border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="bg-white text-green-700 p-4 rounded-full shadow-lg">
-                <span className="text-3xl">🎓</span>
+            
+            <div>
+              <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                <span>Sistema</span>
+                <span>›</span>
+                <span className="text-green-600 font-semibold">Gestión de Estudiantes</span>
               </div>
-              <div>
-                <h1 className="text-4xl font-black tracking-wide drop-shadow-lg">
-                  Estudiantes Comunes
+              <div className="flex items-center gap-3">
+                <GraduationCap className="w-8 h-8 text-gray-900" />
+                <h1 className="text-3xl font-black text-gray-900">
+                  Estudiantes del Centro
                 </h1>
-                <p className="text-green-200 text-lg font-medium mt-1">
-                  Gestión de estudiantes del centro educativo
-                </p>
               </div>
             </div>
-          </div>
-        </div>
-        
-        {/* Nota explicativa en el header */}
-        <div className="max-w-6xl mx-auto px-6 mt-4">
-          <div className="bg-green-800/50 backdrop-blur-sm border border-green-400/30 p-4 rounded-lg">
-            <p className="text-green-100 text-sm font-medium">
-              <span className="font-bold">💡 Estudiantes Comunes:</span> Registros académicos para gestión de proyectos, niveles y secciones. 
-              Para usuarios estudiantes con acceso al sistema, consulta la sección <strong>"Usuarios"</strong>.
-            </p>
+
+            <div className="hidden lg:flex items-center gap-4">
+              <div className="bg-gradient-to-br from-green-500 to-green-600 text-white px-4 py-3 rounded-xl shadow-lg">
+                <div className="flex items-center justify-center mb-1">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div className="text-2xl font-black text-center">{stats.total}</div>
+                <div className="text-xs font-semibold opacity-90 text-center">Total</div>
+              </div>
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl shadow-lg">
+                <div className="flex items-center justify-center mb-1">
+                  <Briefcase className="w-5 h-5" />
+                </div>
+                <div className="text-2xl font-black text-center">{stats.withProject}</div>
+                <div className="text-xs font-semibold opacity-90 text-center">Con Proyecto</div>
+              </div>
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white px-4 py-3 rounded-xl shadow-lg">
+                <div className="flex items-center justify-center mb-1">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div className="text-2xl font-black text-center">{stats.withSpecialty}</div>
+                <div className="text-xs font-semibold opacity-90 text-center">Especialidad</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="max-w-6xl mx-auto px-6 -mt-4">
-        <div className="bg-white rounded-t-lg shadow-lg">
-          <div className="flex">
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="flex gap-1">
             <button
               onClick={() => handleTabChange('list')}
-              className={`flex-1 py-4 px-6 font-bold text-center transition-colors ${
-                activeTab === 'list'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              className={`relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
+                activeTab === 'list' ? 'text-green-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              📚 Estudiantes Comunes
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                <span>Lista de Estudiantes</span>
+                <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-black">
+                  {stats.total}
+                </span>
+              </div>
+              {activeTab === 'list' && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-green-600 rounded-t-full"></div>
+              )}
             </button>
+            
             <button
               onClick={() => handleTabChange('register')}
-              className={`flex-1 py-4 px-6 font-bold text-center transition-colors ${
-                activeTab === 'register'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              className={`relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
+                activeTab === 'register' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              {id ? '✏️ Editar Estudiante' : '➕ Registrar Estudiante'}
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5" />
+                <span>{id ? 'Editar Estudiante' : 'Nuevo Estudiante'}</span>
+              </div>
+              {activeTab === 'register' && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-full"></div>
+              )}
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Content */}
-        <div className="bg-white rounded-b-lg shadow-lg p-6">
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-8 py-8">
+        
+        {/* Stats móvil */}
+        <div className="lg:hidden grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-3 rounded-xl shadow-lg text-center">
+            <Users className="w-5 h-5 mx-auto mb-1" />
+            <div className="text-xl font-black">{stats.total}</div>
+            <div className="text-xs font-semibold opacity-90">Total</div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-3 rounded-xl shadow-lg text-center">
+            <Briefcase className="w-5 h-5 mx-auto mb-1" />
+            <div className="text-xl font-black">{stats.withProject}</div>
+            <div className="text-xs font-semibold opacity-90">Proyecto</div>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-3 rounded-xl shadow-lg text-center">
+            <Award className="w-5 h-5 mx-auto mb-1" />
+            <div className="text-xl font-black">{stats.withSpecialty}</div>
+            <div className="text-xs font-semibold opacity-90">Especial.</div>
+          </div>
+        </div>
+
+        {/* Contenido */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
           {activeTab === 'list' ? (
             <ListStudents 
               students={students}
@@ -122,55 +175,53 @@ const Students = () => {
               }}
             />
           ) : (
-            <RegisterStudent
-              studentCode={studentCode}
-              setStudentCode={setStudentCode}
-              name={name}
-              setName={setName}
-              lastName={lastName}
-              setLastName={setLastName}
-              idLevel={idLevel}
-              setIdLevel={setIdLevel}
-              idSection={idSection}
-              setIdSection={setIdSection}
-              idSpecialty={idSpecialty}
-              setIdSpecialty={setIdSpecialty}
-              projectId={projectId}
-              setProjectId={setProjectId}
-              saveStudent={saveStudent}
-              id={id}
-              handleEdit={handleEdit}
-              onCancel={handleCancelEdit}
-            />
+            <div className="p-8">
+              <RegisterStudent
+                studentCode={studentCode}
+                setStudentCode={setStudentCode}
+                name={name}
+                setName={setName}
+                lastName={lastName}
+                setLastName={setLastName}
+                idLevel={idLevel}
+                setIdLevel={setIdLevel}
+                idSection={idSection}
+                setIdSection={setIdSection}
+                idSpecialty={idSpecialty}
+                setIdSpecialty={setIdSpecialty}
+                projectId={projectId}
+                setProjectId={setProjectId}
+                saveStudent={saveStudent}
+                id={id}
+                handleEdit={handleEdit}
+                onCancel={handleCancelEdit}
+              />
+            </div>
           )}
         </div>
-      </div>
 
-      {/* Footer informativo */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="bg-gradient-to-r from-green-100 to-green-200 p-6 rounded-xl border-2 border-green-200 shadow-lg">
-          <div className="flex items-start space-x-3">
-            <span className="text-2xl">📋</span>
-            <div>
-              <h4 className="text-green-800 font-bold text-lg mb-2">Gestión de Estudiantes Comunes:</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-green-700 text-sm font-medium">
-                <div>
-                  <h5 className="font-bold mb-1">📚 Información Académica:</h5>
-                  <ul className="space-y-1">
-                    <li>• Código único de estudiante</li>
-                    <li>• Nivel educativo y sección</li>
-                    <li>• Especialidad (opcional)</li>
-                    <li>• Proyecto asignado (opcional)</li>
-                  </ul>
+        {/* Footer */}
+        <div className="mt-6 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-5 rounded-r-xl">
+          <div className="flex items-start gap-3">
+            <Info className="w-6 h-6 text-green-600 flex-shrink-0" />
+            <div className="flex-1">
+              <h4 className="font-bold text-gray-800 mb-2">Gestión de Estudiantes</h4>
+              <div className="grid md:grid-cols-2 gap-3 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-green-600" />
+                  <span><span className="font-semibold text-gray-800">Nivel y Sección:</span> Organización académica</span>
                 </div>
-                <div>
-                  <h5 className="font-bold mb-1">🎯 Funcionalidades:</h5>
-                  <ul className="space-y-1">
-                    <li>• Registro y edición de datos</li>
-                    <li>• Asignación de proyectos</li>
-                    <li>• Filtros y búsqueda avanzada</li>
-                    <li>• Estadísticas académicas</li>
-                  </ul>
+                <div className="flex items-center gap-2">
+                  <Award className="w-4 h-4 text-purple-600" />
+                  <span><span className="font-semibold text-gray-800">Especialidad:</span> Para bachillerato</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-blue-600" />
+                  <span><span className="font-semibold text-gray-800">Proyectos:</span> Asignación de trabajos</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-green-600" />
+                  <span><span className="font-semibold text-gray-800">Código único:</span> Identificación individual</span>
                 </div>
               </div>
             </div>

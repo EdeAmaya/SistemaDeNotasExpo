@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Lightbulb, Hash, FileText, BookOpen, Users, Award, CheckCircle, XCircle, Edit2, Plus, Info, Loader2, Globe } from 'lucide-react';
 
 const RegisterProject = ({
   projectId, setProjectId,
@@ -262,18 +263,10 @@ const RegisterProject = ({
       
       try {
         const [levelsResponse, sectionsResponse, specialtiesResponse, studentsResponse] = await Promise.all([
-          fetch('http://localhost:4000/api/levels', {
-            credentials: 'include'
-          }),
-          fetch('http://localhost:4000/api/sections', {
-            credentials: 'include'
-          }),
-          fetch('http://localhost:4000/api/specialties', {
-            credentials: 'include'
-          }),
-          fetch('http://localhost:4000/api/students', {
-            credentials: 'include'
-          })
+          fetch('http://localhost:4000/api/levels', { credentials: 'include' }),
+          fetch('http://localhost:4000/api/sections', { credentials: 'include' }),
+          fetch('http://localhost:4000/api/specialties', { credentials: 'include' }),
+          fetch('http://localhost:4000/api/students', { credentials: 'include' })
         ]);
 
         if (levelsResponse.ok) {
@@ -351,114 +344,113 @@ const RegisterProject = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* Header del formulario */}
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center space-x-4 mb-4">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-full shadow-lg">
-            <span className="text-3xl">{id ? '✏️' : '🔬'}</span>
+    <div className="max-w-4xl mx-auto">
+      
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-3">
+          <div className={`w-12 h-12 rounded-xl ${id ? 'bg-gradient-to-br from-blue-500 to-blue-700' : 'bg-gradient-to-br from-green-500 to-green-700'} flex items-center justify-center shadow-lg`}>
+            {id ? <Edit2 className="w-6 h-6 text-white" /> : <Plus className="w-6 h-6 text-white" />}
           </div>
-          <h2 className="text-3xl font-black text-blue-800">
-            {id ? 'Editar Proyecto' : 'Nuevo Proyecto'}
-          </h2>
+          <div>
+            <h2 className="text-2xl font-black text-gray-900">
+              {id ? 'Editar Proyecto' : 'Crear Nuevo Proyecto'}
+            </h2>
+            <p className="text-sm text-gray-500">
+              {id ? 'Actualiza la información del proyecto' : 'Completa los datos para registrar un nuevo proyecto'}
+            </p>
+          </div>
         </div>
-        <div className="h-1 bg-gradient-to-r from-blue-600 via-blue-400 to-blue-600 rounded-full max-w-xs mx-auto shadow-sm"></div>
       </div>
 
-      {/* Mostrar errores de conexión */}
+      {/* Mostrar errores */}
       {errors.general && (
-        <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          <strong>Error:</strong> {errors.general}
+        <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+          <div className="flex items-center gap-2">
+            <XCircle className="w-5 h-5 text-red-500" />
+            <p className="text-red-700 font-medium">{errors.general}</p>
+          </div>
         </div>
       )}
 
-      <form className="bg-white shadow-2xl rounded-2xl overflow-hidden border-4 border-blue-100" onSubmit={handleSubmit}>
-        {/* Header decorativo del formulario */}
-        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 p-6">
-          <h3 className="text-white text-xl font-bold text-center">
-            Información del Proyecto
+      <form onSubmit={handleSubmit} className="space-y-6">
+        
+        {/* Información del Proyecto */}
+        <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Lightbulb className="w-5 h-5" />
+            <span>Información del Proyecto</span>
           </h3>
+          
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+              <FileText className="w-4 h-4" />
+              <span>Nombre del Proyecto *</span>
+            </label>
+            <input
+              type="text"
+              value={projectName || ''}
+              onChange={(e) => setProjectName(e.target.value)}
+              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium"
+              placeholder="Ej: Sistema de Riego Automatizado"
+              required
+            />
+          </div>
         </div>
 
-        <div className="p-8 space-y-6 bg-gradient-to-b from-white to-blue-50">
-          {/* Nombre del proyecto */}
-          <div className="group">
-            <label className="flex items-center space-x-2 text-blue-800 font-bold text-lg mb-3">
-              <span className="bg-blue-600 text-white p-1 rounded-full text-sm">📋</span>
-              <span>Nombre del Proyecto</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                name="projectName"
-                value={projectName || ''}
-                onChange={(e) => setProjectName(e.target.value)}
-                className="w-full px-4 py-4 border-3 border-blue-200 rounded-xl text-gray-800 font-medium shadow-inner bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 text-lg"
-                placeholder="Ej: Sistema de Riego Automatizado"
-                required
-              />
-              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                <span className="text-blue-400 text-xl">🔬</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Nivel y Especialidad/Sección en fila */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Campo Nivel */}
-            <div className="group">
-              <label className="flex items-center space-x-2 text-blue-800 font-bold text-lg mb-3">
-                <span className="bg-blue-600 text-white p-1 rounded-full text-sm">📚</span>
-                <span>Nivel Académico</span>
+        {/* Información Académica */}
+        <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <BookOpen className="w-5 h-5" />
+            <span>Asignación Académica</span>
+          </h3>
+          
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Nivel */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                <BookOpen className="w-4 h-4" />
+                <span>Nivel *</span>
               </label>
-              <div className="relative">
-                <select
-                  name="idLevel"
-                  value={idLevel || ''}
-                  onChange={(e) => setIdLevel(e.target.value)}
-                  className="w-full px-4 py-4 border-3 border-blue-200 rounded-xl text-gray-800 font-medium shadow-inner bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 text-lg"
-                  required
-                  disabled={loadingData}
-                >
-                  <option value="">
-                    {loadingData ? 'Cargando niveles...' : 'Seleccionar nivel...'}
+              <select
+                value={idLevel || ''}
+                onChange={(e) => setIdLevel(e.target.value)}
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium"
+                required
+                disabled={loadingData}
+              >
+                <option value="">
+                  {loadingData ? 'Cargando niveles...' : 'Seleccionar nivel...'}
+                </option>
+                {levels.map((level) => (
+                  <option key={level._id} value={level._id}>
+                    {level.levelName || level.name}
                   </option>
-                  {levels.map((level) => (
-                    <option key={level._id} value={level._id}>
-                      {level.levelName || level.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                  <span className="text-blue-400 text-xl">📖</span>
-                </div>
-              </div>
+                ))}
+              </select>
               {errors.levels && (
-                <p className="text-red-600 text-sm mt-1">{errors.levels}</p>
+                <p className="text-red-600 text-xs mt-1 flex items-center gap-1">
+                  <XCircle className="w-3 h-3" />
+                  {errors.levels}
+                </p>
               )}
             </div>
 
-            {/* Campo condicional: Especialidad (Bachillerato) o Sección (Básica) */}
-            <div className="group">
+            {/* Sección o Especialidad */}
+            <div>
               {(() => {
                 if (!idLevel) {
                   return (
                     <>
-                      <label className="flex items-center space-x-2 text-gray-600 font-bold text-lg mb-3">
-                        <span className="bg-gray-400 text-white p-1 rounded-full text-sm">❓</span>
-                        <span>Especialidad/Sección</span>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        Especialidad/Sección *
                       </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value="Primero selecciona un nivel..."
-                          className="w-full px-4 py-4 border-3 border-gray-200 rounded-xl text-gray-500 font-medium shadow-inner bg-gray-50 text-lg"
-                          readOnly
-                        />
-                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                          <span className="text-gray-400 text-xl">⏳</span>
-                        </div>
-                      </div>
+                      <input
+                        type="text"
+                        value="Primero selecciona un nivel..."
+                        className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg text-gray-500 font-medium cursor-not-allowed"
+                        readOnly
+                      />
                     </>
                   );
                 }
@@ -469,32 +461,26 @@ const RegisterProject = ({
                 if (isBachillerato(levelName)) {
                   return (
                     <>
-                      <label className="flex items-center space-x-2 text-purple-800 font-bold text-lg mb-3">
-                        <span className="bg-purple-600 text-white p-1 rounded-full text-sm">🎯</span>
-                        <span>Especialidad</span>
+                      <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                        <Award className="w-4 h-4" />
+                        <span>Especialidad *</span>
                       </label>
-                      <div className="relative">
-                        <select
-                          name="selectedSpecialty"
-                          value={selectedSpecialty || ''}
-                          onChange={(e) => setSelectedSpecialty(e.target.value)}
-                          className="w-full px-4 py-4 border-3 border-purple-200 rounded-xl text-gray-800 font-medium shadow-inner bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 text-lg"
-                          required
-                          disabled={loadingData}
-                        >
-                          <option value="">
-                            {loadingData ? 'Cargando especialidades...' : 'Seleccionar especialidad...'}
+                      <select
+                        value={selectedSpecialty || ''}
+                        onChange={(e) => setSelectedSpecialty(e.target.value)}
+                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all text-gray-900 font-medium"
+                        required
+                        disabled={loadingData}
+                      >
+                        <option value="">
+                          {loadingData ? 'Cargando especialidades...' : 'Seleccionar especialidad...'}
+                        </option>
+                        {specialties.map((specialty) => (
+                          <option key={specialty._id} value={specialty._id}>
+                            {specialty.specialtyName} ({specialty.letterSpecialty})
                           </option>
-                          {specialties.map((specialty) => (
-                            <option key={specialty._id} value={specialty._id}>
-                              {specialty.specialtyName} ({specialty.letterSpecialty})
-                            </option>
-                          ))}
-                        </select>
-                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                          <span className="text-purple-400 text-xl">🎓</span>
-                        </div>
-                      </div>
+                        ))}
+                      </select>
                     </>
                   );
                 }
@@ -502,181 +488,202 @@ const RegisterProject = ({
                 if (isBasica(levelName)) {
                   return (
                     <>
-                      <label className="flex items-center space-x-2 text-blue-800 font-bold text-lg mb-3">
-                        <span className="bg-blue-600 text-white p-1 rounded-full text-sm">📋</span>
-                        <span>Sección</span>
+                      <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                        <FileText className="w-4 h-4" />
+                        <span>Sección *</span>
                       </label>
-                      <div className="relative">
-                        <select
-                          name="idSection"
-                          value={idSection || ''}
-                          onChange={(e) => setIdSection(e.target.value)}
-                          className="w-full px-4 py-4 border-3 border-blue-200 rounded-xl text-gray-800 font-medium shadow-inner bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 text-lg"
-                          required
-                          disabled={loadingData}
-                        >
-                          <option value="">
-                            {loadingData ? 'Cargando secciones...' : 'Seleccionar sección...'}
+                      <select
+                        value={idSection || ''}
+                        onChange={(e) => setIdSection(e.target.value)}
+                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium"
+                        required
+                        disabled={loadingData}
+                      >
+                        <option value="">
+                          {loadingData ? 'Cargando secciones...' : 'Seleccionar sección...'}
+                        </option>
+                        {getFilteredSections().map((section) => (
+                          <option key={section._id} value={section._id}>
+                            {section.sectionName || section.name}
                           </option>
-                          {getFilteredSections().map((section) => (
-                            <option key={section._id} value={section._id}>
-                              {section.sectionName || section.name}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                          <span className="text-blue-400 text-xl">📋</span>
-                        </div>
-                      </div>
+                        ))}
+                      </select>
                     </>
                   );
                 }
 
                 return (
                   <>
-                    <label className="flex items-center space-x-2 text-gray-600 font-bold text-lg mb-3">
-                      <span className="bg-gray-400 text-white p-1 rounded-full text-sm">❓</span>
-                      <span>Tipo no reconocido</span>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Tipo no reconocido
                     </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value="Nivel no reconocido"
-                        className="w-full px-4 py-4 border-3 border-gray-200 rounded-xl text-gray-500 font-medium shadow-inner bg-gray-50 text-lg"
-                        readOnly
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      value="Nivel no reconocido"
+                      className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg text-gray-500 font-medium"
+                      readOnly
+                    />
                   </>
                 );
               })()}
-              
-              {errors.sections && (
-                <p className="text-red-600 text-sm mt-1">{errors.sections}</p>
-              )}
-              {errors.specialties && (
-                <p className="text-red-600 text-sm mt-1">{errors.specialties}</p>
-              )}
             </div>
           </div>
+        </div>
 
-          {/* Número de Equipo Automático - Solo Lectura */}
-          <div className="group">
-            <label className="flex items-center space-x-2 text-green-800 font-bold text-lg mb-3">
-              <span className="bg-green-600 text-white p-1 rounded-full text-sm">👥</span>
-              <span>Número de Equipo (Asignado Automáticamente)</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={autoTeamNumber ? `Equipo #${autoTeamNumber}` : 'Selecciona nivel y sección/especialidad...'}
-                className={`w-full px-4 py-4 border-3 rounded-xl text-gray-800 font-medium shadow-inner text-lg transition-all duration-300 ${
-                  autoTeamNumber 
-                    ? 'border-green-200 bg-green-50 text-green-800' 
-                    : 'border-gray-200 bg-gray-50 text-gray-500'
-                }`}
-                readOnly
-              />
-              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                {autoTeamNumber ? (
-                  <span className="text-green-500 text-xl">✅</span>
-                ) : (
-                  <span className="text-gray-400 text-xl">⏳</span>
-                )}
+        {/* IDs Automáticos */}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Hash className="w-5 h-5 text-blue-600" />
+            <span>Identificación Automática</span>
+          </h3>
+          
+          <div className="space-y-4">
+            {/* Número de Equipo */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                <Users className="w-4 h-4" />
+                <span>Número de Equipo (Automático)</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={autoTeamNumber ? `Equipo #${autoTeamNumber}` : 'Selecciona nivel y sección/especialidad...'}
+                  className={`w-full px-4 py-3 border-2 rounded-lg font-bold text-lg transition-all ${
+                    autoTeamNumber 
+                      ? 'border-green-300 bg-green-50 text-green-800' 
+                      : 'border-gray-200 bg-gray-50 text-gray-500'
+                  }`}
+                  readOnly
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center">
+                  {autoTeamNumber ? (
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  ) : (
+                    <Loader2 className="w-5 h-5 text-gray-400" />
+                  )}
+                </div>
               </div>
+              <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${
+                autoTeamNumber ? 'text-green-600' : 'text-gray-500'
+              }`}>
+                <Info className="w-3 h-3" />
+                {autoTeamNumber 
+                  ? 'Número asignado automáticamente' 
+                  : 'Completa los campos para asignar número'}
+              </p>
             </div>
-            <p className={`text-xs mt-1 font-medium transition-colors ${
-              autoTeamNumber ? 'text-green-600' : 'text-gray-500'
-            }`}>
-              {autoTeamNumber 
-                ? `✅ Número de equipo asignado automáticamente basado en proyectos existentes` 
-                : '⏳ El número se asignará automáticamente al completar los campos'}
-            </p>
-          </div>
 
-          {/* ID Generado en Tiempo Real */}
-          <div className="group">
-            <label className="flex items-center space-x-2 text-green-800 font-bold text-lg mb-3">
-              <span className="bg-green-600 text-white p-1 rounded-full text-sm">🆔</span>
-              <span>ID del Proyecto (Generado Automáticamente)</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={projectId || 'Selecciona nivel, sección y el número de equipo se asignará...'}
-                className={`w-full px-4 py-4 border-3 rounded-xl text-gray-800 font-medium shadow-inner text-lg transition-all duration-300 ${
-                  projectId 
-                    ? 'border-green-200 bg-green-50 text-green-800' 
-                    : 'border-gray-200 bg-gray-50 text-gray-500'
-                }`}
-                readOnly
-              />
-              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                {projectId ? (
-                  <span className="text-green-500 text-xl">✅</span>
-                ) : (
-                  <span className="text-gray-400 text-xl">⏳</span>
-                )}
+            {/* ID del Proyecto */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                <Hash className="w-4 h-4" />
+                <span>ID del Proyecto (Automático)</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={projectId || 'El ID se generará automáticamente...'}
+                  className={`w-full px-4 py-3 border-2 rounded-lg font-bold text-lg transition-all ${
+                    projectId 
+                      ? 'border-green-300 bg-green-50 text-green-800' 
+                      : 'border-gray-200 bg-gray-50 text-gray-500'
+                  }`}
+                  readOnly
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center">
+                  {projectId ? (
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  ) : (
+                    <Loader2 className="w-5 h-5 text-gray-400" />
+                  )}
+                </div>
               </div>
+              <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${
+                projectId ? 'text-green-600' : 'text-gray-500'
+              }`}>
+                <Info className="w-3 h-3" />
+                {projectId 
+                  ? 'ID generado según nivel y equipo' 
+                  : 'El ID se genera al completar los campos'}
+              </p>
             </div>
-            <p className={`text-xs mt-1 font-medium transition-colors ${
-              projectId ? 'text-green-600' : 'text-gray-500'
-            }`}>
-              {projectId 
-                ? '✅ ID generado automáticamente con el número de equipo asignado' 
-                : '⏳ El ID se generará automáticamente al completar los campos'}
-            </p>
-          </div>
 
-          {/* Google Sites Link Generado Automáticamente */}
-          <div className="group">
-            <label className="flex items-center space-x-2 text-purple-800 font-bold text-lg mb-3">
-              <span className="bg-purple-600 text-white p-1 rounded-full text-sm">🌐</span>
-              <span>Enlace de Google Sites (Generado Automáticamente)</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={googleSitesLink || 'El enlace se generará automáticamente con el ID del proyecto...'}
-                className={`w-full px-4 py-4 border-3 rounded-xl text-gray-800 font-medium shadow-inner text-lg transition-all duration-300 ${
-                  googleSitesLink 
-                    ? 'border-purple-200 bg-purple-50 text-purple-800' 
-                    : 'border-gray-200 bg-gray-50 text-gray-500'
-                }`}
-                readOnly
-              />
-              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                {googleSitesLink ? (
-                  <span className="text-purple-500 text-xl">✅</span>
-                ) : (
-                  <span className="text-gray-400 text-xl">⏳</span>
-                )}
+            {/* Google Sites Link */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                <Globe className="w-4 h-4" />
+                <span>Enlace Google Sites (Automático)</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={googleSitesLink || 'El enlace se generará con el ID...'}
+                  className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                    googleSitesLink 
+                      ? 'border-purple-300 bg-purple-50 text-purple-800' 
+                      : 'border-gray-200 bg-gray-50 text-gray-500'
+                  }`}
+                  readOnly
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center">
+                  {googleSitesLink ? (
+                    <CheckCircle className="w-5 h-5 text-purple-500" />
+                  ) : (
+                    <Loader2 className="w-5 h-5 text-gray-400" />
+                  )}
+                </div>
               </div>
+              <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${
+                googleSitesLink ? 'text-purple-600' : 'text-gray-500'
+              }`}>
+                <Info className="w-3 h-3" />
+                {googleSitesLink 
+                  ? 'Formato: sites.google.com/ricaldone.edu.sv/[ID]' 
+                  : 'El enlace se genera automáticamente'}
+              </p>
             </div>
-            <p className={`text-xs mt-1 font-medium transition-colors ${
-              googleSitesLink ? 'text-purple-600' : 'text-gray-500'
-            }`}>
-              {googleSitesLink 
-                ? '✅ Enlace generado automáticamente siguiendo el formato: https://sites.google.com/ricaldone.edu.sv/[ID]' 
-                : '⏳ El enlace se generará automáticamente al completar los campos'}
-            </p>
           </div>
+        </div>
 
-          {/* Asignar estudiantes (opcional) */}
-          <div className="group">
-            <label className="flex items-center space-x-2 text-blue-800 font-bold text-lg mb-3">
-              <span className="bg-orange-600 text-white p-1 rounded-full text-sm">👥</span>
-              <span>Estudiantes Asignados (Opcional)</span>
-            </label>
-            <div className="relative">
+        {/* Estado y Estudiantes */}
+        <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            <span>Configuración Adicional</span>
+          </h3>
+          
+          <div className="space-y-4">
+            {/* Estado */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                <CheckCircle className="w-4 h-4" />
+                <span>Estado del Proyecto *</span>
+              </label>
+              <select
+                value={status || 'Activo'}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-900 font-medium"
+                required
+              >
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+              </select>
+            </div>
+
+            {/* Estudiantes Asignados */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                <Users className="w-4 h-4" />
+                <span>Estudiantes Asignados (Opcional)</span>
+              </label>
               <select
                 multiple
-                name="assignedStudents"
                 value={assignedStudents || []}
                 onChange={(e) => {
                   const selectedValues = Array.from(e.target.selectedOptions, option => option.value);
                   setAssignedStudents(selectedValues);
                 }}
-                className="w-full px-4 py-4 border-3 border-orange-200 rounded-xl text-gray-800 font-medium shadow-inner bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-300 text-lg min-h-32"
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium min-h-32"
                 disabled={!idLevel || (!idSection && !selectedSpecialty)}
               >
                 {(() => {
@@ -720,7 +727,7 @@ const RegisterProject = ({
                     if (filteredStudents.length === 0) {
                       return (
                         <option disabled>
-                          No hay estudiantes registrados en este nivel y sección
+                          No hay estudiantes en este nivel y sección
                         </option>
                       );
                     }
@@ -741,7 +748,6 @@ const RegisterProject = ({
                       );
                     }
 
-                    // Para bachillerato: filtrar por nivel Y especialidad (los estudiantes tienen idSpecialty)
                     const filteredStudents = (students || []).filter(student => {
                       if (!student || !student.idLevel || !student.idSpecialty) {
                         return false;
@@ -754,7 +760,7 @@ const RegisterProject = ({
                     if (filteredStudents.length === 0) {
                       return (
                         <option disabled>
-                          No hay estudiantes registrados en este nivel y especialidad
+                          No hay estudiantes en este nivel y especialidad
                         </option>
                       );
                     }
@@ -773,117 +779,74 @@ const RegisterProject = ({
                   );
                 })()}
               </select>
-              <div className="absolute top-4 right-4 pointer-events-none">
-                <span className="text-orange-400 text-xl">👨‍🎓</span>
-              </div>
+              <p className="text-xs mt-1 text-gray-600 flex items-center gap-1">
+                <Info className="w-3 h-3" />
+                Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples
+              </p>
+              {assignedStudents && assignedStudents.length > 0 && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-blue-700 font-medium text-sm flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    {assignedStudents.length} estudiante(s) seleccionado(s)
+                  </p>
+                </div>
+              )}
             </div>
-            <p className="text-orange-600 text-xs mt-1">
-              💡 Opcional: Mantén presionado Ctrl (o Cmd en Mac) para seleccionar múltiples estudiantes
-            </p>
-            {assignedStudents && assignedStudents.length > 0 && (
-              <div className="mt-2 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                <p className="text-orange-700 font-medium text-sm">
-                  {assignedStudents.length} estudiante(s) seleccionado(s)
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Estado del proyecto */}
-          <div className="group">
-            <label className="flex items-center space-x-2 text-blue-800 font-bold text-lg mb-3">
-              <span className="bg-green-600 text-white p-1 rounded-full text-sm">⚡</span>
-              <span>Estado del Proyecto</span>
-            </label>
-            <div className="relative">
-              <select
-                name="status"
-                value={status || 'Activo'}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-4 py-4 border-3 border-green-200 rounded-xl text-gray-800 font-medium shadow-inner bg-white focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-300 text-lg"
-                required
-              >
-                <option value="Activo">✅ Activo</option>
-                <option value="Inactivo">❌ Inactivo</option>
-              </select>
-              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                <span className="text-green-400 text-xl">🎯</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Mensaje de carga */}
-          {loadingData && (
-            <div className="bg-blue-100 border-l-4 border-blue-400 p-4 rounded-r-lg">
-              <div className="flex items-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
-                <p className="text-blue-700 text-sm font-medium">
-                  Cargando datos de catálogos...
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Botones de acción */}
-          <div className="pt-6 space-y-4">
-            {!id ? (
-              <button
-                type="submit"
-                disabled={loadingData}
-                className={`w-full py-4 px-6 rounded-xl font-black text-xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-4 flex items-center justify-center space-x-3 ${
-                  loadingData
-                    ? 'bg-gray-400 border-gray-300 text-gray-600 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 text-white border-blue-500'
-                }`}
-              >
-                <span className="text-2xl">💾</span>
-                <span>Registrar Proyecto</span>
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={loadingData}
-                className={`w-full py-4 px-6 rounded-xl font-black text-xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-4 flex items-center justify-center space-x-3 ${
-                  loadingData
-                    ? 'bg-gray-400 border-gray-300 text-gray-600 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-emerald-500 via-emerald-600 to-blue-500 hover:from-emerald-600 hover:via-blue-500 hover:to-blue-600 text-white border-emerald-400'
-                }`}
-              >
-                <span className="text-2xl">✏️</span>
-                <span>Actualizar Proyecto</span>
-              </button>
-            )}
-
-            {onCancel && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="w-full bg-gradient-to-r from-gray-500 via-gray-600 to-gray-700 hover:from-gray-600 hover:via-gray-700 hover:to-gray-800 text-white py-3 px-6 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-gray-400 flex items-center justify-center space-x-3"
-              >
-                <span className="text-xl">↩️</span>
-                <span>Cancelar</span>
-              </button>
-            )}
           </div>
         </div>
 
-        {/* Footer decorativo del formulario */}
-        <div className="h-3 bg-gradient-to-r from-blue-600 via-blue-400 to-blue-600"></div>
+        {/* Loading indicator */}
+        {loadingData && (
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+              <p className="text-blue-700 text-sm font-medium">
+                Cargando datos de catálogos...
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Botones de Acción */}
+        <div className="flex gap-4 pt-4">
+          <button
+            type="submit"
+            disabled={loadingData}
+            className={`flex-1 py-4 px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 ${
+              loadingData
+                ? 'bg-gray-400 cursor-not-allowed'
+                : id
+                ? 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
+                : 'bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800'
+            }`}
+          >
+            {id ? <Edit2 className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+            <span>{id ? 'Actualizar Proyecto' : 'Registrar Proyecto'}</span>
+          </button>
+
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+            >
+              <XCircle className="w-5 h-5" />
+              <span>Cancelar</span>
+            </button>
+          )}
+        </div>
       </form>
 
-      {/* Información adicional */}
-      <div className="mt-8 bg-gradient-to-r from-blue-100 to-blue-200 p-6 rounded-xl border-2 border-blue-200 shadow-lg">
-        <div className="flex items-start space-x-3">
-          <span className="text-2xl">💡</span>
-          <div>
-            <h4 className="text-blue-800 font-bold text-lg mb-2">Sistema automatizado completo:</h4>
-            <ul className="text-blue-700 space-y-1 text-sm font-medium">
-              <li>• <strong>Numeración automática:</strong> El sistema asigna automáticamente el siguiente número de equipo disponible</li>
-              <li>• <strong>Por nivel y sección:</strong> Cada combinación nivel-sección tiene su propia numeración (ej: 8°C Equipo 1, 2, 3...)</li>
-              <li>• <strong>ID automático:</strong> Se genera usando [Nivel][Sección][Equipo]-[Año]</li>
-              <li>• <strong>Google Sites automático:</strong> Se genera el enlace siguiendo el formato https://sites.google.com/ricaldone.edu.sv/[ID]</li>
-              <li>• <strong>Filtrado inteligente:</strong> Los estudiantes se filtran automáticamente por nivel y sección/especialidad</li>
-              <li>• <strong>Sin duplicados:</strong> El sistema previene números de equipo duplicados automáticamente</li>
+      {/* Info adicional */}
+      <div className="mt-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+        <div className="flex gap-3">
+          <Info className="w-6 h-6 text-blue-600 flex-shrink-0" />
+          <div className="flex-1 text-sm text-gray-700">
+            <p className="font-bold text-gray-900 mb-1">Sistema Automatizado</p>
+            <ul className="space-y-1">
+              <li>• El número de equipo se asigna automáticamente</li>
+              <li>• El ID se genera con formato: [Nivel][Sección][Equipo]-[Año]</li>
+              <li>• El enlace de Google Sites se crea automáticamente</li>
             </ul>
           </div>
         </div>

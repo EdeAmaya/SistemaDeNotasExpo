@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Lightbulb, Plus, BookOpen, CheckCircle, XCircle, Globe, Info } from 'lucide-react';
 import ListProjects from './components/ListProjects';
 import RegisterProject from './components/RegisterProject';
 import useDataProjects from './hooks/useDataProjects';
@@ -7,7 +8,6 @@ const Projects = () => {
   const [activeTab, setActiveTab] = useState('list');
   
   const {
-    // Estados
     projects,
     loading,
     id,
@@ -20,8 +20,6 @@ const Projects = () => {
     teamNumber,
     assignedStudents,
     selectedSpecialty,
-    
-    // Setters
     setProjectId,
     setProjectName,
     setGoogleSitesLink,
@@ -31,8 +29,6 @@ const Projects = () => {
     setTeamNumber,
     setAssignedStudents,
     setSelectedSpecialty,
-    
-    // Funciones
     saveProject,
     deleteProject,
     updateProject,
@@ -52,69 +48,126 @@ const Projects = () => {
     setActiveTab('list');
   };
 
+  const stats = {
+    total: projects.length,
+    active: projects.filter(p => p.status === 'Activo').length,
+    inactive: projects.filter(p => p.status === 'Inactivo').length,
+    withLink: projects.filter(p => p.googleSitesLink).length,
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white py-8 shadow-2xl">
-        <div className="max-w-6xl mx-auto px-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      
+      {/* Header Superior */}
+      <div className="bg-white border-b-2 border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="bg-white text-blue-700 p-4 rounded-full shadow-lg">
-                <span className="text-3xl">🔬</span>
+            
+            <div>
+              <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                <span>Sistema</span>
+                <span>›</span>
+                <span className="text-blue-600 font-semibold">Gestión de Proyectos</span>
               </div>
-              <div>
-                <h1 className="text-4xl font-black tracking-wide drop-shadow-lg">
+              <div className="flex items-center gap-3">
+                <Lightbulb className="w-8 h-8 text-gray-900" />
+                <h1 className="text-3xl font-black text-gray-900">
                   Proyectos Técnicos Científicos
                 </h1>
-                <p className="text-blue-200 text-lg font-medium mt-1">
-                  Gestión de proyectos de investigación y desarrollo
-                </p>
               </div>
             </div>
-          </div>
-        </div>
-        
-        {/* Nota explicativa en el header */}
-        <div className="max-w-6xl mx-auto px-6 mt-4">
-          <div className="bg-blue-800/50 backdrop-blur-sm border border-blue-400/30 p-4 rounded-lg">
-            <p className="text-blue-100 text-sm font-medium">
-              <span className="font-bold">💡 Proyectos Científicos:</span> Gestión de investigaciones académicas, documentación en Google Sites, 
-              asignación por niveles y secciones. Seguimiento del estado de desarrollo de cada proyecto.
-              <span className="font-bold"> Nueva función:</span> Numeración automática de equipos por nivel y sección.
-            </p>
+
+            <div className="hidden lg:flex items-center gap-4">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl shadow-lg">
+                <div className="flex items-center justify-center mb-1">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div className="text-2xl font-black text-center">{stats.total}</div>
+                <div className="text-xs font-semibold opacity-90 text-center">Total</div>
+              </div>
+              <div className="bg-gradient-to-br from-green-500 to-green-600 text-white px-4 py-3 rounded-xl shadow-lg">
+                <div className="flex items-center justify-center mb-1">
+                  <CheckCircle className="w-5 h-5" />
+                </div>
+                <div className="text-2xl font-black text-center">{stats.active}</div>
+                <div className="text-xs font-semibold opacity-90 text-center">Activos</div>
+              </div>
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white px-4 py-3 rounded-xl shadow-lg">
+                <div className="flex items-center justify-center mb-1">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <div className="text-2xl font-black text-center">{stats.withLink}</div>
+                <div className="text-xs font-semibold opacity-90 text-center">Con Sitio</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="max-w-6xl mx-auto px-6 -mt-4">
-        <div className="bg-white rounded-t-lg shadow-lg">
-          <div className="flex">
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="flex gap-1">
             <button
               onClick={() => handleTabChange('list')}
-              className={`flex-1 py-4 px-6 font-bold text-center transition-colors ${
-                activeTab === 'list'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              className={`relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
+                activeTab === 'list' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              🔬 Proyectos Científicos
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                <span>Lista de Proyectos</span>
+                <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-black">
+                  {stats.total}
+                </span>
+              </div>
+              {activeTab === 'list' && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-full"></div>
+              )}
             </button>
+            
             <button
               onClick={() => handleTabChange('register')}
-              className={`flex-1 py-4 px-6 font-bold text-center transition-colors ${
-                activeTab === 'register'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              className={`relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
+                activeTab === 'register' ? 'text-green-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              {id ? '✏️ Editar Proyecto' : '➕ Registrar Proyecto'}
+              <div className="flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                <span>{id ? 'Editar Proyecto' : 'Nuevo Proyecto'}</span>
+              </div>
+              {activeTab === 'register' && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-green-600 rounded-t-full"></div>
+              )}
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Content */}
-        <div className="bg-white rounded-b-lg shadow-lg p-6">
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-8 py-8">
+        
+        {/* Stats móvil */}
+        <div className="lg:hidden grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-3 rounded-xl shadow-lg text-center">
+            <BookOpen className="w-5 h-5 mx-auto mb-1" />
+            <div className="text-xl font-black">{stats.total}</div>
+            <div className="text-xs font-semibold opacity-90">Total</div>
+          </div>
+          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-3 rounded-xl shadow-lg text-center">
+            <CheckCircle className="w-5 h-5 mx-auto mb-1" />
+            <div className="text-xl font-black">{stats.active}</div>
+            <div className="text-xs font-semibold opacity-90">Activos</div>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-3 rounded-xl shadow-lg text-center">
+            <Globe className="w-5 h-5 mx-auto mb-1" />
+            <div className="text-xl font-black">{stats.withLink}</div>
+            <div className="text-xs font-semibold opacity-90">Sitio</div>
+          </div>
+        </div>
+
+        {/* Contenido */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
           {activeTab === 'list' ? (
             <ListProjects 
               projects={projects}
@@ -126,62 +179,58 @@ const Projects = () => {
               }}
             />
           ) : (
-            <RegisterProject
-              projectId={projectId}
-              setProjectId={setProjectId}
-              projectName={projectName}
-              setProjectName={setProjectName}
-              googleSitesLink={googleSitesLink}
-              setGoogleSitesLink={setGoogleSitesLink}
-              idLevel={idLevel}
-              setIdLevel={setIdLevel}
-              idSection={idSection}
-              setIdSection={setIdSection}
-              status={status}
-              setStatus={setStatus}
-              teamNumber={teamNumber}
-              setTeamNumber={setTeamNumber}
-              assignedStudents={assignedStudents}
-              setAssignedStudents={setAssignedStudents}
-              selectedSpecialty={selectedSpecialty}
-              setSelectedSpecialty={setSelectedSpecialty}
-              projects={projects} // NUEVA PROP: Pasar los proyectos para la numeración automática
-              saveProject={saveProject}
-              id={id}
-              handleEdit={handleEdit}
-              onCancel={handleCancelEdit}
-            />
+            <div className="p-8">
+              <RegisterProject
+                projectId={projectId}
+                setProjectId={setProjectId}
+                projectName={projectName}
+                setProjectName={setProjectName}
+                googleSitesLink={googleSitesLink}
+                setGoogleSitesLink={setGoogleSitesLink}
+                idLevel={idLevel}
+                setIdLevel={setIdLevel}
+                idSection={idSection}
+                setIdSection={setIdSection}
+                status={status}
+                setStatus={setStatus}
+                teamNumber={teamNumber}
+                setTeamNumber={setTeamNumber}
+                assignedStudents={assignedStudents}
+                setAssignedStudents={setAssignedStudents}
+                selectedSpecialty={selectedSpecialty}
+                setSelectedSpecialty={setSelectedSpecialty}
+                projects={projects}
+                saveProject={saveProject}
+                id={id}
+                handleEdit={handleEdit}
+                onCancel={handleCancelEdit}
+              />
+            </div>
           )}
         </div>
-      </div>
 
-      {/* Footer informativo */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="bg-gradient-to-r from-blue-100 to-blue-200 p-6 rounded-xl border-2 border-blue-200 shadow-lg">
-          <div className="flex items-start space-x-3">
-            <span className="text-2xl">📋</span>
-            <div>
-              <h4 className="text-blue-800 font-bold text-lg mb-2">Gestión de Proyectos Científicos:</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-blue-700 text-sm font-medium">
-                <div>
-                  <h5 className="font-bold mb-1">🔬 Información del Proyecto:</h5>
-                  <ul className="space-y-1">
-                    <li>• ID único del proyecto</li>
-                    <li>• Nombre descriptivo del proyecto</li>
-                    <li>• Enlace a Google Sites (opcional)</li>
-                    <li>• Nivel y sección asignados</li>
-                    <li>• <strong>Numeración automática de equipos</strong></li>
-                  </ul>
+        {/* Footer */}
+        <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-5 rounded-r-xl">
+          <div className="flex items-start gap-3">
+            <Info className="w-6 h-6 text-blue-600 flex-shrink-0" />
+            <div className="flex-1">
+              <h4 className="font-bold text-gray-800 mb-2">Gestión de Proyectos</h4>
+              <div className="grid md:grid-cols-2 gap-3 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="w-4 h-4 text-blue-600" />
+                  <span><span className="font-semibold text-gray-800">ID Automático:</span> Generación inteligente</span>
                 </div>
-                <div>
-                  <h5 className="font-bold mb-1">🎯 Funcionalidades:</h5>
-                  <ul className="space-y-1">
-                    <li>• Registro y edición de proyectos</li>
-                    <li>• Control de estado (Activo/Inactivo)</li>
-                    <li>• Documentación en línea</li>
-                    <li>• Filtros y búsqueda avanzada</li>
-                    <li>• <strong>Asignación automática de números de equipo</strong></li>
-                  </ul>
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-purple-600" />
+                  <span><span className="font-semibold text-gray-800">Google Sites:</span> Documentación en línea</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span><span className="font-semibold text-gray-800">Estado:</span> Control activo/inactivo</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-blue-600" />
+                  <span><span className="font-semibold text-gray-800">Asignación:</span> Por nivel y sección</span>
                 </div>
               </div>
             </div>
