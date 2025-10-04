@@ -4,12 +4,14 @@ import projectScoreController from "../controllers/projectScoresController.js";
 const router = express.Router();
 
 router.route("/")
-  .get(projectScoreController.getProjectScores)
-  .post(projectScoreController.createProjectScore);
+    .get(projectScoreController.getProjectScores)
+    .post(projectScoreController.createProjectScore);
+
+router.get("/project-averages", projectScoreController.getProjectFinalScores);
 
 router.route("/:id")
-  .get(projectScoreController.getProjectScoreById)
-  .put(projectScoreController.updateProjectScore)
-  .delete(projectScoreController.deleteProjectScore);
+    .get(projectScoreController.getProjectScoreById)
+    .put(projectScoreController.updateProjectScore)
+    .delete(projectScoreController.deleteProjectScore);
 
 export default router;

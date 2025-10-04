@@ -1,7 +1,131 @@
 import Evaluation from "../models/Evaluations.js";
 import Rubric from "../models/Rubrics.js";
+import ProjectScore from "../models/ProjectScore.js";
 
 const evaluationController = {};
+
+// ===============================
+// FUNCIÓN AUXILIAR - Actualizar ProjectScore
+// ===============================
+const updateProjectScore = async (projectId) => {
+    try {
+        // Obtener todas las evaluaciones del proyecto
+        const evaluations = await Evaluation.find({ projectId })
+            .populate({
+                path: "rubricId",
+                populate: { path: "stageId", select: "name" }
+            });
+
+        if (evaluations.length === 0) {
+            await ProjectScore.findOneAndDelete({ projectId });
+            return;
+        }
+
+        // Separar evaluaciones internas y externas
+        const internas = [];
+        const externas = [];
+
+        evaluations.forEach(ev => {
+            const evalData = {
+                evaluationId: ev._id,
+                rubricId: ev.rubricId._id,
+                rubricName: ev.rubricId.rubricName,
+                notaFinal: ev.notaFinal,
+                fecha: ev.fecha || ev.createdAt,
+                tipoCalculo: ev.tipoCalculo
+            };
+
+            // Clasificar en evaluacion externa o interna
+            const stageName = ev.rubricId?.stageId?.name || '';
+            const isExternal = stageName.toLowerCase().includes('externa') ||
+                stageName.toLowerCase() === 'evaluación externa';
+
+            if (isExternal) {
+                externas.push(evalData);
+            } else {
+                internas.push(evalData);
+            }
+        });
+
+        // Calcular promedios
+        const notasInternas = internas.map(e => e.notaFinal || 0);
+        const notasExternas = externas.map(e => e.notaFinal || 0);
+        const todasNotas = [...notasInternas, ...notasExternas];
+
+        const promedioInterno = notasInternas.length
+            ? notasInternas.reduce((a, b) => a + b, 0) / notasInternas.length
+            : 0;
+
+        const promedioExterno = notasExternas.length
+            ? notasExternas.reduce((a, b) => a + b, 0) / notasExternas.length
+            : 0;
+
+        // Calcular nota final global ponderada: 50% interno + 50% externo
+        let notaFinalGlobal = 0;
+        if (notasInternas.length > 0 && notasExternas.length > 0) {
+            notaFinalGlobal = (promedioInterno * 0.5) + (promedioExterno * 0.5);
+        } else if (notasInternas.length > 0) {
+            notaFinalGlobal = promedioInterno;
+        } else if (notasExternas.length > 0) {
+            notaFinalGlobal = promedioExterno;
+        }
+
+        // Calcular promedio de mejora
+        let promedioMejora = 0;
+        if (todasNotas.length >= 2) {
+            const primera = todasNotas[0];
+            const ultima = todasNotas[todasNotas.length - 1];
+            promedioMejora = primera > 0 ? ((ultima - primera) / primera) * 100 : 0;
+        }
+
+        const firstEvaluation = evaluations[0];
+        const nivel = firstEvaluation.rubricId?.level || 1;
+
+        const fechas = evaluations
+            .map(e => e.fecha || e.createdAt)
+            .filter(f => f)
+            .sort((a, b) => new Date(b) - new Date(a));
+        const fechaUltimaEvaluacion = fechas[0] || new Date();
+
+        // Actualizar o crear ProjectScore
+        const scoreData = {
+            projectId,
+            nivel,
+            evaluaciones: evaluations.map(ev => {
+                const stageName = ev.rubricId?.stageId?.name || '';
+                const isExternal = stageName.toLowerCase().includes('externa') ||
+                    stageName.toLowerCase() === 'evaluación externa';
+
+                return {
+                    evaluationId: ev._id,
+                    rubricId: ev.rubricId._id,
+                    rubricName: ev.rubricId.rubricName,
+                    notaFinal: ev.notaFinal,
+                    fecha: ev.fecha || ev.createdAt,
+                    tipoCalculo: ev.tipoCalculo,
+                    evaluacionTipo: isExternal ? "externa" : "interna"
+                };
+            }),
+            evaluacionesInternas: internas,
+            evaluacionesExternas: externas,
+            promedioInterno,
+            promedioExterno,
+            notaFinalGlobal,
+            promedioMejora,
+            fechaUltimaEvaluacion,
+            totalEvaluaciones: evaluations.length
+        };
+
+        await ProjectScore.findOneAndUpdate(
+            { projectId },
+            scoreData,
+            { upsert: true, new: true }
+        );
+    } catch (error) {
+        console.error("Error actualizando ProjectScore:", error);
+        throw error;
+    }
+};
 
 // ===============================
 // GET - Listar todas las evaluaciones
@@ -21,11 +145,11 @@ evaluationController.getEvaluations = async (req, res) => {
 
         res.status(200).json({ success: true, data: evaluations });
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            message: "Error fetching evaluations", 
-            error: error.message, 
-            stack: error.stack 
+        res.status(500).json({
+            success: false,
+            message: "Error fetching evaluations",
+            error: error.message,
+            stack: error.stack
         });
     }
 };
@@ -47,19 +171,19 @@ evaluationController.getEvaluationById = async (req, res) => {
             });
 
         if (!evaluation) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "Evaluation not found" 
+            return res.status(404).json({
+                success: false,
+                message: "Evaluation not found"
             });
         }
 
         res.status(200).json({ success: true, data: evaluation });
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            message: "Error fetching evaluation", 
+        res.status(500).json({
+            success: false,
+            message: "Error fetching evaluation",
             error: error.message,
-            stack: error.stack 
+            stack: error.stack
         });
     }
 };
@@ -68,131 +192,137 @@ evaluationController.getEvaluationById = async (req, res) => {
 // POST - Crear evaluación
 // ===============================
 evaluationController.createEvaluation = async (req, res) => {
-  try {
-    const { projectId, rubricId, criteriosEvaluados, notaFinal, tipoCalculo } = req.body;
+    try {
+        const { projectId, rubricId, criteriosEvaluados, notaFinal, tipoCalculo } = req.body;
 
-    // Verificar que notaFinal y tipoCalculo estén presentes
-    if (notaFinal === undefined || !tipoCalculo) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "notaFinal and tipoCalculo are required" 
-      });
+        // Verificar que notaFinal y tipoCalculo estén presentes
+        if (notaFinal === undefined || !tipoCalculo) {
+            return res.status(400).json({
+                success: false,
+                message: "notaFinal and tipoCalculo are required"
+            });
+        }
+
+        // Buscar la rúbrica con su etapa
+        const rubric = await Rubric.findById(rubricId).populate("stageId", "name");
+        if (!rubric) {
+            return res.status(404).json({ success: false, message: "Rubric not found" });
+        }
+
+        // Determinar si es evaluación externa o interna
+        let evaluacionTipo = "interna";
+        if (rubric.stageId && rubric.stageId.name === "Evaluación Externa") {
+            evaluacionTipo = "externa";
+        }
+
+        // Mapear criterios
+        const mappedCriteria = criteriosEvaluados.map(c => {
+            const criterionId = c.criterioId || c.criterionId;
+            if (!criterionId) {
+                throw new Error("Cada criterio debe tener criterioId o criterionId");
+            }
+
+            const crit = rubric.criteria.id(criterionId);
+            if (!crit) {
+                throw new Error(`Criterion ${criterionId} not found in rubric`);
+            }
+
+            return {
+                criterionId: crit._id,
+                criterionName: crit.criterionName,
+                puntajeObtenido: c.puntajeObtenido,
+                comentario: c.comentario || ""
+            };
+        });
+
+        // Crear la evaluación
+        const evaluation = await Evaluation.create({
+            projectId,
+            rubricId,
+            criteriosEvaluados: mappedCriteria,
+            notaFinal,
+            tipoCalculo,
+            evaluacionTipo
+        });
+
+        // Actualizar ProjectScore automáticamente
+        await updateProjectScore(projectId);
+
+        res.status(201).json({ success: true, data: evaluation });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: "Error creating evaluation",
+            error: error.message
+        });
     }
-
-    // Buscar la rúbrica con su etapa
-    const rubric = await Rubric.findById(rubricId).populate("stageId");
-    if (!rubric) {
-      return res.status(404).json({ success: false, message: "Rubric not found" });
-    }
-
-    // Determinar si es evaluación externa o interna
-    let evaluacionTipo = "interna";
-    if (rubric.stageId && rubric.stageId.nombre === "Evaluación Externa") {
-      evaluacionTipo = "externa";
-    }
-
-    // Mapear criterios
-    const mappedCriteria = criteriosEvaluados.map(c => {
-      const criterionId = c.criterioId || c.criterionId;
-      if (!criterionId) {
-        throw new Error("Cada criterio debe tener criterioId o criterionId");
-      }
-
-      const crit = rubric.criteria.id(criterionId);
-      if (!crit) {
-        throw new Error(`Criterion ${criterionId} not found in rubric`);
-      }
-
-      return {
-        criterionId: crit._id,
-        criterionName: crit.criterionName,
-        puntajeObtenido: c.puntajeObtenido,
-        comentario: c.comentario || ""
-      };
-    });
-
-    // Crear la evaluación
-    const evaluation = await Evaluation.create({
-      projectId,
-      rubricId,
-      criteriosEvaluados: mappedCriteria,
-      notaFinal,
-      tipoCalculo,
-      evaluacionTipo // asignado automáticamente
-    });
-
-    res.status(201).json({ success: true, data: evaluation });
-  } catch (error) {
-    res.status(400).json({ 
-      success: false, 
-      message: "Error creating evaluation", 
-      error: error.message 
-    });
-  }
 };
 
 // ===============================
 // PUT - Actualizar evaluación
 // ===============================
 evaluationController.updateEvaluation = async (req, res) => {
-  try {
-    const { criteriosEvaluados, rubricId } = req.body;
-    let updateData = { ...req.body };
+    try {
+        const { criteriosEvaluados, rubricId } = req.body;
+        let updateData = { ...req.body };
 
-    if (rubricId) {
-      const rubric = await Rubric.findById(rubricId).populate("stageId");
-      if (!rubric) {
-        return res.status(404).json({ 
-          success: false, 
-          message: "Rubric not found" 
+        if (rubricId) {
+            const rubric = await Rubric.findById(rubricId).populate("stageId", "name");
+            if (!rubric) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Rubric not found"
+                });
+            }
+
+            // Determinar tipo según la etapa
+            updateData.evaluacionTipo = (rubric.stageId && rubric.stageId.name === "Evaluación Externa")
+                ? "externa"
+                : "interna";
+
+            if (criteriosEvaluados) {
+                const mappedCriteria = criteriosEvaluados.map(c => {
+                    const criterionId = c.criterioId || c.criterionId;
+                    if (!criterionId) throw new Error("Cada criterio debe tener criterioId o criterionId");
+
+                    const crit = rubric.criteria.id(criterionId);
+                    if (!crit) throw new Error(`Criterion ${criterionId} not found in rubric`);
+
+                    return {
+                        criterionId: crit._id,
+                        criterionName: crit.criterionName,
+                        puntajeObtenido: c.puntajeObtenido,
+                        comentario: c.comentario || ""
+                    };
+                });
+                updateData.criteriosEvaluados = mappedCriteria;
+            }
+        }
+
+        const evaluation = await Evaluation.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true, runValidators: true }
+        ).populate("projectId").populate("rubricId");
+
+        if (!evaluation) {
+            return res.status(404).json({
+                success: false,
+                message: "Evaluation not found"
+            });
+        }
+
+        // Actualizar ProjectScore automáticamente
+        await updateProjectScore(evaluation.projectId._id || evaluation.projectId);
+
+        res.status(200).json({ success: true, data: evaluation });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: "Error updating evaluation",
+            error: error.message
         });
-      }
-
-      // Determinar tipo según la etapa
-      updateData.evaluacionTipo = (rubric.stageId && rubric.stageId.nombre === "Evaluación Externa")
-        ? "externa"
-        : "interna";
-
-      if (criteriosEvaluados) {
-        const mappedCriteria = criteriosEvaluados.map(c => {
-          const criterionId = c.criterioId || c.criterionId;
-          if (!criterionId) throw new Error("Cada criterio debe tener criterioId o criterionId");
-
-          const crit = rubric.criteria.id(criterionId);
-          if (!crit) throw new Error(`Criterion ${criterionId} not found in rubric`);
-
-          return {
-            criterionId: crit._id,
-            criterionName: crit.criterionName,
-            puntajeObtenido: c.puntajeObtenido,
-            comentario: c.comentario || ""
-          };
-        });
-        updateData.criteriosEvaluados = mappedCriteria;
-      }
     }
-
-    const evaluation = await Evaluation.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    ).populate("projectId").populate("rubricId");
-
-    if (!evaluation) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Evaluation not found" 
-      });
-    }
-
-    res.status(200).json({ success: true, data: evaluation });
-  } catch (error) {
-    res.status(400).json({ 
-      success: false, 
-      message: "Error updating evaluation", 
-      error: error.message 
-    });
-  }
 };
 
 // ===============================
@@ -200,20 +330,28 @@ evaluationController.updateEvaluation = async (req, res) => {
 // ===============================
 evaluationController.deleteEvaluation = async (req, res) => {
     try {
-        const evaluation = await Evaluation.findByIdAndDelete(req.params.id);
+        const evaluation = await Evaluation.findById(req.params.id);
         if (!evaluation) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "Evaluation not found" 
+            return res.status(404).json({
+                success: false,
+                message: "Evaluation not found"
             });
         }
+
+        const projectId = evaluation.projectId;
+
+        await Evaluation.findByIdAndDelete(req.params.id);
+
+        // IMPORTANTE: Actualizar ProjectScore automáticamente
+        await updateProjectScore(projectId);
+
         res.status(200).json({ success: true, message: "Evaluation deleted successfully" });
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            message: "Error deleting evaluation", 
+        res.status(500).json({
+            success: false,
+            message: "Error deleting evaluation",
             error: error.message,
-            stack: error.stack 
+            stack: error.stack
         });
     }
 };

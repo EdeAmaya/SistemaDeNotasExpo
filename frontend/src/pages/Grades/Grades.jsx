@@ -3,17 +3,24 @@ import { CheckSquare, Plus, BookOpen, ClipboardList, Award, Layers, Info, FileTe
 import ListGrades from './components/ListGrades';
 import RegisterGrade from './components/RegisterGrade';
 import useDataEvaluations from './hooks/useDataEvaluations';
+import useDataProjectScores from './hooks/useDataProjectScores';
 
 const Grades = () => {
   useEffect(() => {
     document.title = "Asignación de Notas | STC";
   }, []);
 
-  const [activeTab, setActiveTab] = useState('list');
+  // Hook para obtener los project scores (para la lista)
+  const { 
+    projectScores, 
+    loading: loadingScores, 
+    getProjectScores 
+  } = useDataProjectScores();
 
+  // Hook para las evaluaciones (para el registro/edición)
   const {
     evaluations,
-    loading,
+    loading: loadingEvaluations,
     error,
     getEvaluations,
     createEvaluation,
@@ -23,15 +30,18 @@ const Grades = () => {
     clearError
   } = useDataEvaluations();
 
+  const [activeTab, setActiveTab] = useState('list');
   const [formData, setFormData] = useState({
     id: null,
     projectId: null,
     rubricId: null
   });
 
+  // Cargar datos al montar el componente
   useEffect(() => {
+    getProjectScores();
     getEvaluations();
-  }, [getEvaluations]);
+  }, [getProjectScores, getEvaluations]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -64,7 +74,9 @@ const Grades = () => {
       }
       clearForm();
       setActiveTab('list');
+      // Recargar ambos datos
       await getEvaluations();
+      await getProjectScores();
     } catch (error) {
       console.error('Error al guardar la evaluación:', error);
     }
@@ -74,6 +86,7 @@ const Grades = () => {
     try {
       await deleteEvaluation(id);
       await getEvaluations();
+      await getProjectScores();
     } catch (error) {
       console.error('Error al eliminar la evaluación:', error);
     }
@@ -84,14 +97,17 @@ const Grades = () => {
     setActiveTab('list');
   };
 
-  // Calcular estadísticas
+  // Calcular estadísticas desde projectScores
   const stats = {
-    total: evaluations.length,
-    avgScore: evaluations.length > 0 
-      ? (evaluations.reduce((sum, e) => sum + calculateTotalScore(e), 0) / evaluations.length).toFixed(2)
+    total: projectScores.length,
+    avgScore: projectScores.length > 0 
+      ? (projectScores.reduce((sum, p) => sum + (p.promedioTotal || 0), 0) / projectScores.length).toFixed(2)
       : 0,
-    totalCriteria: evaluations.reduce((acc, e) => acc + (e.criteriosEvaluados?.length || 0), 0)
+    totalEvaluations: projectScores.reduce((acc, p) => acc + (p.totalEvaluaciones || 0), 0)
   };
+
+  // Determinar qué loading mostrar según la pestaña activa
+  const currentLoading = activeTab === 'list' ? loadingScores : loadingEvaluations;
 
   return (
     <div className="min-h-screen">
@@ -103,10 +119,10 @@ const Grades = () => {
               <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                 <span>Sistema</span>
                 <span>›</span>
-                <span className="text-yellow-600 font-semibold">Gestión de Evaluaciones</span>
+                <span className="text-yellow-500 font-semibold">Gestión de Evaluaciones</span>
               </div>
               <div className="flex items-center gap-3">
-                <BookOpenCheck className="w-8 h-8 text-yellow-600" />
+                <BookOpenCheck className="w-8 h-8 text-yellow-500" />
                 <h1 className="text-3xl font-black text-gray-900">
                   Evaluación de Proyectos
                 </h1>
@@ -118,7 +134,7 @@ const Grades = () => {
               <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 text-white px-4 py-3 rounded-xl shadow-lg text-center">
                 <ClipboardList className="w-5 h-5 mx-auto mb-1" />
                 <div className="text-2xl font-black">{stats.total}</div>
-                <div className="text-xs font-semibold opacity-90">Evaluaciones</div>
+                <div className="text-xs font-semibold opacity-90">Proyectos</div>
               </div>
               <div className="bg-gradient-to-br from-yellow-300 to-yellow-400 text-white px-4 py-3 rounded-xl shadow-lg text-center">
                 <Award className="w-5 h-5 mx-auto mb-1" />
@@ -127,8 +143,8 @@ const Grades = () => {
               </div>
               <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white px-4 py-3 rounded-xl shadow-lg text-center">
                 <FileText className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-2xl font-black">{stats.totalCriteria}</div>
-                <div className="text-xs font-semibold opacity-90">Criterios</div>
+                <div className="text-2xl font-black">{stats.totalEvaluations}</div>
+                <div className="text-xs font-semibold opacity-90">Evaluaciones</div>
               </div>
             </div>
           </div>
@@ -142,12 +158,12 @@ const Grades = () => {
             <button
               onClick={() => handleTabChange('list')}
               className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
-                activeTab === 'list' ? 'text-yellow-600' : 'text-gray-500 hover:text-gray-700'
+                activeTab === 'list' ? 'text-yellow-500' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5" />
-                <span>Evaluaciones Registradas</span>
+                <span>Proyectos Evaluados</span>
                 <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-black">
                   {stats.total}
                 </span>
@@ -183,7 +199,7 @@ const Grades = () => {
           <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 text-white p-3 rounded-xl shadow-lg text-center">
             <ClipboardList className="w-5 h-5 mx-auto mb-1" />
             <div className="text-xl font-black">{stats.total}</div>
-            <div className="text-xs font-semibold opacity-90">Evaluaciones</div>
+            <div className="text-xs font-semibold opacity-90">Proyectos</div>
           </div>
           <div className="bg-gradient-to-br from-yellow-300 to-yellow-400 text-white p-3 rounded-xl shadow-lg text-center">
             <Award className="w-5 h-5 mx-auto mb-1" />
@@ -192,8 +208,8 @@ const Grades = () => {
           </div>
           <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-3 rounded-xl shadow-lg text-center">
             <FileText className="w-5 h-5 mx-auto mb-1" />
-            <div className="text-xl font-black">{stats.totalCriteria}</div>
-            <div className="text-xs font-semibold opacity-90">Criterios</div>
+            <div className="text-xl font-black">{stats.totalEvaluations}</div>
+            <div className="text-xs font-semibold opacity-90">Evaluaciones</div>
           </div>
         </div>
 
@@ -226,10 +242,8 @@ const Grades = () => {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
           {activeTab === 'list' ? (
             <ListGrades 
-              rubrics={evaluations}
-              loading={loading}
-              deleteGrade={handleDelete}
-              editGrade={handleEdit}
+              projectScores={projectScores}
+              loading={loadingScores}
             />
           ) : (
             <div className="p-8">
@@ -261,11 +275,11 @@ const Grades = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Award className="w-4 h-4 text-yellow-600" />
-                  <span><span className="font-semibold text-gray-800">Ponderación:</span> Peso relativo de cada criterio en la nota final</span>
+                  <span><span className="font-semibold text-gray-800">Evaluaciones:</span> Internas (docentes) y externas (jurados)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckSquare className="w-4 h-4 text-yellow-600" />
-                  <span><span className="font-semibold text-gray-800">Proyectos:</span> Filtrados automáticamente por nivel y especialidad</span>
+                  <span><span className="font-semibold text-gray-800">Promedios:</span> Cálculo automático por tipo y total</span>
                 </div>
               </div>
               
