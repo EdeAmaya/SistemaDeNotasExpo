@@ -4,7 +4,7 @@ import useDataEvaluations from '../hooks/useDataEvaluations';
 
 const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
   const { createEvaluation, updateEvaluation, loading: evaluationLoading, error: evaluationError } = useDataEvaluations();
-  
+
   const [rubrics, setRubrics] = useState([]);
   const [projects, setProjects] = useState([]);
   const [selectedRubric, setSelectedRubric] = useState(null);
@@ -45,7 +45,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
         const response = await fetch('http://localhost:4000/api/projects');
         if (response.ok) {
           const allProjects = await response.json();
-          
+
           const filteredProjects = allProjects.filter(project => {
             if (selectedRubric.level === 1) {
               return true;
@@ -55,7 +55,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
               const rubricLevelId = selectedRubric.levelId?._id || selectedRubric.levelId;
               const projectIdLevel = project.idLevel?._id || project.idLevel;
               const levelIdMatch = projectIdLevel === rubricLevelId;
-              
+
               if (!levelIdMatch) return false;
 
               let specialtyMatch = true;
@@ -70,7 +70,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
 
             return false;
           });
-          
+
           setProjects(filteredProjects);
         }
       } catch (error) {
@@ -88,16 +88,15 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
     const rubric = rubrics.find(r => r._id === rubricId);
     setSelectedRubric(rubric);
     setFormData(prev => ({ ...prev, rubricId, projectId: null }));
-    
-    // ✅ CORRECCIÓN: Inicializar scores con el ID del criterio
+
     if (rubric?.criteria) {
       console.log('🔍 Criterios de la rúbrica:', rubric.criteria.map(c => ({
         _id: c._id,
         name: c.criterionName
       })));
-      
+
       setCriteriaScores(rubric.criteria.map(criterio => ({
-        criterioId: criterio._id, // ✅ Usar el _id del criterio
+        criterioId: criterio._id,
         criterionName: criterio.criterionName,
         criterionWeight: criterio.criterionWeight || 0,
         puntajeObtenido: 0,
@@ -108,8 +107,17 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
 
   // Actualizar puntaje de un criterio
   const updateCriterionScore = (index, value) => {
+    let numericValue = parseFloat(value);
+
+    // Evitar NaN o valores vacíos
+    if (isNaN(numericValue)) numericValue = 0;
+
+    // Limitar el rango entre 0 y 10
+    if (numericValue < 0) numericValue = 0;
+    if (numericValue > 10) numericValue = 10;
+
     const newScores = [...criteriaScores];
-    newScores[index].puntajeObtenido = parseFloat(value) || 0;
+    newScores[index].puntajeObtenido = numericValue;
     setCriteriaScores(newScores);
   };
 
@@ -171,12 +179,11 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
       return;
     }
 
-    // ✅ CORRECCIÓN: Ahora criterioId existe en cada criterio
     const dataToSend = {
       projectId: formData.projectId,
       rubricId: formData.rubricId,
       criteriosEvaluados: criteriaScores.map(c => ({
-        criterioId: c.criterioId, // ✅ Ahora esto existe
+        criterioId: c.criterioId,
         puntajeObtenido: c.puntajeObtenido,
         comentario: c.comentario || ''
       })),
@@ -199,8 +206,8 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
       }
 
       if (result) {
-        console.log('✅ Evaluación guardada exitosamente:', result);
-        
+        console.log('Evaluación guardada exitosamente:', result);
+
         // Resetear formulario
         setFormData({
           rubricId: null,
@@ -208,11 +215,11 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
         });
         setSelectedRubric(null);
         setCriteriaScores([]);
-        
+
         if (onCancel) onCancel();
       }
     } catch (err) {
-      console.error('❌ Error al guardar:', err);
+      console.error("Error al guardar:", err);
       setErrors({ general: evaluationError || err.message || "Error al guardar la evaluación." });
     }
   };
@@ -317,21 +324,19 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                   </div>
                 )}
               </div>
-              
+
               {/* Advertencia de ponderaciones para Escala Estimativa */}
               {selectedRubric.rubricType === 1 && (
-                <div className={`mt-3 p-3 rounded-lg border-2 ${
-                  isWeightValid ? 'bg-green-50 border-green-300' : 'bg-orange-50 border-orange-300'
-                }`}>
+                <div className={`mt-3 p-3 rounded-lg border-2 ${isWeightValid ? 'bg-green-50 border-green-300' : 'bg-orange-50 border-orange-300'
+                  }`}>
                   <div className="flex items-center gap-2">
                     {isWeightValid ? (
                       <CheckCircle className="w-5 h-5 text-green-600" />
                     ) : (
                       <AlertTriangle className="w-5 h-5 text-orange-600" />
                     )}
-                    <span className={`text-sm font-bold ${
-                      isWeightValid ? 'text-green-700' : 'text-orange-700'
-                    }`}>
+                    <span className={`text-sm font-bold ${isWeightValid ? 'text-green-700' : 'text-orange-700'
+                      }`}>
                       Ponderación Total: {criteriaScores.reduce((sum, c) => sum + c.criterionWeight, 0).toFixed(1)}%
                       {!isWeightValid && ' (debe sumar 100%)'}
                     </span>
@@ -358,9 +363,9 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
               disabled={loadingProjects || evaluationLoading}
             >
               <option value="">
-                {loadingProjects ? 'Cargando proyectos...' : 
-                 projects.length === 0 ? 'No hay proyectos disponibles para esta rúbrica' :
-                 'Seleccionar proyecto...'}
+                {loadingProjects ? 'Cargando proyectos...' :
+                  projects.length === 0 ? 'No hay proyectos disponibles para esta rúbrica' :
+                    'Seleccionar proyecto...'}
               </option>
               {projects.map((project) => (
                 <option key={project._id} value={project._id}>
@@ -472,8 +477,8 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                     <span className="text-xl font-bold text-gray-800">Nota Final</span>
                   </div>
                   <p className="text-sm text-gray-600">
-                    {selectedRubric.rubricType === 1 
-                      ? "Calculada con ponderación: Σ(nota × peso%)" 
+                    {selectedRubric.rubricType === 1
+                      ? "Calculada con ponderación: Σ(nota × peso%)"
                       : `Promedio de ${criteriaScores.length} criterios`}
                   </p>
                 </div>

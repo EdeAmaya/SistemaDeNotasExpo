@@ -69,13 +69,13 @@ evaluationController.getEvaluationById = async (req, res) => {
 // ===============================
 evaluationController.createEvaluation = async (req, res) => {
     try {
-        console.log('📥 REQUEST BODY:', JSON.stringify(req.body, null, 2));
+        console.log('REQUEST BODY:', JSON.stringify(req.body, null, 2));
         
         const { projectId, rubricId, criteriosEvaluados, notaFinal, tipoCalculo } = req.body;
 
         // Verificar que notaFinal y tipoCalculo estén presentes
         if (notaFinal === undefined || !tipoCalculo) {
-            console.log('❌ Faltan notaFinal o tipoCalculo');
+            console.log('Faltan notaFinal o tipoCalculo');
             return res.status(400).json({ 
                 success: false, 
                 message: "notaFinal and tipoCalculo are required" 
@@ -85,20 +85,19 @@ evaluationController.createEvaluation = async (req, res) => {
         // Verificar que la rúbrica existe
         const rubric = await Rubric.findById(rubricId);
         if (!rubric) {
-            console.log('❌ Rúbrica no encontrada:', rubricId);
+            console.log('Rúbrica no encontrada:', rubricId);
             return res.status(404).json({ success: false, message: "Rubric not found" });
         }
 
-        console.log('✅ Rúbrica encontrada:', rubric._id);
-        console.log('✅ Criterios en rúbrica:', rubric.criteria.map(c => ({ _id: c._id, name: c.criterionName })));
+        console.log('Rúbrica encontrada:', rubric._id);
+        console.log('Criterios en rúbrica:', rubric.criteria.map(c => ({ _id: c._id, name: c.criterionName })));
 
-        // ✅ CORRECCIÓN: Mapear criterios evaluados aceptando tanto criterioId como criterionId
         const mappedCriteria = criteriosEvaluados.map(c => {
             // Aceptar ambos nombres (español e inglés)
             const criterionId = c.criterioId || c.criterionId;
             
             if (!criterionId) {
-                console.log('❌ Criterio sin ID:', c);
+                console.log('Criterio sin ID:', c);
                 throw new Error('Each criterion must have a criterioId or criterionId');
             }
 
@@ -106,12 +105,12 @@ evaluationController.createEvaluation = async (req, res) => {
             const crit = rubric.criteria.id(criterionId);
             
             if (!crit) {
-                console.log('❌ Criterio NO encontrado:', criterionId);
-                console.log('📋 IDs disponibles:', rubric.criteria.map(cr => cr._id.toString()));
+                console.log('Criterio NO encontrado:', criterionId);
+                console.log('IDs disponibles:', rubric.criteria.map(cr => cr._id.toString()));
                 throw new Error(`Criterion ${criterionId} not found in rubric`);
             }
             
-            console.log('✅ Criterio encontrado:', crit.criterionName);
+            console.log('Criterio encontrado:', crit.criterionName);
             return {
                 criterionId: crit._id,
                 criterionName: crit.criterionName,
@@ -128,11 +127,11 @@ evaluationController.createEvaluation = async (req, res) => {
             tipoCalculo
         });
 
-        console.log('✅ Evaluación creada exitosamente');
+        console.log('Evaluación creada exitosamente');
         res.status(201).json({ success: true, data: evaluation });
     } catch (error) {
-        console.error('❌ ERROR EN CONTROLADOR:', error.message);
-        console.error('❌ STACK:', error.stack);
+        console.error('ERROR EN CONTROLADOR:', error.message);
+        console.error('STACK:', error.stack);
         res.status(400).json({ 
             success: false, 
             message: "Error creating evaluation", 
@@ -159,7 +158,6 @@ evaluationController.updateEvaluation = async (req, res) => {
                 });
             }
 
-            // ✅ CORRECCIÓN: Aceptar tanto criterioId como criterionId
             const mappedCriteria = criteriosEvaluados.map(c => {
                 const criterionId = c.criterioId || c.criterionId;
                 

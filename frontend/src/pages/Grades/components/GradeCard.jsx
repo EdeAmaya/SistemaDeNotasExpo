@@ -18,12 +18,6 @@ const GradeCard = ({ grade, deleteGrade, editGrade, viewMode = 'list' }) => {
     return stage.name || stage.stageName || 'Etapa no definida';
   };
 
-  const getSpecialtyName = (rubric) => {
-    if (!rubric?.specialtyId) return 'Sin especialidad';
-    const specialty = rubric.specialtyId;
-    return specialty.specialtyName || specialty.name || 'Especialidad no definida';
-  };
-
   const getLevelName = (level) => {
     if (level === 1) return 'Tercer Ciclo';
     if (level === 2) return 'Bachillerato';
