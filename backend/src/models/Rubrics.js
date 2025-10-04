@@ -1,5 +1,5 @@
 // Schema para criterios
-import {Schema, model} from "mongoose";
+import { Schema, model } from "mongoose";
 
 // Subdocumento para los criterios
 const criterionSchema = new Schema({
@@ -9,15 +9,15 @@ const criterionSchema = new Schema({
   },
   criterionDescription: {
     type: String,
-    required: true
+    required: false
   },
   criterionScore: {
     type: Number,
-    required: true
+    required: false
   },
   criterionWeight: {
     type: Number,
-    required: true
+    required: false
   }
 }, { _id: false });
 
@@ -27,13 +27,15 @@ const rubricSchema = new Schema({
     type: String,
     required: true
   },
-  levelId: {
+  level: {
     type: Number,
+    enum: [1, 2], // 1 = Tercer Ciclo, 2 = Bachillerato
     required: true
   },
   specialtyId: {
-    type: Number,
-    required: true
+    type: Schema.Types.ObjectId,
+    ref: 'Specialty',
+    required: false
   },
   year: {
     type: String,
@@ -44,10 +46,10 @@ const rubricSchema = new Schema({
     ref: 'Stage',
     required: true
   },
-  evaluationTypeId: {
-    type: Schema.Types.ObjectId,
-    ref: 'EvaluationType',
-    required: true
+  rubricType: {
+    type: Number,
+    enum: [1, 2], // 1 = Escala estimativa, 2 = Rúbrica
+    required: true,
   },
   criteria: [criterionSchema] // Array de criterios
 }, {

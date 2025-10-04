@@ -83,13 +83,13 @@ app.use("/api/register", registerRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/levels", authenticateToken, levelsRoutes);
 app.use("/api/sections", authenticateToken, sectionsRoutes);
-app.use("/api/specialties", authenticateToken, specialtiesRoutes);
+app.use("/api/specialties", specialtiesRoutes);
 app.use("/api/students", authenticateToken, studentsRoutes);
 app.use("/api/projects", authenticateToken, projectsRoutes);
 app.use("/api/activities", authenticateToken, activitiesRoutes);
-app.use("/api/stages", authenticateToken, stagesRoutes);
+app.use("/api/stages", stagesRoutes);
 app.use("/api/user-activities", authenticateToken, userActivitiesRoutes);
-app.use("/api/rubrics", authenticateToken, rubricRoutes);
+app.use("/api/rubrics", rubricRoutes);
 app.use("/api/evaluations", authenticateToken, evaluationsRoutes);
 app.use("/api/heartbeat", authenticateToken, heartbeatRoutes);
 

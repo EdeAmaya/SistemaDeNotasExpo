@@ -7,122 +7,137 @@ const rubricController = {};
 // MANEJO DE RUBRICAS
 // =====================
 
-// GET - Obtener todas las rúbricas
+// Crear una nueva rúbrica
+rubricController.createRubrics = async (req, res) => {
+    try {
+        const {
+            rubricName,
+            level,
+            specialtyId,
+            year,
+            stageId,
+            rubricType,
+            criteria
+        } = req.body;
+
+        const newRubric = new Rubric({
+            rubricName,
+            level,
+            specialtyId: specialtyId || null, // Puede ser opcional
+            year,
+            stageId,
+            rubricType,
+            criteria
+        });
+
+        await newRubric.save();
+        res.status(201).json({
+            message: "Success",
+            rubric: newRubric
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Error creating rubric",
+            error: error.message
+        });
+    }
+};
+
+// Obtener todas las rúbricas
 rubricController.getRubrics = async (req, res) => {
     try {
         const rubrics = await Rubric.find()
-            .populate("stageId")
-            .populate("evaluationTypeId");
+            .populate("specialtyId", "specialtyName") // opcional
+            .populate("stageId", "name"); // trae solo el nombre de la etapa
 
-        res.status(200).json({
-            success: true,
-            data: rubrics,
-        });
+        res.status(200).json(rubrics);
     } catch (error) {
         res.status(500).json({
-            success: false,
             message: "Error fetching rubrics",
-            error: error.message,
+            error: error.message
         });
     }
 };
 
-// GET - Obtener una rúbrica por ID
+// Obtener una rúbrica por ID
 rubricController.getRubricById = async (req, res) => {
     try {
         const rubric = await Rubric.findById(req.params.id)
-            .populate("stageId")
-            .populate("evaluationTypeId");
+            .populate("specialtyId", "specialtyName")
+            .populate("stageId", "stageName");
 
         if (!rubric) {
-            return res.status(404).json({
-                success: false,
-                message: "Rubric not found",
-            });
+            return res.status(404).json({ message: "Rubric not found" });
         }
 
-        res.status(200).json({
-            success: true,
-            data: rubric,
-        });
+        res.status(200).json(rubric);
     } catch (error) {
         res.status(500).json({
-            success: false,
             message: "Error fetching rubric",
-            error: error.message,
+            error: error.message
         });
     }
 };
 
-// POST - Crear una o varias rúbricas con criterios
-rubricController.createRubrics = async (req, res) => {
-    try {
-        // Puede recibir un objeto o un array de rúbricas
-        const data = Array.isArray(req.body) ? req.body : [req.body];
-        const rubrics = await Rubric.insertMany(data);
-
-        res.status(201).json({
-            success: true,
-            data: rubrics,
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: "Error creating rubrics",
-            error: error.message,
-        });
-    }
-};
-
-// PUT - Actualizar una rúbrica completa (incluyendo criterios)
+// Actualizar una rúbrica
 rubricController.updateRubric = async (req, res) => {
     try {
-        const rubric = await Rubric.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-            runValidators: true,
-        });
+        const {
+            rubricName,
+            level,
+            specialtyId,
+            year,
+            stageId,
+            rubricType,
+            criteria
+        } = req.body;
 
-        if (!rubric) {
-            return res.status(404).json({
-                success: false,
-                message: "Rubric not found",
-            });
+        const updatedRubric = await Rubric.findByIdAndUpdate(
+            req.params.id,
+            {
+                rubricName,
+                level,
+                specialtyId: specialtyId || null,
+                year,
+                stageId,
+                rubricType,
+                criteria
+            },
+            { new: true, runValidators: true }
+        )
+            .populate("specialtyId", "specialtyName")
+            .populate("stageId", "stageName");
+
+        if (!updatedRubric) {
+            return res.status(404).json({ message: "Rubric not found" });
         }
 
         res.status(200).json({
-            success: true,
-            data: rubric,
+            message: "Rubric updated successfully",
+            rubric: updatedRubric
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
+        res.status(500).json({
             message: "Error updating rubric",
-            error: error.message,
+            error: error.message
         });
     }
 };
 
-// DELETE - Eliminar rúbrica
+// Eliminar una rúbrica
 rubricController.deleteRubric = async (req, res) => {
     try {
-        const rubric = await Rubric.findByIdAndDelete(req.params.id);
+        const deletedRubric = await Rubric.findByIdAndDelete(req.params.id);
 
-        if (!rubric) {
-            return res.status(404).json({
-                success: false,
-                message: "Rubric not found",
-            });
+        if (!deletedRubric) {
+            return res.status(404).json({ message: "Rubric not found" });
         }
 
-        res.status(200).json({
-            success: true,
-            message: "Rubric deleted successfully",
-        });
+        res.status(200).json({ message: "Rubric deleted successfully" });
     } catch (error) {
         res.status(500).json({
-            success: false,
             message: "Error deleting rubric",
-            error: error.message,
+            error: error.message
         });
     }
 };
