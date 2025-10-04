@@ -10,6 +10,7 @@ import Users from "../pages/Users/Users";
 import Students from "../pages/Students/Students";
 import Projects from "../pages/Projects/Projects";
 import Evaluations from "../pages/Evaluations/Evaluations";
+import Grades from "../pages/Grades/Grades";
 import Login from "../pages/Login/Login";
 
 // Navegación
@@ -92,6 +93,13 @@ function Navigation() {
           <Route path="/evaluations" element={
             <ProtectedRoute requiredRoles={['Admin', 'Docente', 'Evaluador']}>
               <Evaluations />
+            </ProtectedRoute>
+          } />
+
+          {/* Rutas de notas - Admin, Docente y Evaluador */}
+          <Route path="/grades" element={
+            <ProtectedRoute requiredRoles={['Admin', 'Docente', 'Evaluador']}>
+              <Grades />
             </ProtectedRoute>
           } />
 

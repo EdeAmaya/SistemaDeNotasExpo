@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { List, LayoutGrid, CheckCircle, BookOpen } from 'lucide-react';
+import { List, LayoutGrid, CheckCircle, BookOpen, Search } from 'lucide-react';
 import RubricCard from "./RubricCard";
 
 const ListRubrics = ({ rubrics, loading, deleteRubric, updateRubric }) => {
@@ -48,19 +48,22 @@ const ListRubrics = ({ rubrics, loading, deleteRubric, updateRubric }) => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all text-sm font-medium placeholder-gray-400"
             />
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+              <Search className="w-5 h-5 text-gray-400" />
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2 bg-gray-100 p-1.5 rounded-lg">
           <button
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm transition-all ${viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+            className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm transition-all ${viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
           >
             <List className="w-4 h-4" />
             <span className="hidden sm:inline">Lista</span>
           </button>
           <button
             onClick={() => setViewMode('grid')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm transition-all ${viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+            className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm transition-all ${viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
           >
             <LayoutGrid className="w-4 h-4" />
             <span className="hidden sm:inline">Tarjetas</span>

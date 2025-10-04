@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, GraduationCap, Triangle, ClipboardList, LogOut } from 'lucide-react';
+import { Home, Users, GraduationCap, Triangle, ClipboardList, LogOut, BookOpenCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import useStages from '../hooks/useStages';
 import toast from 'react-hot-toast';
@@ -97,6 +97,13 @@ const NavBar = () => {
       title: 'Evaluaciones',
       icon: ClipboardList,
       route: '/evaluations',
+      roles: ['Admin', 'Docente', 'Evaluador']
+    },
+    {
+      id: 'grades',
+      title: 'Notas',
+      icon: BookOpenCheck,
+      route: '/grades',
       roles: ['Admin', 'Docente', 'Evaluador']
     }
   ];

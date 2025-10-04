@@ -81,17 +81,17 @@ app.use("/api/register", registerRoutes);
 
 // Rutas protegidas (requieren autenticación)
 app.use("/api/users", usersRoutes);
-app.use("/api/levels", authenticateToken, levelsRoutes);
-app.use("/api/sections", authenticateToken, sectionsRoutes);
+app.use("/api/levels", levelsRoutes);
+app.use("/api/sections", sectionsRoutes);
 app.use("/api/specialties", specialtiesRoutes);
-app.use("/api/students", authenticateToken, studentsRoutes);
-app.use("/api/projects", authenticateToken, projectsRoutes);
-app.use("/api/activities", authenticateToken, activitiesRoutes);
+app.use("/api/students", studentsRoutes);
+app.use("/api/projects", projectsRoutes);
+app.use("/api/activities", activitiesRoutes);
 app.use("/api/stages", stagesRoutes);
-app.use("/api/user-activities", authenticateToken, userActivitiesRoutes);
+app.use("/api/user-activities", userActivitiesRoutes);
 app.use("/api/rubrics", rubricRoutes);
-app.use("/api/evaluations", authenticateToken, evaluationsRoutes);
-app.use("/api/heartbeat", authenticateToken, heartbeatRoutes);
+app.use("/api/evaluations", evaluationsRoutes);
+app.use("/api/heartbeat", heartbeatRoutes);
 
 // Ruta de verificación de estado de autenticación
 app.get("/api/auth/verify", authenticateToken, (req, res) => {
