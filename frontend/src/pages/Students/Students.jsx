@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
-import { GraduationCap, UserPlus, BookOpen, Users, Award, Briefcase, Info } from 'lucide-react';
+import { GraduationCap, UserPlus, BookOpen, Users, Award, Briefcase, Info, Upload } from 'lucide-react';
 import ListStudents from './components/ListStudents';
 import RegisterStudent from './components/RegisterStudent';
+import BulkStudentUpload from './components/BulkStudentUpload';
 import useDataStudents from './hooks/useDataStudents';
 
 const Students = () => {
   const [activeTab, setActiveTab] = useState('list');
+  const [levels, setLevels] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [specialties, setSpecialties] = useState([]);
+  const [projects, setProjects] = useState([]);
   
   const {
     students,
@@ -29,8 +34,31 @@ const Students = () => {
     deleteStudent,
     updateStudent,
     handleEdit,
-    clearForm
+    clearForm,
+    refreshStudents
   } = useDataStudents();
+
+  React.useEffect(() => {
+    const fetchCatalogs = async () => {
+      try {
+        const [levelsRes, sectionsRes, specialtiesRes, projectsRes] = await Promise.all([
+          fetch('http://localhost:4000/api/levels', { credentials: 'include' }),
+          fetch('http://localhost:4000/api/sections', { credentials: 'include' }),
+          fetch('http://localhost:4000/api/specialties', { credentials: 'include' }),
+          fetch('http://localhost:4000/api/projects', { credentials: 'include' })
+        ]);
+
+        if (levelsRes.ok) setLevels(await levelsRes.json());
+        if (sectionsRes.ok) setSections(await sectionsRes.json());
+        if (specialtiesRes.ok) setSpecialties(await specialtiesRes.json());
+        if (projectsRes.ok) setProjects(await projectsRes.json());
+      } catch (error) {
+        console.error('Error cargando catálogos:', error);
+      }
+    };
+
+    fetchCatalogs();
+  }, []);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -41,6 +69,11 @@ const Students = () => {
 
   const handleCancelEdit = () => {
     clearForm();
+    setActiveTab('list');
+  };
+
+  const handleBulkUploadComplete = () => {
+    refreshStudents();
     setActiveTab('list');
   };
 
@@ -136,6 +169,21 @@ const Students = () => {
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-full"></div>
               )}
             </button>
+
+            <button
+              onClick={() => handleTabChange('bulk')}
+              className={`relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
+                activeTab === 'bulk' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Upload className="w-5 h-5" />
+                <span>Carga Masiva</span>
+              </div>
+              {activeTab === 'bulk' && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-t-full"></div>
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -174,7 +222,7 @@ const Students = () => {
                 setActiveTab('register');
               }}
             />
-          ) : (
+          ) : activeTab === 'register' ? (
             <div className="p-8">
               <RegisterStudent
                 studentCode={studentCode}
@@ -197,6 +245,14 @@ const Students = () => {
                 onCancel={handleCancelEdit}
               />
             </div>
+          ) : (
+            <BulkStudentUpload
+              onUploadComplete={handleBulkUploadComplete}
+              levels={levels}
+              sections={sections}
+              specialties={specialties}
+              projects={projects}
+            />
           )}
         </div>
 
@@ -220,8 +276,8 @@ const Students = () => {
                   <span><span className="font-semibold text-gray-800">Proyectos:</span> Asignación de trabajos</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4 text-green-600" />
-                  <span><span className="font-semibold text-gray-800">Código único:</span> Identificación individual</span>
+                  <Upload className="w-4 h-4 text-indigo-600" />
+                  <span><span className="font-semibold text-gray-800">Carga masiva:</span> Múltiples estudiantes vía Excel</span>
                 </div>
               </div>
             </div>

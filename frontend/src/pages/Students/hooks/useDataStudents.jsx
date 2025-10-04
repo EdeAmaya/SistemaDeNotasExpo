@@ -42,7 +42,7 @@ const useDataStudents = () => {
             if (excludeId) {
                 url += `?excludeId=${excludeId}`;
             }
-            
+
             const response = await fetch(url, {
                 credentials: 'include' // ← AGREGADO
             });
@@ -60,7 +60,7 @@ const useDataStudents = () => {
     // Guardar nuevo estudiante
     const saveStudent = async (e) => {
         e.preventDefault();
-        
+
         if (!studentCode || !name || !lastName || !idLevel || !idSection) {
             toast.error("Por favor completa todos los campos obligatorios");
             return;
@@ -218,6 +218,10 @@ const useDataStudents = () => {
         setProjectId("");
     };
 
+    const refreshStudents = async () => {
+        await fetchStudents(); 
+    };
+
     // Cargar estudiantes al montar el componente
     useEffect(() => {
         fetchStudents();
@@ -235,7 +239,7 @@ const useDataStudents = () => {
         idSection,
         idSpecialty,
         projectId,
-        
+
         // Setters
         setStudentCode,
         setName,
@@ -244,7 +248,7 @@ const useDataStudents = () => {
         setIdSection,
         setIdSpecialty,
         setProjectId,
-        
+
         // Funciones
         fetchStudents,
         saveStudent,
@@ -252,7 +256,8 @@ const useDataStudents = () => {
         updateStudent,
         handleEdit,
         clearForm,
-        checkStudentCode
+        checkStudentCode,
+        refreshStudents
     };
 };
 
