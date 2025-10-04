@@ -264,7 +264,7 @@ studentController.bulkInsertStudents = async (req, res) => {
             code: studentData.studentCode,
             error: `El código ${studentData.studentCode} ya está asignado a ${existingStudent.name} ${existingStudent.lastName}`
           });
-          continue; 
+          continue;
         }
 
         const newStudent = new studentModel({
@@ -327,6 +327,40 @@ studentController.bulkInsertStudents = async (req, res) => {
     console.error('Error en carga masiva:', error);
     res.status(500).json({
       message: "Error en la carga masiva de estudiantes",
+      error: error.message
+    });
+  }
+};
+
+studentController.deleteAllStudents = async (req, res) => {
+  try {
+    const count = await studentModel.countDocuments();
+
+    if (count === 0) {
+      return res.status(404).json({
+        message: "No hay estudiantes para eliminar"
+      });
+    }
+
+    const result = await studentModel.deleteMany({});
+
+    await ActivityLogger.log(
+      req.user._id,
+      'DELETE_ALL_STUDENTS',
+      `Eliminó TODOS los estudiantes del sistema (${count} registros)`,
+      'Student',
+      null,
+      { deletedCount: count },
+      req
+    );
+
+    res.json({
+      message: `Se eliminaron ${count} estudiantes exitosamente`,
+      deletedCount: count
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error al eliminar todos los estudiantes",
       error: error.message
     });
   }

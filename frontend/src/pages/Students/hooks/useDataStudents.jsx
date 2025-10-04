@@ -219,7 +219,33 @@ const useDataStudents = () => {
     };
 
     const refreshStudents = async () => {
-        await fetchStudents(); 
+        await fetchStudents();
+    };
+
+    const deleteAllStudents = async () => {
+        try {
+            const response = await fetch(`${API}/students/delete-all`, {
+                method: "DELETE",
+                credentials: 'include',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || "Error al eliminar todos los estudiantes");
+            }
+
+            toast.success(result.message);
+            await fetchStudents();
+            return true;
+        } catch (error) {
+            console.error("Error:", error);
+            toast.error("Error al eliminar todos los estudiantes");
+            return false;
+        }
     };
 
     // Cargar estudiantes al montar el componente
@@ -257,7 +283,8 @@ const useDataStudents = () => {
         handleEdit,
         clearForm,
         checkStudentCode,
-        refreshStudents
+        refreshStudents,
+        deleteAllStudents
     };
 };
 

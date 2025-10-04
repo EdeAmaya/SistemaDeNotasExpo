@@ -4,6 +4,7 @@ import ListStudents from './components/ListStudents';
 import RegisterStudent from './components/RegisterStudent';
 import BulkStudentUpload from './components/BulkStudentUpload';
 import useDataStudents from './hooks/useDataStudents';
+import DeleteAllStudentsButton from './components/DeleteAllStudentsButton';
 
 const Students = () => {
   const [activeTab, setActiveTab] = useState('list');
@@ -11,7 +12,7 @@ const Students = () => {
   const [sections, setSections] = useState([]);
   const [specialties, setSpecialties] = useState([]);
   const [projects, setProjects] = useState([]);
-  
+
   const {
     students,
     loading,
@@ -32,6 +33,7 @@ const Students = () => {
     setProjectId,
     saveStudent,
     deleteStudent,
+    deleteAllStudents,
     updateStudent,
     handleEdit,
     clearForm,
@@ -86,12 +88,12 @@ const Students = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
-      
+
       {/* Header Superior */}
       <div className="bg-white border-b-2 border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
-            
+
             <div>
               <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                 <span>Sistema</span>
@@ -139,9 +141,8 @@ const Students = () => {
           <div className="flex gap-1">
             <button
               onClick={() => handleTabChange('list')}
-              className={`relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
-                activeTab === 'list' ? 'text-green-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`relative px-6 py-4 font-bold text-sm transition-all duration-300 ${activeTab === 'list' ? 'text-green-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5" />
@@ -154,12 +155,11 @@ const Students = () => {
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-green-600 rounded-t-full"></div>
               )}
             </button>
-            
+
             <button
               onClick={() => handleTabChange('register')}
-              className={`relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
-                activeTab === 'register' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`relative px-6 py-4 font-bold text-sm transition-all duration-300 ${activeTab === 'register' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <UserPlus className="w-5 h-5" />
@@ -172,9 +172,8 @@ const Students = () => {
 
             <button
               onClick={() => handleTabChange('bulk')}
-              className={`relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
-                activeTab === 'bulk' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`relative px-6 py-4 font-bold text-sm transition-all duration-300 ${activeTab === 'bulk' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <Upload className="w-5 h-5" />
@@ -184,13 +183,18 @@ const Students = () => {
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-t-full"></div>
               )}
             </button>
+
+            <DeleteAllStudentsButton
+              totalStudents={students.length}
+              onDeleteAll={deleteAllStudents}
+            />
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-8 py-8">
-        
+
         {/* Stats móvil */}
         <div className="lg:hidden grid grid-cols-3 gap-3 mb-6">
           <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-3 rounded-xl shadow-lg text-center">
@@ -213,7 +217,7 @@ const Students = () => {
         {/* Contenido */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
           {activeTab === 'list' ? (
-            <ListStudents 
+            <ListStudents
               students={students}
               loading={loading}
               deleteStudent={deleteStudent}
