@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { PlusCircle, Edit2, XCircle, ClipboardList, Calendar, Layers, CheckCircle, Award, AlertTriangle } from "lucide-react";
+import useDataRubrics from '../hooks/useDataRubrics'; // Ajusta la ruta según tu estructura
 
-const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) => {
+const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
+  // Hook personalizado para manejar las operaciones de rúbricas
+  const { createRubric, updateRubric, loading: rubricLoading, error: rubricError } = useDataRubrics();
+  
   const [specialties, setSpecialties] = useState([]);
   const [stages, setStages] = useState([]);
+  const [levels, setLevels] = useState([]);
   const [loadingSpecialties, setLoadingSpecialties] = useState(false);
   const [loadingStages, setLoadingStages] = useState(false);
+  const [loadingLevels, setLoadingLevels] = useState(false);
   const [errors, setErrors] = useState({});
   const [criteriaCount, setCriteriaCount] = useState(1);
 
@@ -19,58 +25,76 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
     { value: "2", label: "Rúbrica" }
   ];
 
-  // Cargar especialidades y etapas
+  // Cargar especialidades, etapas y niveles al montar el componente
   useEffect(() => {
     const fetchData = async () => {
       setLoadingSpecialties(true);
       setLoadingStages(true);
-      
-      try {
-        const token = localStorage.getItem('token') || 
-                     localStorage.getItem('authToken') || 
-                     sessionStorage.getItem('token') ||
-                     sessionStorage.getItem('authToken');
+      setLoadingLevels(true);
 
-        if (!token) {
-          console.warn('No se encontró token de autenticación');
-        }
+      try {
+        const token = localStorage.getItem('token') ||
+          localStorage.getItem('authToken') ||
+          sessionStorage.getItem('token') ||
+          sessionStorage.getItem('authToken');
 
         const headers = {
           'Content-Type': 'application/json',
           ...(token && { 'Authorization': `Bearer ${token}` })
         };
 
-        const [specialtiesRes, stagesRes] = await Promise.all([
+        const [specialtiesRes, stagesRes, levelsRes] = await Promise.all([
           fetch('http://localhost:4000/api/specialties', { headers }),
-          fetch('http://localhost:4000/api/stages', { headers })
+          fetch('http://localhost:4000/api/stages', { headers }),
+          fetch('http://localhost:4000/api/levels', { headers })
         ]);
 
+        if (levelsRes.ok) {
+          const levelsData = await levelsRes.json();
+          console.log('Niveles cargados:', levelsData);
+          setLevels(levelsData);
+        } else {
+          console.error('Error al cargar niveles:', levelsRes.status);
+        }
+
         if (specialtiesRes.ok) {
-          const data = await specialtiesRes.json();
-          setSpecialties(data);
+          const specialtiesData = await specialtiesRes.json();
+          setSpecialties(specialtiesData);
+        } else {
+          console.error('Error al cargar especialidades:', specialtiesRes.status);
         }
 
         if (stagesRes.ok) {
-          const data = await stagesRes.json();
-          setStages(data);
+          const stagesData = await stagesRes.json();
+          setStages(stagesData);
+        } else {
+          console.error('Error al cargar etapas:', stagesRes.status);
         }
       } catch (error) {
         console.error('Error al cargar datos:', error);
+        setErrors({ general: 'Error al cargar los datos iniciales' });
       } finally {
         setLoadingSpecialties(false);
         setLoadingStages(false);
+        setLoadingLevels(false);
       }
     };
 
     fetchData();
   }, []);
 
-  // Limpiar especialidad si no es Bachillerato
+  // Limpiar especialidad y levelId si no es Bachillerato
   useEffect(() => {
-    if (formData.level !== "2" && formData.specialtyId) {
-      setFormData(prev => ({ ...prev, specialtyId: null }));
+    if (formData.level !== "2") {
+      if (formData.specialtyId || formData.levelId) {
+        setFormData(prev => ({ 
+          ...prev, 
+          specialtyId: null,
+          levelId: null 
+        }));
+      }
     }
-  }, [formData.level]);
+  }, [formData.level, formData.specialtyId, formData.levelId, setFormData]);
 
   // Calcular ponderación total para Escala Estimativa
   const calculateTotalWeight = () => {
@@ -88,14 +112,12 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
     const newCriteria = [];
     for (let i = 0; i < count; i++) {
       if (formData.rubricType === "1") {
-        // Escala Estimativa
         newCriteria.push({
           criterionName: "",
           criterionDescription: "",
           criterionWeight: ""
         });
       } else {
-        // Rúbrica
         newCriteria.push({
           criterionName: ""
         });
@@ -113,15 +135,15 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
 
   // Cambiar tipo de rúbrica (reinicia criterios)
   const handleRubricTypeChange = (value) => {
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData(prev => ({
+      ...prev,
       rubricType: value,
-      criteria: [] 
+      criteria: []
     }));
     setCriteriaCount(1);
   };
 
-  // Validación y envío
+  // Validación y envío usando el hook
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
@@ -134,6 +156,11 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
 
     if (formData.level === "2" && !formData.specialtyId) {
       setErrors({ general: "Bachillerato requiere una especialidad." });
+      return;
+    }
+
+    if (formData.level === "2" && !formData.levelId) {
+      setErrors({ general: "Bachillerato requiere seleccionar un nivel." });
       return;
     }
 
@@ -173,28 +200,26 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
     // Preparar datos según el modelo del backend
     const dataToSend = {
       rubricName: formData.rubricName,
-      level: parseInt(formData.level), // Convertir a Number
+      level: parseInt(formData.level),
       specialtyId: formData.specialtyId || null,
-      year: formData.year.toString(), // Mantener como String
+      levelId: formData.levelId || null,
+      year: formData.year.toString(),
       stageId: formData.stageId,
-      rubricType: parseInt(formData.rubricType), // Convertir a Number
+      rubricType: parseInt(formData.rubricType),
       criteria: formData.criteria.map(criterion => {
-        // El modelo requiere TODOS los campos del criterionSchema
-        // Para Escala Estimativa (tipo 1)
         if (formData.rubricType === "1") {
           return {
             criterionName: criterion.criterionName,
             criterionDescription: criterion.criterionDescription,
-            criterionScore: 0, // Valor por defecto
+            criterionScore: 0,
             criterionWeight: parseFloat(criterion.criterionWeight)
           };
         }
-        // Para Rúbrica (tipo 2)
         return {
           criterionName: criterion.criterionName,
-          criterionDescription: "", // Campo requerido por el schema
-          criterionScore: 0, // Campo requerido por el schema
-          criterionWeight: 0 // Campo requerido por el schema
+          criterionDescription: "",
+          criterionScore: 0,
+          criterionWeight: 0
         };
       })
     };
@@ -202,10 +227,33 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
     console.log('Datos a enviar:', dataToSend);
 
     try {
-      await onSave(dataToSend);
+      let result;
+      if (isEditing && formData._id) {
+        result = await updateRubric(formData._id, dataToSend);
+      } else {
+        result = await createRubric(dataToSend);
+      }
+
+      if (result) {
+        console.log('Rúbrica guardada exitosamente:', result);
+        // Resetear formulario
+        setFormData({
+          rubricName: "",
+          level: "",
+          levelId: null,
+          specialtyId: null,
+          year: "",
+          stageId: "",
+          rubricType: "",
+          criteria: []
+        });
+        
+        // Notificar éxito al componente padre si existe callback
+        if (onCancel) onCancel();
+      }
     } catch (err) {
-      console.error('Error completo:', err);
-      setErrors({ general: "Error al guardar la rúbrica." });
+      console.error('Error al guardar:', err);
+      setErrors({ general: rubricError || "Error al guardar la rúbrica." });
     }
   };
 
@@ -229,11 +277,11 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
       </div>
 
       {/* Errores */}
-      {errors.general && (
+      {(errors.general || rubricError) && (
         <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
           <div className="flex items-center gap-2">
             <XCircle className="w-5 h-5 text-red-500" />
-            <p className="text-red-700 font-medium">{errors.general}</p>
+            <p className="text-red-700 font-medium">{errors.general || rubricError}</p>
           </div>
         </div>
       )}
@@ -258,6 +306,7 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
                 className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all"
                 placeholder="Ej: Evaluación Proyecto Final"
                 required
+                disabled={rubricLoading}
               />
             </div>
 
@@ -268,6 +317,7 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
                 onChange={(e) => setFormData(prev => ({ ...prev, level: e.target.value }))}
                 className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all"
                 required
+                disabled={rubricLoading}
               >
                 <option value="">Seleccionar nivel...</option>
                 {levelOptions.map((option) => (
@@ -292,6 +342,7 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
                 min="2020"
                 max="2100"
                 required
+                disabled={rubricLoading}
               />
             </div>
 
@@ -305,7 +356,7 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
                 onChange={(e) => setFormData(prev => ({ ...prev, stageId: e.target.value }))}
                 className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all"
                 required
-                disabled={loadingStages}
+                disabled={loadingStages || rubricLoading}
               >
                 <option value="">
                   {loadingStages ? 'Cargando etapas...' : 'Seleccionar etapa...'}
@@ -325,6 +376,7 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
                 onChange={(e) => handleRubricTypeChange(e.target.value)}
                 className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all"
                 required
+                disabled={rubricLoading}
               >
                 <option value="">Seleccionar tipo...</option>
                 {rubricTypeOptions.map((option) => (
@@ -336,28 +388,65 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
             </div>
 
             {formData.level === "2" && (
-              <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
-                  <Award className="w-4 h-4" />
-                  <span>Especialidad *</span>
-                </label>
-                <select
-                  value={formData.specialtyId || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, specialtyId: e.target.value }))}
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all"
-                  required={formData.level === "2"}
-                  disabled={loadingSpecialties}
-                >
-                  <option value="">
-                    {loadingSpecialties ? 'Cargando especialidades...' : 'Seleccionar especialidad...'}
-                  </option>
-                  {specialties.map((specialty) => (
-                    <option key={specialty._id} value={specialty._id}>
-                      {specialty.specialtyName || specialty.name}
+              <>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                    <Award className="w-4 h-4" />
+                    <span>Especialidad *</span>
+                  </label>
+                  <select
+                    value={formData.specialtyId || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, specialtyId: e.target.value }))}
+                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all"
+                    required
+                    disabled={loadingSpecialties || rubricLoading}
+                  >
+                    <option value="">
+                      {loadingSpecialties ? 'Cargando especialidades...' : 'Seleccionar especialidad...'}
                     </option>
-                  ))}
-                </select>
-              </div>
+                    {specialties.map((specialty) => (
+                      <option key={specialty._id} value={specialty._id}>
+                        {specialty.specialtyName || specialty.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                    <Award className="w-4 h-4" />
+                    <span>Nivel de Bachillerato *</span>
+                  </label>
+                  <select
+                    value={formData.levelId || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, levelId: e.target.value }))}
+                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all"
+                    required
+                    disabled={loadingLevels || rubricLoading}
+                  >
+                    <option value="">
+                      {loadingLevels ? "Cargando niveles..." : "Seleccionar nivel..."}
+                    </option>
+                    {levels.map(lvl => (
+                      <option key={lvl._id} value={lvl._id}>
+                        {lvl.levelName || lvl.name || `Nivel ${lvl._id}`}
+                      </option>
+                    ))}
+                  </select>
+
+                  {!loadingLevels && levels.length === 0 && (
+                    <p className="mt-2 text-sm text-amber-600">
+                      No se encontraron niveles. Verifica que la API /levels esté funcionando.
+                    </p>
+                  )}
+
+                  {!loadingLevels && levels.length > 0 && (
+                    <p className="mt-2 text-xs text-gray-500">
+                      {levels.length} nivel(es) disponible(s)
+                    </p>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -370,7 +459,6 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
               <span>Criterios de Evaluación *</span>
             </h3>
 
-            {/* Selector de cantidad de criterios */}
             {formData.criteria.length === 0 && (
               <div className="mb-6 bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
                 <label className="block text-sm font-bold text-gray-700 mb-3">
@@ -384,11 +472,13 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
                     value={criteriaCount}
                     onChange={(e) => setCriteriaCount(Math.max(1, parseInt(e.target.value) || 1))}
                     className="w-24 px-4 py-2 bg-white border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    disabled={rubricLoading}
                   />
                   <button
                     type="button"
                     onClick={() => initializeCriteria(criteriaCount)}
-                    className="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-colors"
+                    className="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={rubricLoading}
                   >
                     Crear Criterios
                   </button>
@@ -396,25 +486,20 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
               </div>
             )}
 
-            {/* Tabla de criterios */}
             {formData.criteria.length > 0 && (
               <>
-                {/* Alerta de ponderación para Escala Estimativa */}
                 {formData.rubricType === "1" && (
-                  <div className={`mb-4 p-4 rounded-lg border-2 ${
-                    isWeightValid 
-                      ? 'bg-green-50 border-green-200' 
-                      : 'bg-orange-50 border-orange-200'
-                  }`}>
+                  <div className={`mb-4 p-4 rounded-lg border-2 ${isWeightValid
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-orange-50 border-orange-200'
+                    }`}>
                     <div className="flex items-center gap-2">
                       {isWeightValid ? (
                         <CheckCircle className="w-5 h-5 text-green-600" />
                       ) : (
                         <AlertTriangle className="w-5 h-5 text-orange-600" />
                       )}
-                      <span className={`font-bold ${
-                        isWeightValid ? 'text-green-700' : 'text-orange-700'
-                      }`}>
+                      <span className={`font-bold ${isWeightValid ? 'text-green-700' : 'text-orange-700'}`}>
                         Ponderación Total: {totalWeight}%
                       </span>
                     </div>
@@ -425,9 +510,7 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-purple-100">
-                        <th className="border-2 border-gray-300 px-4 py-3 text-left text-sm font-bold text-gray-700">
-                          #
-                        </th>
+                        <th className="border-2 border-gray-300 px-4 py-3 text-left text-sm font-bold text-gray-700">#</th>
                         <th className="border-2 border-gray-300 px-4 py-3 text-left text-sm font-bold text-gray-700">
                           Nombre del Criterio *
                         </th>
@@ -456,6 +539,7 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
                               onChange={(e) => updateCriterionField(index, "criterionName", e.target.value)}
                               className="w-full px-3 py-2 border-2 border-gray-200 rounded focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
                               placeholder="Ej: Creatividad"
+                              disabled={rubricLoading}
                             />
                           </td>
                           {formData.rubricType === "1" && (
@@ -467,6 +551,7 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
                                   className="w-full px-3 py-2 border-2 border-gray-200 rounded focus:border-purple-500 focus:ring-2 focus:ring-purple-100 resize-none"
                                   rows="2"
                                   placeholder="Descripción del criterio..."
+                                  disabled={rubricLoading}
                                 />
                               </td>
                               <td className="border-2 border-gray-300 px-2 py-2">
@@ -479,6 +564,7 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
                                   min="0"
                                   max="100"
                                   step="0.1"
+                                  disabled={rubricLoading}
                                 />
                               </td>
                             </>
@@ -492,7 +578,8 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
                 <button
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, criteria: [] }))}
-                  className="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-colors"
+                  className="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={rubricLoading}
                 >
                   Reiniciar Criterios
                 </button>
@@ -505,17 +592,31 @@ const RegisterRubric = ({ formData, setFormData, onSave, onCancel, isEditing }) 
         <div className="flex gap-4 pt-4">
           <button
             type="submit"
-            className="flex-1 py-4 px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800"
+            disabled={rubricLoading}
+            className="flex-1 py-4 px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
-            <CheckCircle className="w-5 h-5" />
-            <span>{isEditing ? "Actualizar Rúbrica" : "Guardar Rúbrica"}</span>
+            {rubricLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span>Guardando...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                <span>{isEditing ? "Actualizar Rúbrica" : "Guardar Rúbrica"}</span>
+              </>
+            )}
           </button>
 
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              className="px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+              disabled={rubricLoading}
+              className="px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <XCircle className="w-5 h-5" />
               <span>Cancelar</span>

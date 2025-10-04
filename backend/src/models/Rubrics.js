@@ -19,7 +19,7 @@ const criterionSchema = new Schema({
     type: Number,
     required: false
   }
-}, { _id: false });
+}, { _id: true });
 
 // Esquema principal de rúbrica
 const rubricSchema = new Schema({
@@ -27,10 +27,15 @@ const rubricSchema = new Schema({
     type: String,
     required: true
   },
-  level: {
+  level: { // Nivel educativo
     type: Number,
     enum: [1, 2], // 1 = Tercer Ciclo, 2 = Bachillerato
     required: true
+  },
+   levelId: {
+    type: Schema.Types.ObjectId,
+    ref: "Level", // Grado específico
+    required: false
   },
   specialtyId: {
     type: Schema.Types.ObjectId,

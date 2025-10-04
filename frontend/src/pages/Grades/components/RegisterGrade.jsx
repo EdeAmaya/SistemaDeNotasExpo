@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { PlusCircle, Edit2, XCircle, ClipboardList, Award, CheckCircle, BookOpen, AlertTriangle, Calculator } from "lucide-react";
+import useDataEvaluations from '../hooks/useDataEvaluations';
 
-const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) => {
+const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
+  const { createEvaluation, updateEvaluation, loading: evaluationLoading, error: evaluationError } = useDataEvaluations();
+  
   const [rubrics, setRubrics] = useState([]);
   const [projects, setProjects] = useState([]);
   const [selectedRubric, setSelectedRubric] = useState(null);
@@ -43,18 +46,29 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
         if (response.ok) {
           const allProjects = await response.json();
           
-          // Filtrar proyectos que coincidan con nivel y especialidad de la rúbrica
           const filteredProjects = allProjects.filter(project => {
-            const levelMatch = project.level === selectedRubric.level;
-            
-            // Si la rúbrica tiene especialidad, el proyecto también debe coincidir
-            if (selectedRubric.specialtyId) {
-              const specialtyMatch = project.specialtyId?._id === selectedRubric.specialtyId._id ||
-                                    project.specialtyId === selectedRubric.specialtyId._id;
-              return levelMatch && specialtyMatch;
+            if (selectedRubric.level === 1) {
+              return true;
             }
-            
-            return levelMatch;
+
+            if (selectedRubric.level === 2) {
+              const rubricLevelId = selectedRubric.levelId?._id || selectedRubric.levelId;
+              const projectIdLevel = project.idLevel?._id || project.idLevel;
+              const levelIdMatch = projectIdLevel === rubricLevelId;
+              
+              if (!levelIdMatch) return false;
+
+              let specialtyMatch = true;
+              if (selectedRubric.specialtyId) {
+                const rubricSpecialtyId = selectedRubric.specialtyId._id || selectedRubric.specialtyId;
+                const projectSpecialtyId = project.selectedSpecialty?._id || project.selectedSpecialty;
+                specialtyMatch = projectSpecialtyId === rubricSpecialtyId;
+              }
+
+              return levelIdMatch && specialtyMatch;
+            }
+
+            return false;
           });
           
           setProjects(filteredProjects);
@@ -75,14 +89,19 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
     setSelectedRubric(rubric);
     setFormData(prev => ({ ...prev, rubricId, projectId: null }));
     
-    // Inicializar scores de criterios
+    // ✅ CORRECCIÓN: Inicializar scores con el ID del criterio
     if (rubric?.criteria) {
-      setCriteriaScores(rubric.criteria.map(c => ({
-        criterionId: c._id,
-        criterionName: c.criterionName,
-        criterionWeight: c.criterionWeight,
-        criterionScore: c.criterionScore,
-        puntajeObtenido: 0
+      console.log('🔍 Criterios de la rúbrica:', rubric.criteria.map(c => ({
+        _id: c._id,
+        name: c.criterionName
+      })));
+      
+      setCriteriaScores(rubric.criteria.map(criterio => ({
+        criterioId: criterio._id, // ✅ Usar el _id del criterio
+        criterionName: criterio.criterionName,
+        criterionWeight: criterio.criterionWeight || 0,
+        puntajeObtenido: 0,
+        comentario: ''
       })));
     }
   };
@@ -94,22 +113,38 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
     setCriteriaScores(newScores);
   };
 
-  // Calcular nota total
+  // Calcular nota total según tipo de instrumento
   const calculateTotalScore = () => {
-    if (selectedRubric?.rubricType === 1) {
-      // Escala Estimativa - suma ponderada
+    if (!selectedRubric || criteriaScores.length === 0) return 0;
+
+    if (selectedRubric.rubricType === 1) {
+      // Escala Estimativa - Suma ponderada
       return criteriaScores.reduce((total, criterio) => {
-        return total + (criterio.puntajeObtenido * criterio.criterionWeight / 100);
+        const score = criterio.puntajeObtenido;
+        const weight = criterio.criterionWeight;
+        return total + (score * weight / 100);
       }, 0);
     } else {
-      // Rúbrica - suma simple
-      return criteriaScores.reduce((total, criterio) => {
+      // Rúbrica - Promedio simple
+      const sum = criteriaScores.reduce((total, criterio) => {
         return total + criterio.puntajeObtenido;
       }, 0);
+      return sum / criteriaScores.length;
     }
   };
 
   const totalScore = calculateTotalScore();
+
+  // Validar que las ponderaciones sumen 100% para Escala Estimativa
+  const validateWeights = () => {
+    if (selectedRubric?.rubricType === 1) {
+      const totalWeight = criteriaScores.reduce((sum, c) => sum + c.criterionWeight, 0);
+      return Math.abs(totalWeight - 100) < 0.01;
+    }
+    return true;
+  };
+
+  const isWeightValid = validateWeights();
 
   // Validación y envío
   const handleSubmit = async (e) => {
@@ -131,23 +166,54 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
       return;
     }
 
+    if (selectedRubric?.rubricType === 1 && !isWeightValid) {
+      setErrors({ general: "Las ponderaciones de los criterios deben sumar 100%." });
+      return;
+    }
+
+    // ✅ CORRECCIÓN: Ahora criterioId existe en cada criterio
     const dataToSend = {
       projectId: formData.projectId,
       rubricId: formData.rubricId,
       criteriosEvaluados: criteriaScores.map(c => ({
-        criterionId: c.criterionId,
-        criterionName: c.criterionName,
-        puntajeObtenido: c.puntajeObtenido
-      }))
+        criterioId: c.criterioId, // ✅ Ahora esto existe
+        puntajeObtenido: c.puntajeObtenido,
+        comentario: c.comentario || ''
+      })),
+      notaFinal: parseFloat(totalScore.toFixed(2)),
+      tipoCalculo: selectedRubric.rubricType === 1 ? 'ponderado' : 'promedio'
     };
 
     console.log('📤 Datos de evaluación a enviar:', dataToSend);
+    console.log('🔍 Criterios siendo enviados:', dataToSend.criteriosEvaluados.map(c => ({
+      criterioId: c.criterioId,
+      puntaje: c.puntajeObtenido
+    })));
 
     try {
-      await onSave(dataToSend);
+      let result;
+      if (isEditing && formData._id) {
+        result = await updateEvaluation(formData._id, dataToSend);
+      } else {
+        result = await createEvaluation(dataToSend);
+      }
+
+      if (result) {
+        console.log('✅ Evaluación guardada exitosamente:', result);
+        
+        // Resetear formulario
+        setFormData({
+          rubricId: null,
+          projectId: null
+        });
+        setSelectedRubric(null);
+        setCriteriaScores([]);
+        
+        if (onCancel) onCancel();
+      }
     } catch (err) {
       console.error('❌ Error al guardar:', err);
-      setErrors({ general: err.message || "Error al guardar la evaluación." });
+      setErrors({ general: evaluationError || err.message || "Error al guardar la evaluación." });
     }
   };
 
@@ -183,11 +249,11 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
       </div>
 
       {/* Errores */}
-      {errors.general && (
+      {(errors.general || evaluationError) && (
         <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
           <div className="flex items-center gap-2">
             <XCircle className="w-5 h-5 text-red-500" />
-            <p className="text-red-700 font-medium">{errors.general}</p>
+            <p className="text-red-700 font-medium">{errors.general || evaluationError}</p>
           </div>
         </div>
       )}
@@ -205,7 +271,7 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
             onChange={(e) => handleRubricChange(e.target.value)}
             className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 transition-all"
             required
-            disabled={loadingRubrics}
+            disabled={loadingRubrics || evaluationLoading}
           >
             <option value="">
               {loadingRubrics ? 'Cargando rúbricas...' : 'Seleccionar rúbrica...'}
@@ -213,6 +279,7 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
             {rubrics.map((rubric) => (
               <option key={rubric._id} value={rubric._id}>
                 {rubric.rubricName} - {getLevelName(rubric.level)} - {getRubricTypeName(rubric.rubricType)}
+                {rubric.levelId?.levelName && ` - ${rubric.levelId.levelName}`}
               </option>
             ))}
           </select>
@@ -237,7 +304,40 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
                   <div className="text-gray-500 font-semibold mb-1">Criterios</div>
                   <div className="text-gray-800 font-bold">{selectedRubric.criteria?.length || 0}</div>
                 </div>
+                {selectedRubric.level === 2 && selectedRubric.levelId && (
+                  <div>
+                    <div className="text-gray-500 font-semibold mb-1">Año Bachillerato</div>
+                    <div className="text-gray-800 font-bold">{selectedRubric.levelId.levelName || selectedRubric.levelId.name}</div>
+                  </div>
+                )}
+                {selectedRubric.specialtyId && (
+                  <div>
+                    <div className="text-gray-500 font-semibold mb-1">Especialidad</div>
+                    <div className="text-gray-800 font-bold">{selectedRubric.specialtyId.specialtyName}</div>
+                  </div>
+                )}
               </div>
+              
+              {/* Advertencia de ponderaciones para Escala Estimativa */}
+              {selectedRubric.rubricType === 1 && (
+                <div className={`mt-3 p-3 rounded-lg border-2 ${
+                  isWeightValid ? 'bg-green-50 border-green-300' : 'bg-orange-50 border-orange-300'
+                }`}>
+                  <div className="flex items-center gap-2">
+                    {isWeightValid ? (
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    ) : (
+                      <AlertTriangle className="w-5 h-5 text-orange-600" />
+                    )}
+                    <span className={`text-sm font-bold ${
+                      isWeightValid ? 'text-green-700' : 'text-orange-700'
+                    }`}>
+                      Ponderación Total: {criteriaScores.reduce((sum, c) => sum + c.criterionWeight, 0).toFixed(1)}%
+                      {!isWeightValid && ' (debe sumar 100%)'}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -252,11 +352,10 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
 
             <select
               value={formData.projectId || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, projectId: e.target.value })
-              )}
+              onChange={(e) => setFormData(prev => ({ ...prev, projectId: e.target.value }))}
               className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 transition-all"
               required
-              disabled={loadingProjects}
+              disabled={loadingProjects || evaluationLoading}
             >
               <option value="">
                 {loadingProjects ? 'Cargando proyectos...' : 
@@ -265,18 +364,38 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
               </option>
               {projects.map((project) => (
                 <option key={project._id} value={project._id}>
-                  {project.projectName} - {project.studentId?.name || 'Sin estudiante'}
+                  {project.projectName} - Equipo {project.teamNumber}
                 </option>
               ))}
             </select>
 
             {projects.length === 0 && selectedRubric && !loadingProjects && (
               <div className="mt-4 p-4 bg-orange-50 border-2 border-orange-200 rounded-lg">
-                <div className="flex items-center gap-2 text-orange-700">
-                  <AlertTriangle className="w-5 h-5" />
-                  <p className="font-medium">
-                    No hay proyectos que coincidan con el nivel y especialidad de esta rúbrica.
-                  </p>
+                <div className="flex items-start gap-2 text-orange-700">
+                  <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium mb-1">
+                      No hay proyectos que coincidan con esta rúbrica.
+                    </p>
+                    <p className="text-sm">
+                      Los proyectos deben coincidir en:
+                    </p>
+                    <ul className="text-sm list-disc list-inside mt-1 space-y-1">
+                      {selectedRubric.level === 1 && (
+                        <li>Nivel: {getLevelName(selectedRubric.level)}</li>
+                      )}
+                      {selectedRubric.level === 2 && (
+                        <>
+                          {selectedRubric.levelId && (
+                            <li>Año: {selectedRubric.levelId.levelName || selectedRubric.levelId.name} (campo idLevel en proyecto)</li>
+                          )}
+                          {selectedRubric.specialtyId && (
+                            <li>Especialidad: {selectedRubric.specialtyId.specialtyName} (campo selectedSpecialty en proyecto)</li>
+                          )}
+                        </>
+                      )}
+                    </ul>
+                  </div>
                 </div>
               </div>
             )}
@@ -307,16 +426,13 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
                       </th>
                     )}
                     <th className="border-2 border-gray-300 px-4 py-3 text-center text-sm font-bold text-gray-700">
-                      Puntaje Máximo
-                    </th>
-                    <th className="border-2 border-gray-300 px-4 py-3 text-center text-sm font-bold text-gray-700">
-                      Puntaje Obtenido *
+                      Puntaje Obtenido * (0-10)
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {criteriaScores.map((criterio, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
+                    <tr key={criterio.criterioId} className="hover:bg-gray-50">
                       <td className="border-2 border-gray-300 px-4 py-2 text-center font-semibold text-gray-600">
                         {index + 1}
                       </td>
@@ -324,13 +440,10 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
                         <div className="font-medium text-gray-800">{criterio.criterionName}</div>
                       </td>
                       {selectedRubric.rubricType === 1 && (
-                        <td className="border-2 border-gray-300 px-4 py-2 text-center font-bold text-gray-700">
-                          {criterio.criterionWeight}%
+                        <td className="border-2 border-gray-300 px-4 py-2 text-center font-bold text-purple-600">
+                          {criterio.criterionWeight.toFixed(1)}%
                         </td>
                       )}
-                      <td className="border-2 border-gray-300 px-4 py-2 text-center font-bold text-gray-700">
-                        {criterio.criterionScore}
-                      </td>
                       <td className="border-2 border-gray-300 px-2 py-2">
                         <input
                           type="number"
@@ -338,9 +451,10 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
                           onChange={(e) => updateCriterionScore(index, e.target.value)}
                           className="w-full px-3 py-2 border-2 border-gray-200 rounded focus:border-yellow-500 focus:ring-2 focus:ring-yellow-100 text-center font-bold"
                           min="0"
-                          max={criterio.criterionScore}
+                          max="10"
                           step="0.1"
                           required
+                          disabled={evaluationLoading}
                         />
                       </td>
                     </tr>
@@ -350,21 +464,26 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
             </div>
 
             {/* Nota Total */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-300 rounded-lg">
+            <div className="mt-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl shadow-md">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calculator className="w-6 h-6 text-green-600" />
-                  <span className="text-lg font-bold text-gray-800">Nota Total:</span>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calculator className="w-6 h-6 text-green-600" />
+                    <span className="text-xl font-bold text-gray-800">Nota Final</span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {selectedRubric.rubricType === 1 
+                      ? "Calculada con ponderación: Σ(nota × peso%)" 
+                      : `Promedio de ${criteriaScores.length} criterios`}
+                  </p>
                 </div>
-                <div className="text-3xl font-black text-green-700">
-                  {totalScore.toFixed(2)}
+                <div className="text-right">
+                  <div className="text-5xl font-black text-green-600">
+                    {totalScore.toFixed(2)}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">sobre 10.0</div>
                 </div>
               </div>
-              {selectedRubric.rubricType === 1 && (
-                <p className="text-xs text-gray-600 mt-2">
-                  * Calculado con ponderaciones: Σ (Puntaje × Peso/100)
-                </p>
-              )}
             </div>
           </div>
         )}
@@ -374,17 +493,31 @@ const RegisterGrade = ({ formData, setFormData, onSave, onCancel, isEditing }) =
           <div className="flex gap-4 pt-4">
             <button
               type="submit"
-              className="flex-1 py-4 px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700"
+              disabled={evaluationLoading}
+              className="flex-1 py-4 px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <CheckCircle className="w-5 h-5" />
-              <span>{isEditing ? "Actualizar Evaluación" : "Guardar Evaluación"}</span>
+              {evaluationLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                  </svg>
+                  <span>Guardando...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-5 h-5" />
+                  <span>{isEditing ? "Actualizar Evaluación" : "Guardar Evaluación"}</span>
+                </>
+              )}
             </button>
 
             {onCancel && (
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                disabled={evaluationLoading}
+                className="px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <XCircle className="w-5 h-5" />
                 <span>Cancelar</span>

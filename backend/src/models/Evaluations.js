@@ -31,7 +31,18 @@ const evaluationSchema = new Schema({
   fecha: {
     type: Date,
     default: Date.now
-  }
+  },
+  notaFinal: {
+        type: Number,
+        required: true,
+        min: 0,
+        max: 10
+    },
+    tipoCalculo: {
+        type: String,
+        enum: ['ponderado', 'promedio'],
+        required: true
+    }
 }, {
   timestamps: true
 });

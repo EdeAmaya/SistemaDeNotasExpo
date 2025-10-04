@@ -66,16 +66,29 @@ const useDataEvaluations = () => {
     setLoading(true);
     setError(null);
     try {
+      // Validar y formatear los datos antes de enviar
+      const formattedData = {
+        ...evaluationData,
+        criteriosEvaluados: evaluationData.criteriosEvaluados?.map(criterio => ({
+          criterioId: criterio.criterioId || criterio._id, // Asegurar que existe criterioId
+          puntajeObtenido: Number(criterio.puntajeObtenido) || 0,
+          comentario: criterio.comentario || ''
+        }))
+      };
+
+      console.log('📤 Datos a enviar:', JSON.stringify(formattedData, null, 2));
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(evaluationData),
+        body: JSON.stringify(formattedData),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Error del servidor:', errorData);
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
 
@@ -83,8 +96,9 @@ const useDataEvaluations = () => {
       setEvaluations(prev => [...prev, result.data]);
       return result.data;
     } catch (error) {
+      console.error('❌ Error completo:', error);
       handleError(error, 'Error al crear la evaluación');
-      return null;
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -95,12 +109,22 @@ const useDataEvaluations = () => {
     setLoading(true);
     setError(null);
     try {
+      // Formatear los datos antes de actualizar
+      const formattedData = {
+        ...evaluationData,
+        criteriosEvaluados: evaluationData.criteriosEvaluados?.map(criterio => ({
+          criterioId: criterio.criterioId || criterio._id,
+          puntajeObtenido: Number(criterio.puntajeObtenido) || 0,
+          comentario: criterio.comentario || ''
+        }))
+      };
+
       const response = await fetch(`${API_URL}/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(evaluationData),
+        body: JSON.stringify(formattedData),
       });
 
       if (!response.ok) {

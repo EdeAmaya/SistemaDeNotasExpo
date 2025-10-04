@@ -30,6 +30,7 @@ const useDataRubrics = () => {
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
       const data = await response.json();
+      // El controlador devuelve directamente el array de rúbricas
       setRubrics(data);
       return data;
     } catch (error) {
@@ -51,6 +52,7 @@ const useDataRubrics = () => {
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
       const data = await response.json();
+      // El controlador devuelve directamente el objeto rúbrica
       setCurrentRubric(data);
       return data;
     } catch (error) {
@@ -78,11 +80,12 @@ const useDataRubrics = () => {
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
       const data = await response.json();
+      // El controlador devuelve { message: "Success", rubric: newRubric }
       setRubrics(prev => [...prev, data.rubric]);
       return data;
     } catch (error) {
       handleError(error, 'Error al crear la rúbrica');
-      return null;
+      throw error; // Propagar el error para manejo en el componente
     } finally {
       setLoading(false);
     }
@@ -105,12 +108,13 @@ const useDataRubrics = () => {
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
       const data = await response.json();
+      // El controlador devuelve { message: "Rubric updated successfully", rubric: updatedRubric }
       setRubrics(prev => prev.map(r => r._id === id ? data.rubric : r));
       setCurrentRubric(data.rubric);
       return data;
     } catch (error) {
       handleError(error, 'Error al actualizar la rúbrica');
-      return null;
+      throw error; // Propagar el error
     } finally {
       setLoading(false);
     }
@@ -129,12 +133,13 @@ const useDataRubrics = () => {
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
       const data = await response.json();
+      // El controlador devuelve { message: "Rubric deleted successfully" }
       setRubrics(prev => prev.filter(r => r._id !== id));
       if (currentRubric?._id === id) setCurrentRubric(null);
       return data;
     } catch (error) {
       handleError(error, 'Error al eliminar la rúbrica');
-      return null;
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -155,7 +160,8 @@ const useDataRubrics = () => {
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
       const data = await response.json();
-      return data;
+      // El controlador devuelve { success: true, data: rubric.criteria }
+      return data.data || data;
     } catch (error) {
       handleError(error, 'Error al obtener criterios');
       return null;
@@ -181,8 +187,8 @@ const useDataRubrics = () => {
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
       const data = await response.json();
+      // El controlador devuelve { success: true, data: rubric.criteria }
       
-      // Actualizar la rúbrica actual si está cargada
       if (currentRubric?._id === rubricId) {
         setCurrentRubric(prev => ({
           ...prev,
@@ -193,7 +199,7 @@ const useDataRubrics = () => {
       return data;
     } catch (error) {
       handleError(error, 'Error al agregar criterios');
-      return null;
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -216,8 +222,8 @@ const useDataRubrics = () => {
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
       const data = await response.json();
+      // El controlador devuelve { success: true, data: criterion }
       
-      // Actualizar la rúbrica actual si está cargada
       if (currentRubric?._id === rubricId) {
         setCurrentRubric(prev => ({
           ...prev,
@@ -230,7 +236,7 @@ const useDataRubrics = () => {
       return data;
     } catch (error) {
       handleError(error, 'Error al actualizar el criterio');
-      return null;
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -249,8 +255,8 @@ const useDataRubrics = () => {
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
       const data = await response.json();
+      // El controlador devuelve { success: true, message: "Criterion deleted successfully" }
       
-      // Actualizar la rúbrica actual si está cargada
       if (currentRubric?._id === rubricId) {
         setCurrentRubric(prev => ({
           ...prev,
@@ -261,13 +267,16 @@ const useDataRubrics = () => {
       return data;
     } catch (error) {
       handleError(error, 'Error al eliminar el criterio');
-      return null;
+      throw error;
     } finally {
       setLoading(false);
     }
   }, [currentRubric]);
 
-  // Limpiar estados
+  // =====================
+  // UTILIDADES
+  // =====================
+
   const clearError = useCallback(() => setError(null), []);
   const clearCurrentRubric = useCallback(() => setCurrentRubric(null), []);
 

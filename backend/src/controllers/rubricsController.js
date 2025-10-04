@@ -13,6 +13,7 @@ rubricController.createRubrics = async (req, res) => {
         const {
             rubricName,
             level,
+            levelId,
             specialtyId,
             year,
             stageId,
@@ -23,7 +24,8 @@ rubricController.createRubrics = async (req, res) => {
         const newRubric = new Rubric({
             rubricName,
             level,
-            specialtyId: specialtyId || null, // Puede ser opcional
+            levelId: levelId || null, // Nueva referencia a Levels
+            specialtyId: specialtyId || null,
             year,
             stageId,
             rubricType,
@@ -47,8 +49,9 @@ rubricController.createRubrics = async (req, res) => {
 rubricController.getRubrics = async (req, res) => {
     try {
         const rubrics = await Rubric.find()
-            .populate("specialtyId", "specialtyName") // opcional
-            .populate("stageId", "name"); // trae solo el nombre de la etapa
+            .populate("specialtyId", "specialtyName")
+            .populate("stageId", "name")
+            .populate("levelId", "levelName"); // Trae el nombre del nivel
 
         res.status(200).json(rubrics);
     } catch (error) {
@@ -64,7 +67,8 @@ rubricController.getRubricById = async (req, res) => {
     try {
         const rubric = await Rubric.findById(req.params.id)
             .populate("specialtyId", "specialtyName")
-            .populate("stageId", "stageName");
+            .populate("stageId", "name")
+            .populate("levelId", "levelName");
 
         if (!rubric) {
             return res.status(404).json({ message: "Rubric not found" });
@@ -85,6 +89,7 @@ rubricController.updateRubric = async (req, res) => {
         const {
             rubricName,
             level,
+            levelId,
             specialtyId,
             year,
             stageId,
@@ -97,6 +102,7 @@ rubricController.updateRubric = async (req, res) => {
             {
                 rubricName,
                 level,
+                levelId: levelId || null,
                 specialtyId: specialtyId || null,
                 year,
                 stageId,
@@ -106,7 +112,8 @@ rubricController.updateRubric = async (req, res) => {
             { new: true, runValidators: true }
         )
             .populate("specialtyId", "specialtyName")
-            .populate("stageId", "stageName");
+            .populate("stageId", "name")
+            .populate("levelId", "levelName");
 
         if (!updatedRubric) {
             return res.status(404).json({ message: "Rubric not found" });
