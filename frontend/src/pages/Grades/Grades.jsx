@@ -4,11 +4,14 @@ import ListGrades from './components/ListGrades';
 import RegisterGrade from './components/RegisterGrade';
 import useDataEvaluations from './hooks/useDataEvaluations';
 import useDataProjectScores from './hooks/useDataProjectScores';
+import ProjectInfo from './components/ProjectInfo';
 
 const Grades = () => {
   useEffect(() => {
     document.title = "Asignación de Notas | STC";
   }, []);
+
+  const [selectedProjectId, setSelectedProjectId] = useState(null); // Proyecto seleccionado para ver detalles
 
   // Hook para obtener los project scores (para la lista)
   const { 
@@ -25,8 +28,6 @@ const Grades = () => {
     getEvaluations,
     createEvaluation,
     updateEvaluation,
-    deleteEvaluation,
-    calculateTotalScore,
     clearError
   } = useDataEvaluations();
 
@@ -56,15 +57,6 @@ const Grades = () => {
     });
   };
 
-  const handleEdit = (evaluation) => {
-    setFormData({
-      id: evaluation._id,
-      projectId: evaluation.projectId?._id || evaluation.projectId,
-      rubricId: evaluation.rubricId?._id || evaluation.rubricId
-    });
-    setActiveTab('assign');
-  };
-
   const handleSave = async (evaluationData) => {
     try {
       if (formData.id) {
@@ -79,16 +71,6 @@ const Grades = () => {
       await getProjectScores();
     } catch (error) {
       console.error('Error al guardar la evaluación:', error);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await deleteEvaluation(id);
-      await getEvaluations();
-      await getProjectScores();
-    } catch (error) {
-      console.error('Error al eliminar la evaluación:', error);
     }
   };
 
@@ -108,6 +90,16 @@ const Grades = () => {
 
   // Determinar qué loading mostrar según la pestaña activa
   const currentLoading = activeTab === 'list' ? loadingScores : loadingEvaluations;
+
+  const handleViewProjectDetails = (projectId) => {
+    setSelectedProjectId(projectId);
+    setActiveTab('details');
+  };
+
+  const handleBackToList = () => {
+    setSelectedProjectId(null);
+    setActiveTab('list');
+  };
 
   return (
     <div className="min-h-screen">
@@ -244,6 +236,12 @@ const Grades = () => {
             <ListGrades 
               projectScores={projectScores}
               loading={loadingScores}
+              onViewDetails={handleViewProjectDetails}
+            />
+          ) : activeTab === 'details' ? (
+            <ProjectInfo 
+              projectId={selectedProjectId}
+              onBack={handleBackToList}
             />
           ) : (
             <div className="p-8">

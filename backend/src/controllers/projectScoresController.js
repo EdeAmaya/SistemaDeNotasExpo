@@ -99,6 +99,54 @@ projectScoreController.getProjectFinalScores = async (req, res) => {
 };
 
 // ===============================
+// GET - Obtener puntaje por projectId
+// ===============================
+projectScoreController.getProjectScoreByProjectId = async (req, res) => {
+  try {
+    const score = await ProjectScore.findOne({ projectId: req.params.projectId })
+      .populate("projectId")
+      .populate({
+        path: "evaluacionesInternas",
+        populate: {
+          path: "rubricId",
+          populate: [
+            { path: "stageId" },
+            { path: "specialtyId" },
+            { path: "levelId" }
+          ]
+        }
+      })
+      .populate({
+        path: "evaluacionesExternas",
+        populate: {
+          path: "rubricId",
+          populate: [
+            { path: "stageId" },
+            { path: "specialtyId" },
+            { path: "levelId" }
+          ]
+        }
+      });
+
+    if (!score) {
+      return res.status(404).json({
+        success: false,
+        message: "Project score not found for this project"
+      });
+    }
+
+    res.status(200).json({ success: true, data: score });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching project score by projectId",
+      error: error.message,
+      stack: error.stack
+    });
+  }
+};
+
+// ===============================
 // POST - Crear puntaje
 // ===============================
 projectScoreController.createProjectScore = async (req, res) => {

@@ -9,6 +9,8 @@ router.route("/")
 
 router.get("/project-averages", projectScoreController.getProjectFinalScores);
 
+router.get("/project/:projectId", projectScoreController.getProjectScoreByProjectId);
+
 router.route("/:id")
     .get(projectScoreController.getProjectScoreById)
     .put(projectScoreController.updateProjectScore)

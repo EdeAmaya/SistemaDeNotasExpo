@@ -9,11 +9,13 @@ import {
   UserCheck
 } from 'lucide-react';
 
-const GradeCard = ({ project, viewMode = 'list' }) => {
-  const navigate = useNavigate();
-
+const GradeCard = ({ project, viewMode = 'list', onViewDetails }) => {
+  
+  // Navegar a vista de detalles del proyecto
   const handleViewDetails = () => {
-    navigate(`/project-scores/${project.projectId}`);
+    if (onViewDetails) {
+      onViewDetails(project.projectId);
+    }
   };
 
   const getScoreColor = (score) => {
