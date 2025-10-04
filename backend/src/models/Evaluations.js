@@ -1,5 +1,5 @@
 // Schema para evaluaciones
-import {Schema, model} from "mongoose";
+import { Schema, model } from "mongoose";
 
 const evaluatedCriterionSchema = new Schema({
   criterionId: {
@@ -32,17 +32,23 @@ const evaluationSchema = new Schema({
     type: Date,
     default: Date.now
   },
+  evaluadorTipo: {
+    type: String,
+    enum: ["interna", "externa"],
+    required: true,
+    default: "interna"
+  },
   notaFinal: {
-        type: Number,
-        required: true,
-        min: 0,
-        max: 10
-    },
-    tipoCalculo: {
-        type: String,
-        enum: ['ponderado', 'promedio'],
-        required: true
-    }
+    type: Number,
+    required: true,
+    min: 0,
+    max: 10
+  },
+  tipoCalculo: {
+    type: String,
+    enum: ['ponderado', 'promedio'],
+    required: true
+  }
 }, {
   timestamps: true
 });
