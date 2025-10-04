@@ -26,6 +26,7 @@ const RegisterProject = ({
   const [errors, setErrors] = useState({});
   const [autoTeamNumber, setAutoTeamNumber] = useState(1);
 
+  // Todas las funciones de cálculo y validación permanecen igual
   const calculateNextTeamNumber = () => {
     if (!idLevel || !projects) {
       return 1;
@@ -346,17 +347,17 @@ const RegisterProject = ({
   return (
     <div className="max-w-4xl mx-auto">
       
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-3">
-          <div className={`w-12 h-12 rounded-xl ${id ? 'bg-gradient-to-br from-blue-500 to-blue-700' : 'bg-gradient-to-br from-green-500 to-green-700'} flex items-center justify-center shadow-lg`}>
-            {id ? <Edit2 className="w-6 h-6 text-white" /> : <Plus className="w-6 h-6 text-white" />}
+      {/* Header - Responsive */}
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col xs:flex-row items-start xs:items-center gap-3 mb-3">
+          <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${id ? 'bg-gradient-to-br from-blue-500 to-blue-700' : 'bg-gradient-to-br from-green-500 to-green-700'} flex items-center justify-center shadow-lg flex-shrink-0`}>
+            {id ? <Edit2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
           </div>
-          <div>
-            <h2 className="text-2xl font-black text-gray-900">
+          <div className="flex-1">
+            <h2 className="text-xl sm:text-2xl font-black text-gray-900">
               {id ? 'Editar Proyecto' : 'Crear Nuevo Proyecto'}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-500">
               {id ? 'Actualiza la información del proyecto' : 'Completa los datos para registrar un nuevo proyecto'}
             </p>
           </div>
@@ -365,57 +366,59 @@ const RegisterProject = ({
 
       {/* Mostrar errores */}
       {errors.general && (
-        <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+        <div className="mb-4 sm:mb-6 bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded-r-lg">
           <div className="flex items-center gap-2">
-            <XCircle className="w-5 h-5 text-red-500" />
-            <p className="text-red-700 font-medium">{errors.general}</p>
+            <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
+            <p className="text-red-700 font-medium text-xs sm:text-sm">{errors.general}</p>
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         
-        {/* Información del Proyecto */}
-        <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Lightbulb className="w-5 h-5" />
+        {/* Información del Proyecto - Responsive */}
+        <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border-2 border-gray-200">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Información del Proyecto</span>
           </h3>
           
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
-              <FileText className="w-4 h-4" />
+            <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Nombre del Proyecto *</span>
             </label>
             <input
               type="text"
               value={projectName || ''}
               onChange={(e) => setProjectName(e.target.value)}
-              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
               placeholder="Ej: Sistema de Riego Automatizado"
               required
             />
           </div>
         </div>
 
-        {/* Información Académica */}
-        <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <BookOpen className="w-5 h-5" />
+        {/* Continúa en la siguiente parte... */}
+
+        {/* Información Académica - Responsive */}
+        <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border-2 border-gray-200">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Asignación Académica</span>
           </h3>
           
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {/* Nivel */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
-                <BookOpen className="w-4 h-4" />
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Nivel *</span>
               </label>
               <select
                 value={idLevel || ''}
                 onChange={(e) => setIdLevel(e.target.value)}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
                 required
                 disabled={loadingData}
               >
@@ -442,13 +445,13 @@ const RegisterProject = ({
                 if (!idLevel) {
                   return (
                     <>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">
                         Especialidad/Sección *
                       </label>
                       <input
                         type="text"
                         value="Primero selecciona un nivel..."
-                        className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg text-gray-500 font-medium cursor-not-allowed"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-100 border-2 border-gray-200 rounded-lg text-gray-500 font-medium cursor-not-allowed text-xs sm:text-base"
                         readOnly
                       />
                     </>
@@ -461,14 +464,14 @@ const RegisterProject = ({
                 if (isBachillerato(levelName)) {
                   return (
                     <>
-                      <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
-                        <Award className="w-4 h-4" />
+                      <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                        <Award className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span>Especialidad *</span>
                       </label>
                       <select
                         value={selectedSpecialty || ''}
                         onChange={(e) => setSelectedSpecialty(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all text-gray-900 font-medium"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
                         required
                         disabled={loadingData}
                       >
@@ -488,14 +491,14 @@ const RegisterProject = ({
                 if (isBasica(levelName)) {
                   return (
                     <>
-                      <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
-                        <FileText className="w-4 h-4" />
+                      <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                        <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span>Sección *</span>
                       </label>
                       <select
                         value={idSection || ''}
                         onChange={(e) => setIdSection(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
                         required
                         disabled={loadingData}
                       >
@@ -514,13 +517,13 @@ const RegisterProject = ({
 
                 return (
                   <>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">
                       Tipo no reconocido
                     </label>
                     <input
                       type="text"
                       value="Nivel no reconocido"
-                      className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg text-gray-500 font-medium"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-100 border-2 border-gray-200 rounded-lg text-gray-500 font-medium text-xs sm:text-base"
                       readOnly
                     />
                   </>
@@ -530,25 +533,25 @@ const RegisterProject = ({
           </div>
         </div>
 
-        {/* IDs Automáticos */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Hash className="w-5 h-5 text-blue-600" />
+        {/* IDs Automáticos - Responsive */}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border-2 border-blue-200">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <Hash className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
             <span>Identificación Automática</span>
           </h3>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* Número de Equipo */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
-                <Users className="w-4 h-4" />
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                <Users className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Número de Equipo (Automático)</span>
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={autoTeamNumber ? `Equipo #${autoTeamNumber}` : 'Selecciona nivel y sección/especialidad...'}
-                  className={`w-full px-4 py-3 border-2 rounded-lg font-bold text-lg transition-all ${
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-bold text-base sm:text-lg transition-all ${
                     autoTeamNumber 
                       ? 'border-green-300 bg-green-50 text-green-800' 
                       : 'border-gray-200 bg-gray-50 text-gray-500'
@@ -557,9 +560,9 @@ const RegisterProject = ({
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center">
                   {autoTeamNumber ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
                   ) : (
-                    <Loader2 className="w-5 h-5 text-gray-400" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   )}
                 </div>
               </div>
@@ -575,15 +578,15 @@ const RegisterProject = ({
 
             {/* ID del Proyecto */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
-                <Hash className="w-4 h-4" />
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                <Hash className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>ID del Proyecto (Automático)</span>
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={projectId || 'El ID se generará automáticamente...'}
-                  className={`w-full px-4 py-3 border-2 rounded-lg font-bold text-lg transition-all ${
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-bold text-base sm:text-lg transition-all ${
                     projectId 
                       ? 'border-green-300 bg-green-50 text-green-800' 
                       : 'border-gray-200 bg-gray-50 text-gray-500'
@@ -592,9 +595,9 @@ const RegisterProject = ({
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center">
                   {projectId ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
                   ) : (
-                    <Loader2 className="w-5 h-5 text-gray-400" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   )}
                 </div>
               </div>
@@ -610,15 +613,15 @@ const RegisterProject = ({
 
             {/* Google Sites Link */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
-                <Globe className="w-4 h-4" />
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                <Globe className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Enlace Google Sites (Automático)</span>
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={googleSitesLink || 'El enlace se generará con el ID...'}
-                  className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-medium transition-all text-xs sm:text-sm ${
                     googleSitesLink 
                       ? 'border-purple-300 bg-purple-50 text-purple-800' 
                       : 'border-gray-200 bg-gray-50 text-gray-500'
@@ -627,9 +630,9 @@ const RegisterProject = ({
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center">
                   {googleSitesLink ? (
-                    <CheckCircle className="w-5 h-5 text-purple-500" />
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
                   ) : (
-                    <Loader2 className="w-5 h-5 text-gray-400" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   )}
                 </div>
               </div>
@@ -645,24 +648,24 @@ const RegisterProject = ({
           </div>
         </div>
 
-        {/* Estado y Estudiantes */}
-        <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5" />
+        {/* Estado y Estudiantes - Responsive */}
+        <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border-2 border-gray-200">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Configuración Adicional</span>
           </h3>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* Estado */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
-                <CheckCircle className="w-4 h-4" />
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Estado del Proyecto *</span>
               </label>
               <select
                 value={status || 'Activo'}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-900 font-medium"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
                 required
               >
                 <option value="Activo">Activo</option>
@@ -672,8 +675,8 @@ const RegisterProject = ({
 
             {/* Estudiantes Asignados */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
-                <Users className="w-4 h-4" />
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                <Users className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Estudiantes Asignados (Opcional)</span>
               </label>
               <select
@@ -683,7 +686,7 @@ const RegisterProject = ({
                   const selectedValues = Array.from(e.target.selectedOptions, option => option.value);
                   setAssignedStudents(selectedValues);
                 }}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium min-h-32"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium min-h-32 text-xs sm:text-sm"
                 disabled={!idLevel || (!idSection && !selectedSpecialty)}
               >
                 {(() => {
@@ -784,9 +787,9 @@ const RegisterProject = ({
                 Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples
               </p>
               {assignedStudents && assignedStudents.length > 0 && (
-                <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-blue-700 font-medium text-sm flex items-center gap-1">
-                    <Users className="w-4 h-4" />
+                <div className="mt-2 p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-blue-700 font-medium text-xs sm:text-sm flex items-center gap-1">
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4" />
                     {assignedStudents.length} estudiante(s) seleccionado(s)
                   </p>
                 </div>
@@ -797,22 +800,22 @@ const RegisterProject = ({
 
         {/* Loading indicator */}
         {loadingData && (
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 rounded-r-lg">
             <div className="flex items-center gap-3">
-              <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
-              <p className="text-blue-700 text-sm font-medium">
+              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 animate-spin" />
+              <p className="text-blue-700 text-xs sm:text-sm font-medium">
                 Cargando datos de catálogos...
               </p>
             </div>
           </div>
         )}
 
-        {/* Botones de Acción */}
-        <div className="flex gap-4 pt-4">
+        {/* Botones de Acción - Responsive */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
           <button
             type="submit"
             disabled={loadingData}
-            className={`flex-1 py-4 px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 ${
+            className={`flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
               loadingData
                 ? 'bg-gray-400 cursor-not-allowed'
                 : id
@@ -820,7 +823,7 @@ const RegisterProject = ({
                 : 'bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800'
             }`}
           >
-            {id ? <Edit2 className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+            {id ? <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <Plus className="w-4 h-4 sm:w-5 sm:h-5" />}
             <span>{id ? 'Actualizar Proyecto' : 'Registrar Proyecto'}</span>
           </button>
 
@@ -828,20 +831,20 @@ const RegisterProject = ({
             <button
               type="button"
               onClick={onCancel}
-              className="px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+              className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base"
             >
-              <XCircle className="w-5 h-5" />
+              <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Cancelar</span>
             </button>
           )}
         </div>
       </form>
 
-      {/* Info adicional */}
-      <div className="mt-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
-        <div className="flex gap-3">
-          <Info className="w-6 h-6 text-blue-600 flex-shrink-0" />
-          <div className="flex-1 text-sm text-gray-700">
+      {/* Info adicional - Responsive */}
+      <div className="mt-4 sm:mt-6 bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 rounded-r-lg">
+        <div className="flex gap-2 sm:gap-3">
+          <Info className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+          <div className="flex-1 text-xs sm:text-sm text-gray-700">
             <p className="font-bold text-gray-900 mb-1">Sistema Automatizado</p>
             <ul className="space-y-1">
               <li>• El número de equipo se asigna automáticamente</li>

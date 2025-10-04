@@ -51,9 +51,9 @@ function Navigation() {
 
   // Si está autenticado, mostrar la aplicación completa
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
       <NavBar />
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-y-auto w-full">
         <Routes>
           {/* Rutas base - disponibles para todos los usuarios autenticados */}
           <Route path="/" element={
@@ -98,7 +98,7 @@ function Navigation() {
           {/* Ruta para manejar rutas no encontradas */}
           <Route path="*" element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-4">
+              <div className="min-h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-4">
                 <div className="max-w-md w-full text-center space-y-6">
                   <div className="bg-white p-8 rounded-2xl shadow-2xl border-4 border-blue-100">
                     <div className="text-6xl mb-4">🔍</div>
