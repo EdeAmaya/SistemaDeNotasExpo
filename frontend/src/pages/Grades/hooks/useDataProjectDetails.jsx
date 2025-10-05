@@ -20,8 +20,8 @@ const useProjectDetails = () => {
     
     try {
       const url = `${API_BASE_URL}/evaluations/project/${projectId}`;
-      const response = await fetch(url);
-      
+      const response = await fetch(url, { credentials: 'include' });
+
       if (!response.ok) {
         throw new Error(`Error HTTP ${response.status}`);
       }

@@ -24,7 +24,7 @@ const useDataProjectScores = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(API_URL, { credentials: "include" });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
@@ -64,7 +64,7 @@ const useDataProjectScores = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/${id}`);
+      const response = await fetch(`${API_URL}/${id}`, { credentials: "include" });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
@@ -99,7 +99,7 @@ const useDataProjectScores = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/project/${projectId}`);
+      const response = await fetch(`${API_URL}/project/${projectId}`, { credentials: "include" });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
