@@ -76,25 +76,23 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rutas de autenticación (públicas)
+// ========================================
+// RUTAS PÚBLICAS (Sin autenticación)
+// ========================================
 app.use("/api/login", loginRoutes);
 app.use("/api/logout", logoutRoutes);
 app.use("/api/register", registerRoutes);
 
-// Rutas protegidas (requieren autenticación)
-app.use("/api/users", usersRoutes);
-app.use("/api/levels", levelsRoutes);
-app.use("/api/sections", sectionsRoutes);
-app.use("/api/specialties", specialtiesRoutes);
-app.use("/api/students", studentsRoutes);
-app.use("/api/projects", projectsRoutes);
-app.use("/api/activities", activitiesRoutes);
-app.use("/api/stages", stagesRoutes);
-app.use("/api/user-activities", userActivitiesRoutes);
-app.use("/api/rubrics", rubricRoutes);
-app.use("/api/evaluations", evaluationsRoutes);
-app.use("/api/heartbeat", heartbeatRoutes);
-app.use("/api/project-scores", projectScoreRoutes);
+// Ruta de prueba PÚBLICA
+app.get("/api/test", (req, res) => {
+  console.log('Test endpoint alcanzado');
+  console.log('Cookies en test:', req.cookies);
+  res.json({ 
+    message: "API del sistema de notas funcionando correctamente",
+    timestamp: new Date().toISOString(),
+    cookies: req.cookies
+  });
+});
 
 // Ruta de verificación de estado de autenticación
 app.get("/api/auth/verify", authenticateToken, (req, res) => {
@@ -111,17 +109,32 @@ app.get("/api/auth/verify", authenticateToken, (req, res) => {
   });
 });
 
-// Ruta de prueba PÚBLICA (sin autenticación)
-app.get("/api/test", (req, res) => {
-  console.log('Test endpoint alcanzado');
-  console.log('Cookies en test:', req.cookies);
-  res.json({ 
-    message: "API del sistema de notas funcionando correctamente",
-    timestamp: new Date().toISOString(),
-    cookies: req.cookies
-  });
-});
+// ========================================
+// MIDDLEWARE DE AUTENTICACIÓN GLOBAL
+// ========================================
+// Todas las rutas debajo de este punto requieren autenticación
+app.use(authenticateToken);
 
+// ========================================
+// RUTAS PROTEGIDAS (Requieren autenticación)
+// ========================================
+app.use("/api/users", usersRoutes);
+app.use("/api/levels", levelsRoutes);
+app.use("/api/sections", sectionsRoutes);
+app.use("/api/specialties", specialtiesRoutes);
+app.use("/api/students", studentsRoutes);
+app.use("/api/projects", projectsRoutes);
+app.use("/api/activities", activitiesRoutes);
+app.use("/api/stages", stagesRoutes);
+app.use("/api/user-activities", userActivitiesRoutes); // ← Ahora está protegida
+app.use("/api/rubrics", rubricRoutes);
+app.use("/api/evaluations", evaluationsRoutes);
+app.use("/api/heartbeat", heartbeatRoutes);
+app.use("/api/project-scores", projectScoreRoutes);
+
+// ========================================
+// MANEJO DE ERRORES
+// ========================================
 // Middleware de manejo de errores
 app.use((err, req, res, next) => {
   console.error('Error:', err);
