@@ -227,11 +227,12 @@ evaluationController.getEvaluationsByProject = async (req, res) => {
                 return {
                     criterionId: ce.criterionId,
                     criterionName: ce.criterionName,
+                    criterionDescription: criterioCompleto?.criterionDescription || "",
                     puntajeObtenido: ce.puntajeObtenido,
                     comentario: ce.comentario,
                     // Detalles adicionales del criterio de la rúbrica
                     puntajeMaximo: criterioCompleto?.maxScore || 0,
-                    peso: criterioCompleto?.weight || 0,
+                    peso: criterioCompleto?.criterionWeight || 0,
                     descripcion: criterioCompleto?.description || ""
                 };
             });

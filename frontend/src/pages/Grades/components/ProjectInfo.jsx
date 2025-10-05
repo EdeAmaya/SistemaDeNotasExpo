@@ -57,7 +57,7 @@ const ProjectInfo = ({ projectId, onBack }) => {
             <div className="flex items-center gap-4 mb-6">
                 <button
                     onClick={onBack}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-all"
+                    className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-all"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     <span>Volver</span>
@@ -99,17 +99,15 @@ const ProjectInfo = ({ projectId, onBack }) => {
                 {/* Botón Evaluaciones Internas */}
                 <button
                     onClick={() => setActiveSection(activeSection === 'internal' ? null : 'internal')}
-                    className={`group relative overflow-hidden rounded-xl p-6 border-2 transition-all duration-300 ${
-                        activeSection === 'internal'
-                            ? 'border-blue-500 bg-blue-50 shadow-lg scale-105'
-                            : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
-                    }`}
+                    className={`cursor-pointer group relative overflow-hidden rounded-xl p-6 border-2 transition-all duration-300 ${activeSection === 'internal'
+                        ? 'border-blue-500 bg-blue-50 shadow-lg scale-105'
+                        : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
+                        }`}
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                                activeSection === 'internal' ? 'bg-blue-500 shadow-lg' : 'bg-blue-100 group-hover:bg-blue-200'
-                            }`}>
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${activeSection === 'internal' ? 'bg-blue-500 shadow-lg' : 'bg-blue-100 group-hover:bg-blue-200'
+                                }`}>
                                 <Users className={`w-6 h-6 ${activeSection === 'internal' ? 'text-white' : 'text-blue-600'}`} />
                             </div>
                             <div className="text-left">
@@ -128,25 +126,22 @@ const ProjectInfo = ({ projectId, onBack }) => {
                             <div className="text-xs text-gray-500 font-semibold">Promedio</div>
                         </div>
                     </div>
-                    <div className={`h-1 rounded-full transition-all ${
-                        activeSection === 'internal' ? 'bg-gradient-to-r from-blue-400 to-blue-600' : 'bg-gray-200 group-hover:bg-blue-300'
-                    }`}></div>
+                    <div className={`h-1 rounded-full transition-all ${activeSection === 'internal' ? 'bg-gradient-to-r from-blue-400 to-blue-600' : 'bg-gray-200 group-hover:bg-blue-300'
+                        }`}></div>
                 </button>
 
                 {/* Botón Evaluaciones Externas */}
                 <button
                     onClick={() => setActiveSection(activeSection === 'external' ? null : 'external')}
-                    className={`group relative overflow-hidden rounded-xl p-6 border-2 transition-all duration-300 ${
-                        activeSection === 'external'
-                            ? 'border-purple-500 bg-purple-50 shadow-lg scale-105'
-                            : 'border-gray-200 bg-white hover:border-purple-300 hover:shadow-md'
-                    }`}
+                    className={`cursor-pointer group relative overflow-hidden rounded-xl p-6 border-2 transition-all duration-300 ${activeSection === 'external'
+                        ? 'border-purple-500 bg-purple-50 shadow-lg scale-105'
+                        : 'border-gray-200 bg-white hover:border-purple-300 hover:shadow-md'
+                        }`}
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                                activeSection === 'external' ? 'bg-purple-500 shadow-lg' : 'bg-purple-100 group-hover:bg-purple-200'
-                            }`}>
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${activeSection === 'external' ? 'bg-purple-500 shadow-lg' : 'bg-purple-100 group-hover:bg-purple-200'
+                                }`}>
                                 <UserCheck className={`w-6 h-6 ${activeSection === 'external' ? 'text-white' : 'text-purple-600'}`} />
                             </div>
                             <div className="text-left">
@@ -165,21 +160,18 @@ const ProjectInfo = ({ projectId, onBack }) => {
                             <div className="text-xs text-gray-500 font-semibold">Promedio</div>
                         </div>
                     </div>
-                    <div className={`h-1 rounded-full transition-all ${
-                        activeSection === 'external' ? 'bg-gradient-to-r from-purple-400 to-purple-600' : 'bg-gray-200 group-hover:bg-purple-300'
-                    }`}></div>
+                    <div className={`h-1 rounded-full transition-all ${activeSection === 'external' ? 'bg-gradient-to-r from-purple-400 to-purple-600' : 'bg-gray-200 group-hover:bg-purple-300'
+                        }`}></div>
                 </button>
             </div>
 
             {/* Contenido según la sección activa */}
             {activeSection && (
                 <div className="animate-fadeIn">
-                    <div className={`rounded-xl border-2 p-6 ${
-                        activeSection === 'internal' ? 'border-blue-200 bg-blue-50' : 'border-purple-200 bg-purple-50'
-                    }`}>
-                        <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${
-                            activeSection === 'internal' ? 'text-blue-700' : 'text-purple-700'
+                    <div className={`rounded-xl border-2 p-6 ${activeSection === 'internal' ? 'border-blue-200 bg-blue-50' : 'border-purple-200 bg-purple-50'
                         }`}>
+                        <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${activeSection === 'internal' ? 'text-blue-700' : 'text-purple-700'
+                            }`}>
                             {activeSection === 'internal' ? (
                                 <>
                                     <Users className="w-6 h-6" />
@@ -237,17 +229,16 @@ const ProjectInfo = ({ projectId, onBack }) => {
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <div className="text-right">
-                                                        <div className={`text-2xl font-black ${
-                                                            activeSection === 'internal' ? 'text-blue-600' : 'text-purple-600'
-                                                        }`}>
+                                                        <div className={`text-2xl font-black ${activeSection === 'internal' ? 'text-blue-600' : 'text-purple-600'
+                                                            }`}>
                                                             {evaluacion.notaFinal?.toFixed(2) || '0.00'}
                                                         </div>
                                                         <div className="text-xs text-gray-500 font-semibold">Nota Final</div>
                                                     </div>
                                                     {isExpanded ? (
-                                                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                                                        <ChevronUp className="cursor-pointer w-5 h-5 text-gray-400" />
                                                     ) : (
-                                                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                                                        <ChevronDown className="cursor-pointer w-5 h-5 text-gray-400" />
                                                     )}
                                                 </div>
                                             </div>
@@ -263,9 +254,19 @@ const ProjectInfo = ({ projectId, onBack }) => {
 
                                                 <div className="space-y-2">
                                                     {evaluacion.criteriosEvaluados?.map((criterio, idx) => {
-                                                        const puntajeMaximo = criterio.puntajeMaximo || 10;
-                                                        const peso = criterio.peso || 0;
-                                                        const porcentaje = puntajeMaximo > 0 
+                                                        // Obtener puntaje máximo según el tipo de rúbrica
+                                                        let puntajeMaximo = 10; // Default para rúbricas tipo 2
+
+                                                        if (rubric?.rubricType === 1) {
+                                                            // Para escalas estimativas, obtener el valor máximo según la ponderación
+                                                            const peso = criterio.peso || criterio.criterionWeight || 0;
+                                                            if (peso === 20) puntajeMaximo = 2.0;
+                                                            else if (peso === 15) puntajeMaximo = 1.5;
+                                                            else if (peso === 10) puntajeMaximo = 1.0;
+                                                        }
+
+                                                        const peso = criterio.peso || criterio.criterionWeight || 0;
+                                                        const porcentaje = puntajeMaximo > 0
                                                             ? ((criterio.puntajeObtenido / puntajeMaximo) * 100).toFixed(0)
                                                             : 0;
 
@@ -307,9 +308,8 @@ const ProjectInfo = ({ projectId, onBack }) => {
                                                                     </div>
 
                                                                     <div className="text-right flex-shrink-0">
-                                                                        <div className={`text-xl font-black ${
-                                                                            activeSection === 'internal' ? 'text-blue-600' : 'text-purple-600'
-                                                                        }`}>
+                                                                        <div className={`text-xl font-black ${activeSection === 'internal' ? 'text-blue-600' : 'text-purple-600'
+                                                                            }`}>
                                                                             {criterio.puntajeObtenido?.toFixed(1) || '0.0'}
                                                                         </div>
                                                                         <div className="text-xs text-gray-500 font-semibold">/ {puntajeMaximo}</div>
@@ -325,11 +325,10 @@ const ProjectInfo = ({ projectId, onBack }) => {
 
                                                 {/* Resumen de la evaluación */}
                                                 {evaluacion.resumen && (
-                                                    <div className={`mt-4 p-3 rounded-lg ${
-                                                        activeSection === 'internal'
-                                                            ? 'bg-blue-100 border border-blue-300'
-                                                            : 'bg-purple-100 border border-purple-300'
-                                                    }`}>
+                                                    <div className={`mt-4 p-3 rounded-lg ${activeSection === 'internal'
+                                                        ? 'bg-blue-100 border border-blue-300'
+                                                        : 'bg-purple-100 border border-purple-300'
+                                                        }`}>
                                                         <div className="grid grid-cols-2 gap-3 text-sm">
                                                             <div>
                                                                 <div className="text-xs text-gray-600 mb-1">Total Criterios</div>
@@ -338,7 +337,7 @@ const ProjectInfo = ({ projectId, onBack }) => {
                                                             <div>
                                                                 <div className="text-xs text-gray-600 mb-1">Puntaje Obtenido</div>
                                                                 <div className="font-bold text-gray-800">
-                                                                    {evaluacion.resumen.totalPuntajeObtenido?.toFixed(2)} / {evaluacion.resumen.totalPuntajeMaximo}
+                                                                    {evaluacion.resumen.totalPuntajeObtenido?.toFixed(2)} / 10
                                                                 </div>
                                                             </div>
                                                             <div>
@@ -349,9 +348,8 @@ const ProjectInfo = ({ projectId, onBack }) => {
                                                             </div>
                                                             <div>
                                                                 <div className="text-xs text-gray-600 mb-1">Nota Final</div>
-                                                                <div className={`text-xl font-black ${
-                                                                    activeSection === 'internal' ? 'text-blue-700' : 'text-purple-700'
-                                                                }`}>
+                                                                <div className={`text-xl font-black ${activeSection === 'internal' ? 'text-blue-700' : 'text-purple-700'
+                                                                    }`}>
                                                                     {evaluacion.notaFinal?.toFixed(2)}
                                                                 </div>
                                                             </div>
@@ -368,10 +366,10 @@ const ProjectInfo = ({ projectId, onBack }) => {
                                 ? projectDetails.evaluacionesInternas
                                 : projectDetails.evaluacionesExternas
                             )?.length === 0 && (
-                                <div className="text-center py-8 text-gray-500">
-                                    No hay evaluaciones {activeSection === 'internal' ? 'internas' : 'externas'} registradas
-                                </div>
-                            )}
+                                    <div className="text-center py-8 text-gray-500">
+                                        No hay evaluaciones {activeSection === 'internal' ? 'internas' : 'externas'} registradas
+                                    </div>
+                                )}
                         </div>
                     </div>
                 </div>
