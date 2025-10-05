@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = 'https://stc-instituto-tecnico-ricaldone.onrender.com/api';
 
 const useProjectDetails = () => {
   const [loading, setLoading] = useState(false);
@@ -9,12 +9,12 @@ const useProjectDetails = () => {
 
   const fetchProjectDetails = useCallback(async (projectId) => {
     if (!projectId) {
-      console.error('❌ projectId es requerido');
+      console.error('projectId es requerido');
       setError('ID de proyecto no proporcionado');
       return null;
     }
 
-    console.log(`🔄 Cargando detalles del proyecto ${projectId}...`);
+    console.log(`Cargando detalles del proyecto ${projectId}...`);
     setLoading(true);
     setError(null);
     
@@ -27,7 +27,7 @@ const useProjectDetails = () => {
       }
       
       const result = await response.json();
-      console.log('✅ Respuesta recibida:', result);
+      console.log('Respuesta recibida:', result);
       
       if (!result.success || !result.data || result.data.length === 0) {
         throw new Error('No se encontraron evaluaciones');
@@ -74,7 +74,7 @@ const useProjectDetails = () => {
         }
       });
 
-      console.log(`✅ ${evaluacionesInternas.length} internas, ${evaluacionesExternas.length} externas`);
+      console.log(`${evaluacionesInternas.length} internas, ${evaluacionesExternas.length} externas`);
 
       // Calcular promedios
       const calcularPromedio = (evaluaciones) => {
@@ -103,14 +103,14 @@ const useProjectDetails = () => {
         totalEvaluaciones: result.data.length
       };
 
-      console.log('✅ Datos listos:', formattedData);
+      console.log('Datos listos:', formattedData);
       
       setProjectDetails(formattedData);
       setLoading(false);
       return formattedData;
       
     } catch (err) {
-      console.error('❌ Error:', err);
+      console.error('Error:', err);
       setError(err.message);
       setProjectDetails(null);
       setLoading(false);

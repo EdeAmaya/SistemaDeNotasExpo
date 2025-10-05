@@ -23,7 +23,7 @@ const usePresence = () => {
         method: 'POST',
         body: JSON.stringify({ isActive: active })
       });
-      console.log(`💓 Heartbeat enviado - Estado: ${active ? 'ACTIVO' : 'AUSENTE'}`);
+      console.log(`Heartbeat enviado - Estado: ${active ? 'ACTIVO' : 'AUSENTE'}`);
     } catch (error) {
       console.error('Error enviando heartbeat:', error);
     }
@@ -46,7 +46,7 @@ const usePresence = () => {
     const timeSinceLastActivity = now - lastActivityTime.current;
     
     if (timeSinceLastActivity > AWAY_THRESHOLD && isUserActive) {
-      console.log('😴 Usuario marcado como ausente por inactividad');
+      console.log('Usuario marcado como ausente por inactividad');
       setIsUserActive(false);
       sendHeartbeat(false);
     }

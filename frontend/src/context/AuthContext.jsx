@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-const API = "http://localhost:4000/api";
+const API = "https://stc-instituto-tecnico-ricaldone.onrender.com/api";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -31,16 +31,16 @@ export const AuthProvider = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Usuario autenticado:', data.user);
+        console.log('Usuario autenticado:', data.user);
         setUser(data.user);
         setIsAuthenticated(true);
       } else {
-        console.log('❌ No autenticado, status:', response.status);
+        console.log('No autenticado, status:', response.status);
         setUser(null);
         setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error('❌ Error verificando autenticación:', error);
+      console.error('Error verificando autenticación:', error);
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -51,17 +51,17 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (email, password) => {
     try {
-      console.log('🚀 Intentando login para:', email);
+      console.log('Intentando login para:', email);
       
       const response = await fetchWithCookies(`${API}/login`, {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
 
-      console.log('📡 Respuesta de login:', response.status);
+      console.log('Respuesta de login:', response.status);
       
       // Verificar headers de respuesta
-      console.log('📨 Headers de respuesta:', Object.fromEntries(response.headers.entries()));
+      console.log('Headers de respuesta:', Object.fromEntries(response.headers.entries()));
 
       const data = await response.json();
 
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error(data.message || "Error en la autenticación");
       }
 
-      console.log('✅ Login exitoso:', data.user);
+      console.log('Login exitoso:', data.user);
 
       // Actualizar el estado con la información del usuario
       setUser(data.user);
@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
 
       // Verificar inmediatamente si las cookies se establecieron
       setTimeout(() => {
-        console.log('🍪 Cookies después del login:', document.cookie);
+        console.log('Cookies después del login:', document.cookie);
       }, 100);
 
       return { 
@@ -87,7 +87,7 @@ export const AuthProvider = ({ children }) => {
         userType: data.userType
       };
     } catch (error) {
-      console.error('❌ Error en login:', error);
+      console.error('Error en login:', error);
       return { 
         success: false, 
         message: error.message 
@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      console.log('🚪 Cerrando sesión...');
+      console.log('Cerrando sesión...');
       
       const response = await fetchWithCookies(`${API}/logout`, {
         method: "POST",
@@ -107,13 +107,13 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         setUser(null);
         setIsAuthenticated(false);
-        console.log('✅ Logout exitoso');
+        console.log('Logout exitoso');
         return { success: true, message: "Sesión cerrada exitosamente" };
       } else {
         throw new Error("Error al cerrar sesión");
       }
     } catch (error) {
-      console.error('❌ Error en logout:', error);
+      console.error('Error en logout:', error);
       // Incluso si hay error, limpiar el estado local
       setUser(null);
       setIsAuthenticated(false);

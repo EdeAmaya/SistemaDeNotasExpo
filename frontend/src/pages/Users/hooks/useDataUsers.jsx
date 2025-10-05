@@ -12,7 +12,7 @@ const useDataUsers = () => {
     const [role, setRole] = useState("");
     const [isVerified, setIsVerified] = useState(false);
 
-    const API = "http://localhost:4000/api/users";
+    const API = "https://stc-instituto-tecnico-ricaldone.onrender.com/api/users";
 
     // Obtener todos los usuarios
     const fetchUsers = async () => {

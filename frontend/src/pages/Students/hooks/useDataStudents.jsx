@@ -13,7 +13,7 @@ const useDataStudents = () => {
     const [idSpecialty, setIdSpecialty] = useState("");
     const [projectId, setProjectId] = useState("");
 
-    const API = "http://localhost:4000/api/students";
+    const API = "https://stc-instituto-tecnico-ricaldone.onrender.com/api/students";
 
     // Obtener todos los estudiantes
     const fetchStudents = async () => {

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-const API_URL = 'http://localhost:4000/api/rubrics';
+const API_URL = 'https://stc-instituto-tecnico-ricaldone.onrender.com/api/rubrics';
 
 const useDataRubrics = () => {
   const [loading, setLoading] = useState(false);

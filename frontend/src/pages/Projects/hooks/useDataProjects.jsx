@@ -15,7 +15,7 @@ const useDataProjects = () => {
     const [assignedStudents, setAssignedStudents] = useState([]);
     const [selectedSpecialty, setSelectedSpecialty] = useState("");
 
-    const API = "http://localhost:4000/api/projects";
+    const API = "https://stc-instituto-tecnico-ricaldone.onrender.com/api/projects";
 
     // Obtener todos los proyectos
     const fetchProjects = async () => {

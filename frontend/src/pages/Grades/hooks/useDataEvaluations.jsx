@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-const API_URL = 'http://localhost:4000/api/evaluations';
+const API_URL = 'https://stc-instituto-tecnico-ricaldone.onrender.com/api/evaluations';
 
 const useDataEvaluations = () => {
   const [loading, setLoading] = useState(false);
@@ -88,7 +88,7 @@ const useDataEvaluations = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('❌ Error del servidor:', errorData);
+        console.error('Error del servidor:', errorData);
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
 
@@ -96,7 +96,7 @@ const useDataEvaluations = () => {
       setEvaluations(prev => [...prev, result.data]);
       return result.data;
     } catch (error) {
-      console.error('❌ Error completo:', error);
+      console.error('Error completo:', error);
       handleError(error, 'Error al crear la evaluación');
       throw error;
     } finally {
