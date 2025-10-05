@@ -6,8 +6,6 @@ import { config } from '../config.js';
 export const authenticateToken = async (req, res, next) => {
   try {
     console.log('🔍 Verificando autenticación...');
-    console.log('Cookies recibidas:', req.cookies);
-    console.log('Headers:', req.headers);
     
     const token = req.cookies.authToken;
     
@@ -16,7 +14,7 @@ export const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ message: 'Token de acceso requerido' });
     }
 
-    console.log('✅ Token encontrado:', token.substring(0, 50) + '...');
+    console.log('✅ Token encontrado');
 
     const decoded = jwt.verify(token, config.JWT.secret);
     console.log('✅ Token decodificado:', decoded);
@@ -70,26 +68,21 @@ export const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Middleware para validar roles específicos
+// Middleware para validar roles específicos - CORREGIDO
 export const validateAuthToken = (allowedUserTypes = []) => {
   return async (req, res, next) => {
     try {
       // Primero autenticar el token
-      await new Promise((resolve, reject) => {
-        authenticateToken(req, res, (err) => {
-          if (err) reject(err);
-          else resolve();
-        });
+      await authenticateToken(req, res, () => {
+        // Una vez autenticado, verificar el rol
+        if (allowedUserTypes.length > 0 && !allowedUserTypes.includes(req.user.userType)) {
+          console.log('❌ Rol insuficiente. Usuario:', req.user.userType, 'Requerido:', allowedUserTypes);
+          return res.status(403).json({ message: "Acceso denegado. Rol insuficiente." });
+        }
+
+        console.log('✅ Rol verificado:', req.user.userType);
+        next();
       });
-
-      // Luego verificar el rol
-      if (allowedUserTypes.length > 0 && !allowedUserTypes.includes(req.user.userType)) {
-        console.log('❌ Rol insuficiente. Usuario:', req.user.userType, 'Requerido:', allowedUserTypes);
-        return res.status(403).json({ message: "Acceso denegado. Rol insuficiente." });
-      }
-
-      console.log('✅ Rol verificado:', req.user.userType);
-      next();
     } catch (error) {
       console.error("❌ Error en validación de token:", error);
       return res.status(403).json({ message: "Error de validación" });

@@ -11,7 +11,6 @@ loginController.login = async (req, res) => {
   try {
     console.log('🔐 Intento de login para:', email);
     console.log('🌍 Origin:', req.headers.origin);
-    console.log('🍪 Cookies recibidas en login:', req.cookies);
 
     let userFound;
     let userType;
@@ -65,25 +64,25 @@ loginController.login = async (req, res) => {
       { expiresIn: config.JWT.expiresIn }
     );
 
-    console.log('🎫 Token generado:', token.substring(0, 50) + '...');
+    console.log('🎫 Token generado exitosamente');
 
-    // CONFIGURACIÓN DE COOKIE MUY ESPECÍFICA
+    // CONFIGURACIÓN DE COOKIE PARA PRODUCCIÓN
+    const isProduction = process.env.NODE_ENV === 'production';
+    
     const cookieOptions = {
       httpOnly: true,
-      secure: false, // FALSE para desarrollo local
-      sameSite: 'lax', // LAX para desarrollo local
+      secure: isProduction, // TRUE en producción (HTTPS)
+      sameSite: isProduction ? 'none' : 'lax', // 'none' en producción para cross-site
       maxAge: 24 * 60 * 60 * 1000, // 24 horas
       path: '/', // Disponible en toda la app
-      domain: undefined // No especificar dominio para localhost
+      domain: isProduction ? undefined : undefined // Sin domain específico
     };
 
     console.log('🍪 Configuración de cookie:', cookieOptions);
+    console.log('🌐 Entorno:', isProduction ? 'PRODUCCIÓN' : 'DESARROLLO');
 
     // Establecer la cookie
     res.cookie("authToken", token, cookieOptions);
-
-    // Verificar que la cookie se estableció
-    console.log('🍪 Cookie establecida en headers:', res.getHeaders()['set-cookie']);
 
     // Formatear información del usuario para enviar al frontend
     let userData = null;
