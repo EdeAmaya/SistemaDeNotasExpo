@@ -8,6 +8,8 @@ router.route("/")
     .get(evaluationController.getEvaluations)
     .post(evaluationController.createEvaluation);
 
+router.get("/project/:projectId", evaluationController.getEvaluationsByProject);
+
 router.route("/:id")
     .get(evaluationController.getEvaluationById)
     .put(evaluationController.updateEvaluation)

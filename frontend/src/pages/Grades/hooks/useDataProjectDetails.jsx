@@ -1,98 +1,135 @@
 import { useState, useCallback } from 'react';
 
-const API_URL = 'http://localhost:4000/api/project-scores';
+const API_BASE_URL = 'http://localhost:4000/api';
 
 const useProjectDetails = () => {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [projectDetails, setProjectDetails] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [projectDetails, setProjectDetails] = useState(null);
 
-    const fetchProjectDetails = useCallback(async (projectId) => {
-        if (!projectId) {
-            setError('Project ID is required');
-            return null;
+  const fetchProjectDetails = useCallback(async (projectId) => {
+    if (!projectId) {
+      console.error('❌ projectId es requerido');
+      setError('ID de proyecto no proporcionado');
+      return null;
+    }
+
+    console.log(`🔄 Cargando detalles del proyecto ${projectId}...`);
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const url = `${API_BASE_URL}/evaluations/project/${projectId}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Error HTTP ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Respuesta recibida:', result);
+      
+      if (!result.success || !result.data || result.data.length === 0) {
+        throw new Error('No se encontraron evaluaciones');
+      }
+
+      // Función para mapear evaluaciones
+      const mapEvaluation = (ev) => ({
+        _id: ev.evaluationId,
+        rubricId: {
+          _id: ev.rubrica.rubricId,
+          rubricName: ev.rubrica.rubricName,
+          rubricType: ev.rubrica.tipoRubrica,
+          stageId: {
+            name: ev.rubrica.stage
+          }
+        },
+        criteriosEvaluados: ev.criterios.map(c => ({
+          criterionId: c.criterionId,
+          criterionName: c.criterionName,
+          puntajeObtenido: c.puntajeObtenido,
+          comentario: c.comentario || '',
+          puntajeMaximo: c.puntajeMaximo,
+          peso: c.peso,
+          descripcion: c.descripcion
+        })),
+        notaFinal: ev.notaFinal,
+        tipoCalculo: ev.tipoCalculo,
+        fecha: ev.fecha,
+        resumen: ev.resumen
+      });
+
+      // Clasificar evaluaciones
+      const evaluacionesInternas = [];
+      const evaluacionesExternas = [];
+
+      result.data.forEach(ev => {
+        const stageName = (ev.rubrica?.stage || '').toLowerCase();
+        const isExternal = stageName.includes('externa') || stageName === 'evaluación externa';
+        
+        if (isExternal) {
+          evaluacionesExternas.push(mapEvaluation(ev));
+        } else {
+          evaluacionesInternas.push(mapEvaluation(ev));
         }
+      });
 
-        setLoading(true);
-        setError(null);
+      console.log(`✅ ${evaluacionesInternas.length} internas, ${evaluacionesExternas.length} externas`);
 
-        try {
-            const response = await fetch(`${API_URL}/project/${projectId}`);
+      // Calcular promedios
+      const calcularPromedio = (evaluaciones) => {
+        if (!evaluaciones.length) return 0;
+        return evaluaciones.reduce((sum, ev) => sum + ev.notaFinal, 0) / evaluaciones.length;
+      };
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || `Error HTTP: ${response.status}`);
-            }
+      const promedioInterno = calcularPromedio(evaluacionesInternas);
+      const promedioExterno = calcularPromedio(evaluacionesExternas);
+      
+      let promedioTotal = 0;
+      if (evaluacionesInternas.length && evaluacionesExternas.length) {
+        promedioTotal = (promedioInterno + promedioExterno) / 2;
+      } else {
+        promedioTotal = promedioInterno || promedioExterno;
+      }
 
-            const result = await response.json();
-            const score = result.data;
+      const formattedData = {
+        projectId,
+        projectName: result.data[0].projectName,
+        evaluacionesInternas,
+        evaluacionesExternas,
+        promedioInterno,
+        promedioExterno,
+        promedioTotal,
+        totalEvaluaciones: result.data.length
+      };
 
-            // Calcular promedios
-            const notasInternas = score.evaluacionesInternas?.map(ev => ev.notaFinal || 0) || [];
-            const notasExternas = score.evaluacionesExternas?.map(ev => ev.notaFinal || 0) || [];
+      console.log('✅ Datos listos:', formattedData);
+      
+      setProjectDetails(formattedData);
+      setLoading(false);
+      return formattedData;
+      
+    } catch (err) {
+      console.error('❌ Error:', err);
+      setError(err.message);
+      setProjectDetails(null);
+      setLoading(false);
+      return null;
+    }
+  }, []);
 
-            const todasNotas = [...notasInternas, ...notasExternas];
+  const clearProjectDetails = useCallback(() => {
+    setProjectDetails(null);
+    setError(null);
+  }, []);
 
-            // Calcular promedios internos y externos
-            const promedioInterno = notasInternas.length
-                ? notasInternas.reduce((a, b) => a + b, 0) / notasInternas.length
-                : 0;
-
-            const promedioExterno = notasExternas.length
-                ? notasExternas.reduce((a, b) => a + b, 0) / notasExternas.length
-                : 0;
-
-            // Calcular promedio total (50% interno + 50% externo)
-            let promedioTotal = 0;
-
-            if (notasInternas.length > 0 && notasExternas.length > 0) {
-                promedioTotal = (promedioInterno * 0.5) + (promedioExterno * 0.5);
-            } else if (notasInternas.length > 0) {
-                promedioTotal = promedioInterno;
-            } else if (notasExternas.length > 0) {
-                promedioTotal = promedioExterno;
-            }
-            const projectData = {
-                _id: score._id,
-                projectId: score.projectId?._id,
-                projectName: score.projectId?.projectName || 'Sin nombre',
-                evaluacionesInternas: score.evaluacionesInternas || [],
-                evaluacionesExternas: score.evaluacionesExternas || [],
-                promedioInterno,
-                promedioExterno,
-                promedioTotal,
-                totalEvaluaciones: todasNotas.length
-            };
-
-            setProjectDetails(projectData);
-            return projectData;
-        } catch (err) {
-            const errorMessage = err.message || 'Error al cargar detalles del proyecto';
-            setError(errorMessage);
-            console.error('Error fetching project details:', err);
-            return null;
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    const clearProjectDetails = useCallback(() => {
-        setProjectDetails(null);
-        setError(null);
-    }, []);
-
-    const clearError = useCallback(() => {
-        setError(null);
-    }, []);
-
-    return {
-        loading,
-        error,
-        projectDetails,
-        fetchProjectDetails,
-        clearProjectDetails,
-        clearError
-    };
+  return {
+    loading,
+    error,
+    projectDetails,
+    fetchProjectDetails,
+    clearProjectDetails
+  };
 };
 
 export default useProjectDetails;

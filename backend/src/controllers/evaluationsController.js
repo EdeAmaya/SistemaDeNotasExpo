@@ -189,6 +189,105 @@ evaluationController.getEvaluationById = async (req, res) => {
 };
 
 // ===============================
+// GET - Obtener todas las evaluaciones de un proyecto con detalles completos
+// ===============================
+evaluationController.getEvaluationsByProject = async (req, res) => {
+    try {
+        const { projectId } = req.params;
+
+        // Buscar todas las evaluaciones del proyecto
+        const evaluations = await Evaluation.find({ projectId })
+            .populate("projectId")
+            .populate({
+                path: "rubricId",
+                populate: [
+                    { path: "stageId", select: "name" },
+                    { path: "specialtyId", select: "specialtyName" },
+                    { path: "levelId", select: "levelName" }
+                ]
+            })
+            .sort({ fecha: -1 }); // Ordenar por fecha descendente
+
+        if (!evaluations || evaluations.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No se encontraron evaluaciones para este proyecto"
+            });
+        }
+
+        // Formatear la respuesta con todos los detalles
+        const formattedEvaluations = evaluations.map(ev => {
+            const rubric = ev.rubricId;
+            
+            // Extraer criterios con sus detalles
+            const criteriosDetalle = ev.criteriosEvaluados.map(ce => {
+                // Buscar el criterio en la rúbrica para obtener detalles completos
+                const criterioCompleto = rubric.criteria.id(ce.criterionId);
+                
+                return {
+                    criterionId: ce.criterionId,
+                    criterionName: ce.criterionName,
+                    puntajeObtenido: ce.puntajeObtenido,
+                    comentario: ce.comentario,
+                    // Detalles adicionales del criterio de la rúbrica
+                    puntajeMaximo: criterioCompleto?.maxScore || 0,
+                    peso: criterioCompleto?.weight || 0,
+                    descripcion: criterioCompleto?.description || ""
+                };
+            });
+
+            // Calcular totales
+            const totalPuntajeObtenido = criteriosDetalle.reduce((sum, c) => sum + (c.puntajeObtenido || 0), 0);
+            const totalPuntajeMaximo = criteriosDetalle.reduce((sum, c) => sum + (c.puntajeMaximo || 0), 0);
+            const totalPeso = criteriosDetalle.reduce((sum, c) => sum + (c.peso || 0), 0);
+
+            return {
+                evaluationId: ev._id,
+                projectId: ev.projectId?._id,
+                projectName: ev.projectId?.projectName,
+                notaFinal: ev.notaFinal,
+                tipoCalculo: ev.tipoCalculo,
+                evaluacionTipo: ev.evaluacionTipo,
+                fecha: ev.fecha || ev.createdAt,
+                rubrica: {
+                    rubricId: rubric._id,
+                    rubricName: rubric.rubricName,
+                    stage: rubric.stageId?.name || "Sin etapa",
+                    specialty: rubric.specialtyId?.specialtyName || "Sin especialidad",
+                    level: rubric.levelId?.levelName || "Sin nivel",
+                    tipoRubrica: rubric.rubricType
+                },
+                criterios: criteriosDetalle,
+                resumen: {
+                    totalCriterios: criteriosDetalle.length,
+                    totalPuntajeObtenido,
+                    totalPuntajeMaximo,
+                    totalPeso,
+                    porcentajeObtenido: totalPuntajeMaximo > 0 
+                        ? ((totalPuntajeObtenido / totalPuntajeMaximo) * 100).toFixed(2) 
+                        : 0
+                }
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            count: formattedEvaluations.length,
+            projectId,
+            data: formattedEvaluations
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Error obteniendo evaluaciones del proyecto",
+            error: error.message,
+            stack: error.stack
+        });
+    }
+};
+
+// ===============================
 // POST - Crear evaluación
 // ===============================
 evaluationController.createEvaluation = async (req, res) => {
