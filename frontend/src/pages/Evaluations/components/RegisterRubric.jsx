@@ -44,9 +44,9 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
         };
 
         const [specialtiesRes, stagesRes, levelsRes] = await Promise.all([
-          fetch('http://localhost:4000/api/specialties', { headers }),
-          fetch('http://localhost:4000/api/stages', { headers }),
-          fetch('http://localhost:4000/api/levels', { headers })
+          fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/specialties', { headers }),
+          fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/stages', { headers }),
+          fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/levels', { headers })
         ]);
 
         if (levelsRes.ok) {

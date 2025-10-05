@@ -191,7 +191,7 @@ const BulkStudentUpload = ({ onUploadComplete, levels, sections, specialties, pr
                 return;
             }
 
-            const response = await fetch('http://localhost:4000/api/students/students/bulk', {
+            const response = await fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/students/students/bulk', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

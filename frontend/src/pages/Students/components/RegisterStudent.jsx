@@ -105,7 +105,7 @@ const RegisterStudent = ({
     setIsCheckingCode(true);
     
     try {
-      const response = await fetch(`http://localhost:4000/api/students`, {
+      const response = await fetch(`https://stc-instituto-tecnico-ricaldone.onrender.com/api/students`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -159,10 +159,10 @@ const RegisterStudent = ({
       
       try {
         const [levelsResponse, sectionsResponse, specialtiesResponse, projectsResponse] = await Promise.all([
-          fetch('http://localhost:4000/api/levels', { credentials: 'include' }),
-          fetch('http://localhost:4000/api/sections', { credentials: 'include' }),
-          fetch('http://localhost:4000/api/specialties', { credentials: 'include' }),
-          fetch('http://localhost:4000/api/projects', { credentials: 'include' })
+          fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/levels', { credentials: 'include' }),
+          fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/sections', { credentials: 'include' }),
+          fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/specialties', { credentials: 'include' }),
+          fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/projects', { credentials: 'include' })
         ]);
 
         if (levelsResponse.ok) {

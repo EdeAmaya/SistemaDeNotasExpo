@@ -18,7 +18,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
     const fetchRubrics = async () => {
       setLoadingRubrics(true);
       try {
-        const response = await fetch('http://localhost:4000/api/rubrics');
+        const response = await fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/rubrics');
         if (response.ok) {
           const data = await response.json();
           setRubrics(data);
@@ -42,7 +42,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
 
       setLoadingProjects(true);
       try {
-        const response = await fetch('http://localhost:4000/api/projects');
+        const response = await fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/projects');
         if (response.ok) {
           const allProjects = await response.json();
 
@@ -90,7 +90,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
     setFormData(prev => ({ ...prev, rubricId, projectId: null }));
 
     if (rubric?.criteria) {
-      console.log('🔍 Criterios de la rúbrica:', rubric.criteria.map(c => ({
+      console.log('Criterios de la rúbrica:', rubric.criteria.map(c => ({
         _id: c._id,
         name: c.criterionName
       })));
@@ -191,8 +191,8 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
       tipoCalculo: selectedRubric.rubricType === 1 ? 'ponderado' : 'promedio'
     };
 
-    console.log('📤 Datos de evaluación a enviar:', dataToSend);
-    console.log('🔍 Criterios siendo enviados:', dataToSend.criteriosEvaluados.map(c => ({
+    console.log('Datos de evaluación a enviar:', dataToSend);
+    console.log('Criterios siendo enviados:', dataToSend.criteriosEvaluados.map(c => ({
       criterioId: c.criterioId,
       puntaje: c.puntajeObtenido
     })));
