@@ -70,6 +70,7 @@ const useDataRubrics = () => {
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -98,6 +99,7 @@ const useDataRubrics = () => {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -127,6 +129,7 @@ const useDataRubrics = () => {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -177,6 +180,7 @@ const useDataRubrics = () => {
     try {
       const response = await fetch(`${API_URL}/${rubricId}/criteria`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -212,6 +216,7 @@ const useDataRubrics = () => {
     try {
       const response = await fetch(`${API_URL}/${rubricId}/criteria/${criterionId}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -249,6 +254,7 @@ const useDataRubrics = () => {
     try {
       const response = await fetch(`${API_URL}/${rubricId}/criteria/${criterionId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

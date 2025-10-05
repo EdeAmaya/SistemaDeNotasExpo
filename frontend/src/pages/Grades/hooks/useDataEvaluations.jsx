@@ -76,10 +76,11 @@ const useDataEvaluations = () => {
         }))
       };
 
-      console.log('📤 Datos a enviar:', JSON.stringify(formattedData, null, 2));
+      console.log('Datos a enviar:', JSON.stringify(formattedData, null, 2));
 
       const response = await fetch(API_URL, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -121,6 +122,7 @@ const useDataEvaluations = () => {
 
       const response = await fetch(`${API_URL}/${id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -151,6 +153,7 @@ const useDataEvaluations = () => {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (!response.ok) {

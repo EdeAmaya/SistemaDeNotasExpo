@@ -136,6 +136,7 @@ const useDataProjectScores = () => {
     try {
       const response = await fetch(`${API_URL}/recalculate/${projectId}`, {
         method: "POST",
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -165,6 +166,7 @@ const useDataProjectScores = () => {
       try {
         const response = await fetch(`${API_URL}/${id}`, {
           method: "DELETE",
+          credentials: "include",
         });
 
         if (!response.ok) {
