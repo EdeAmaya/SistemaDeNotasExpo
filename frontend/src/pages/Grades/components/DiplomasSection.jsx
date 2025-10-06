@@ -8,37 +8,37 @@ const API = "https://stc-instituto-tecnico-ricaldone.onrender.com/api";
 
 const isBachilleratoLevel = (levelName) => {
   const normalized = levelName.toLowerCase();
-  return normalized.includes('bachillerato') || 
-         normalized.includes('año') ||
-         normalized.includes('desarrollo') ||
-         normalized.includes('electr') ||
-         normalized.includes('mecánica') ||
-         normalized.includes('contaduría');
+  return normalized.includes('bachillerato') ||
+    normalized.includes('año') ||
+    normalized.includes('desarrollo') ||
+    normalized.includes('electr') ||
+    normalized.includes('mecánica') ||
+    normalized.includes('contaduría');
 };
 
 const getSectionsForLevel = (levelName, allSections) => {
   const normalizedLevel = levelName.toLowerCase();
-  
-  if (normalizedLevel.includes('tercer ciclo') || 
-      normalizedLevel.includes('3er ciclo') ||
-      normalizedLevel.includes('octavo') ||
-      normalizedLevel.includes('noveno') ||
-      normalizedLevel.includes('séptimo') ||
-      normalizedLevel.includes('7') ||
-      normalizedLevel.includes('8') ||
-      normalizedLevel.includes('9')) {
-    return allSections.filter(section => 
+
+  if (normalizedLevel.includes('tercer ciclo') ||
+    normalizedLevel.includes('3er ciclo') ||
+    normalizedLevel.includes('octavo') ||
+    normalizedLevel.includes('noveno') ||
+    normalizedLevel.includes('séptimo') ||
+    normalizedLevel.includes('7') ||
+    normalizedLevel.includes('8') ||
+    normalizedLevel.includes('9')) {
+    return allSections.filter(section =>
       /^[A-F]$/i.test(section.sectionName)
     );
   }
-  
+
   if (isBachilleratoLevel(levelName)) {
     return allSections.filter(section => {
       const name = section.sectionName;
       return name === '1A' || name === '1B' || name === '2A' || name === '2B';
     });
   }
-  
+
   return [];
 };
 
@@ -51,12 +51,18 @@ const ProjectsListView = ({ section, level, onBack }) => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API}/project-scores/section/${section._id}`, {credentials: 'include'});
-        
+        const response = await fetch(`${API}/project-scores/section/${section._id}`, { credentials: 'include' });
+
+        if (response.status === 404) {
+          setProjects([]);
+          setError(null);
+          return;
+        }
+
         if (!response.ok) {
           throw new Error('Error al cargar los proyectos');
         }
-        
+
         const data = await response.json();
         setProjects(data.data || []);
         setError(null);
@@ -315,7 +321,7 @@ const LevelCard = ({ level, sections, specialties, onSelectLevel }) => {
   const isBachillerato = isBachilleratoLevel(level.levelName);
 
   return (
-    <div 
+    <div
       onClick={() => onSelectLevel(level)}
       className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:shadow-xl hover:border-yellow-400 transition-all duration-300 overflow-hidden cursor-pointer transform hover:scale-105"
     >
@@ -456,7 +462,7 @@ const TercerCicloDetail = ({ level, sections, onBack }) => {
 
 const BachilleratoDetail = ({ level, sections, specialties, onBack }) => {
   const levelSections = getSectionsForLevel(level.levelName, sections);
-  
+
   const grupo1Sections = levelSections.filter(s => s.sectionName.startsWith('1'));
   const grupo2Sections = levelSections.filter(s => s.sectionName.startsWith('2'));
 
@@ -594,7 +600,7 @@ const DiplomasSection = () => {
   const { levels, loading: loadingLevels, error: errorLevels } = useLevels();
   const { sections, loading: loadingSections } = useSections();
   const { specialties, loading: loadingSpecialties } = useSpecialties();
-  
+
   const [selectedLevel, setSelectedLevel] = useState(null);
 
   const loading = loadingLevels || loadingSections || loadingSpecialties;
@@ -640,7 +646,7 @@ const DiplomasSection = () => {
 
   if (selectedLevel) {
     const isBachillerato = isBachilleratoLevel(selectedLevel.levelName);
-    
+
     if (isBachillerato) {
       return (
         <BachilleratoDetail
