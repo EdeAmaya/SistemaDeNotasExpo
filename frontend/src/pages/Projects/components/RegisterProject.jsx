@@ -1,6 +1,317 @@
 import React, { useState, useEffect } from 'react';
-import { Lightbulb, Hash, FileText, BookOpen, Users, Award, CheckCircle, XCircle, Edit2, Plus, Info, Loader2, Globe } from 'lucide-react';
+import { Lightbulb, Hash, FileText, BookOpen, Users, Award, CheckCircle, XCircle, Edit2, Plus, Info, Loader2, Globe, Search, X, UserCheck } from 'lucide-react';
 
+// ===== COMPONENTE MODAL PARA SELECCIONAR ESTUDIANTES =====
+const StudentSelector = ({ 
+  idLevel, 
+  idSection, 
+  selectedSpecialty, 
+  levels, 
+  students, 
+  assignedStudents, 
+  setAssignedStudents,
+  isBachillerato,
+  isBasica 
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const getFilteredStudents = () => {
+    if (!idLevel) return [];
+
+    const selectedLevel = levels.find(level => level._id === idLevel);
+    if (!selectedLevel) return [];
+
+    const levelName = selectedLevel.levelName || selectedLevel.name || '';
+    
+    if (isBasica(levelName)) {
+      if (!idSection) return [];
+
+      return (students || []).filter(student => {
+        if (!student || !student._id || !student.idLevel || !student.idSection) return false;
+        const studentLevel = student.idLevel._id || student.idLevel;
+        const studentSection = student.idSection._id || student.idSection;
+        return studentLevel === idLevel && studentSection === idSection;
+      });
+    }
+    
+    if (isBachillerato(levelName)) {
+      if (!selectedSpecialty) return [];
+
+      return (students || []).filter(student => {
+        if (!student || !student._id || !student.idLevel || !student.idSpecialty) return false;
+        const studentLevel = student.idLevel._id || student.idLevel;
+        const studentSpecialty = student.idSpecialty._id || student.idSpecialty;
+        return studentLevel === idLevel && studentSpecialty === selectedSpecialty;
+      });
+    }
+
+    return [];
+  };
+
+  const filteredStudents = getFilteredStudents().filter(student => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    const fullName = `${student.name || ''} ${student.lastName || ''}`.toLowerCase();
+    const code = String(student.studentCode || '').toLowerCase();
+    return fullName.includes(searchLower) || code.includes(searchLower);
+  });
+
+  const toggleStudent = (studentId) => {
+    if (assignedStudents.includes(studentId)) {
+      setAssignedStudents(assignedStudents.filter(id => id !== studentId));
+    } else {
+      setAssignedStudents([...assignedStudents, studentId]);
+    }
+  };
+
+  const getSelectedStudentsInfo = () => {
+    return students.filter(s => s && s._id && assignedStudents.includes(s._id));
+  };
+
+  const canOpen = idLevel && (idSection || selectedSpecialty);
+
+  return (
+    <div>
+      <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+        <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+        <span>Estudiantes Asignados (Opcional)</span>
+      </label>
+
+      {/* Botón para abrir modal */}
+      <button
+        type="button"
+        onClick={() => canOpen && setIsOpen(true)}
+        disabled={!canOpen}
+        className={`w-full px-3 sm:px-4 py-3 sm:py-4 border-2 rounded-lg font-medium transition-all text-left flex items-center justify-between ${
+          canOpen
+            ? 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
+            : 'bg-gray-100 border-gray-200 cursor-not-allowed'
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+          <span className="text-xs sm:text-sm text-gray-600">
+            {!idLevel ? 'Selecciona un nivel primero' :
+             !idSection && !selectedSpecialty ? 'Selecciona sección/especialidad primero' :
+             assignedStudents.length > 0 ? `${assignedStudents.length} estudiante(s) seleccionado(s)` :
+             'Clic para seleccionar estudiantes'}
+          </span>
+        </div>
+        {canOpen && (
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+        )}
+      </button>
+
+      {/* Chips de estudiantes seleccionados */}
+      {assignedStudents.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {getSelectedStudentsInfo().map(student => (
+            <div
+              key={student._id}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-lg text-xs font-medium animate-fadeIn"
+            >
+              <UserCheck className="w-3 h-3" />
+              <span>{student.name || ''} {student.lastName || ''}</span>
+              <button
+                type="button"
+                onClick={() => toggleStudent(student._id)}
+                className="ml-1 hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col animate-scaleIn">
+            {/* Header del Modal */}
+            <div className="p-4 sm:p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg">
+                    <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-black text-gray-900">
+                      Seleccionar Estudiantes
+                    </h3>
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      {assignedStudents.length} seleccionado(s) de {getFilteredStudents().length} disponible(s)
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    setSearchTerm('');
+                  }}
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              {/* Barra de búsqueda */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar por nombre o código..."
+                  className="w-full pl-10 sm:pl-12 pr-10 py-2.5 sm:py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition-all text-xs sm:text-sm font-medium"
+                  autoFocus
+                />
+                <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 hover:bg-gray-200 rounded-full p-1 transition-colors"
+                  >
+                    <X className="w-4 h-4 text-gray-500" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Lista de estudiantes */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              {filteredStudents.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                    <Users className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+                  </div>
+                  <p className="text-gray-900 font-bold text-base sm:text-lg">
+                    {searchTerm ? 'No se encontraron estudiantes' : 'No hay estudiantes disponibles'}
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                    {searchTerm ? 'Intenta con otro término de búsqueda' : 'Verifica la selección de nivel y sección'}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                  {filteredStudents.map((student, index) => {
+                    const isSelected = assignedStudents.includes(student._id);
+                    return (
+                      <button
+                        key={student._id}
+                        type="button"
+                        onClick={() => toggleStudent(student._id)}
+                        className={`p-3 sm:p-4 rounded-xl border-2 transition-all text-left animate-fadeIn ${
+                          isSelected
+                            ? 'bg-blue-50 border-blue-500 shadow-md'
+                            : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                        }`}
+                        style={{ animationDelay: `${index * 0.03}s` }}
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Checkbox visual */}
+                          <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                            isSelected
+                              ? 'bg-blue-500 border-blue-500'
+                              : 'bg-white border-gray-300'
+                          }`}>
+                            {isSelected && (
+                              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                            )}
+                          </div>
+
+                          {/* Info del estudiante */}
+                          <div className="flex-1 min-w-0">
+                            <p className={`font-bold text-sm sm:text-base truncate ${
+                              isSelected ? 'text-blue-900' : 'text-gray-900'
+                            }`}>
+                              {student.name || ''} {student.lastName || ''}
+                            </p>
+                            <p className={`text-xs sm:text-sm ${
+                              isSelected ? 'text-blue-600' : 'text-gray-500'
+                            }`}>
+                              Código: {student.studentCode || 'Sin código'}
+                            </p>
+                          </div>
+
+                          {/* Badge de seleccionado */}
+                          {isSelected && (
+                            <div className="px-2 sm:px-3 py-1 bg-blue-500 text-white rounded-lg text-xs font-bold flex-shrink-0">
+                              ✓ Seleccionado
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer del Modal */}
+            <div className="p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAssignedStudents([])}
+                  disabled={assignedStudents.length === 0}
+                  className={`flex-1 px-4 py-2.5 sm:py-3 rounded-xl font-bold transition-colors text-sm sm:text-base flex items-center justify-center gap-2 ${
+                    assignedStudents.length === 0
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <X className="w-4 h-4" />
+                  Limpiar Selección
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    setSearchTerm('');
+                  }}
+                  className="flex-1 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-xl font-bold hover:from-blue-600 hover:to-blue-800 transition-all shadow-lg text-sm sm:text-base flex items-center justify-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Confirmar ({assignedStudents.length})
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+        .animate-scaleIn {
+          animation: scaleIn 0.3s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+// ===== COMPONENTE PRINCIPAL REGISTERPROJECT =====
 const RegisterProject = ({
   projectId, setProjectId,
   projectName, setProjectName,
@@ -26,7 +337,6 @@ const RegisterProject = ({
   const [errors, setErrors] = useState({});
   const [autoTeamNumber, setAutoTeamNumber] = useState(1);
 
-  // Todas las funciones de cálculo y validación permanecen igual
   const calculateNextTeamNumber = () => {
     if (!idLevel || !projects) {
       return 1;
@@ -376,7 +686,7 @@ const RegisterProject = ({
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         
-        {/* Información del Proyecto - Responsive */}
+        {/* Información del Proyecto */}
         <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border-2 border-gray-200">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
             <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -399,9 +709,7 @@ const RegisterProject = ({
           </div>
         </div>
 
-        {/* Continúa en la siguiente parte... */}
-
-        {/* Información Académica - Responsive */}
+        {/* Información Académica */}
         <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border-2 border-gray-200">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
             <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -533,7 +841,7 @@ const RegisterProject = ({
           </div>
         </div>
 
-        {/* IDs Automáticos - Responsive */}
+        {/* IDs Automáticos */}
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border-2 border-blue-200">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
             <Hash className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
@@ -648,7 +956,7 @@ const RegisterProject = ({
           </div>
         </div>
 
-        {/* Estado y Estudiantes - Responsive */}
+        {/* Estado y Estudiantes */}
         <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border-2 border-gray-200">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
             <Users className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -673,128 +981,18 @@ const RegisterProject = ({
               </select>
             </div>
 
-            {/* Estudiantes Asignados */}
-            <div>
-              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
-                <Users className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span>Estudiantes Asignados (Opcional)</span>
-              </label>
-              <select
-                multiple
-                value={assignedStudents || []}
-                onChange={(e) => {
-                  const selectedValues = Array.from(e.target.selectedOptions, option => option.value);
-                  setAssignedStudents(selectedValues);
-                }}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium min-h-32 text-xs sm:text-sm"
-                disabled={!idLevel || (!idSection && !selectedSpecialty)}
-              >
-                {(() => {
-                  if (!idLevel) {
-                    return (
-                      <option disabled>
-                        Primero selecciona un nivel académico
-                      </option>
-                    );
-                  }
-
-                  const selectedLevel = levels.find(level => level._id === idLevel);
-                  if (!selectedLevel) {
-                    return (
-                      <option disabled>
-                        Nivel no encontrado
-                      </option>
-                    );
-                  }
-
-                  const levelName = selectedLevel.levelName || selectedLevel.name || '';
-                  
-                  if (isBasica(levelName)) {
-                    if (!idSection) {
-                      return (
-                        <option disabled>
-                          Selecciona una sección para ver los estudiantes
-                        </option>
-                      );
-                    }
-
-                    const filteredStudents = (students || []).filter(student => {
-                      if (!student || !student.idLevel || !student.idSection) {
-                        return false;
-                      }
-                      const studentLevel = student.idLevel._id || student.idLevel;
-                      const studentSection = student.idSection._id || student.idSection;
-                      return studentLevel === idLevel && studentSection === idSection;
-                    });
-
-                    if (filteredStudents.length === 0) {
-                      return (
-                        <option disabled>
-                          No hay estudiantes en este nivel y sección
-                        </option>
-                      );
-                    }
-
-                    return filteredStudents.map((student) => (
-                      <option key={student._id} value={student._id}>
-                        {student.name} {student.lastName} - {student.studentCode}
-                      </option>
-                    ));
-                  }
-                  
-                  else if (isBachillerato(levelName)) {
-                    if (!selectedSpecialty) {
-                      return (
-                        <option disabled>
-                          Selecciona una especialidad para ver los estudiantes
-                        </option>
-                      );
-                    }
-
-                    const filteredStudents = (students || []).filter(student => {
-                      if (!student || !student.idLevel || !student.idSpecialty) {
-                        return false;
-                      }
-                      const studentLevel = student.idLevel._id || student.idLevel;
-                      const studentSpecialty = student.idSpecialty._id || student.idSpecialty;
-                      return studentLevel === idLevel && studentSpecialty === selectedSpecialty;
-                    });
-
-                    if (filteredStudents.length === 0) {
-                      return (
-                        <option disabled>
-                          No hay estudiantes en este nivel y especialidad
-                        </option>
-                      );
-                    }
-
-                    return filteredStudents.map((student) => (
-                      <option key={student._id} value={student._id}>
-                        {student.name} {student.lastName} - {student.studentCode}
-                      </option>
-                    ));
-                  }
-
-                  return (
-                    <option disabled>
-                      Tipo de nivel no reconocido
-                    </option>
-                  );
-                })()}
-              </select>
-              <p className="text-xs mt-1 text-gray-600 flex items-center gap-1">
-                <Info className="w-3 h-3" />
-                Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples
-              </p>
-              {assignedStudents && assignedStudents.length > 0 && (
-                <div className="mt-2 p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-blue-700 font-medium text-xs sm:text-sm flex items-center gap-1">
-                    <Users className="w-3 h-3 sm:w-4 sm:h-4" />
-                    {assignedStudents.length} estudiante(s) seleccionado(s)
-                  </p>
-                </div>
-              )}
-            </div>
+            {/* Estudiantes Asignados - Nuevo Componente */}
+            <StudentSelector
+              idLevel={idLevel}
+              idSection={idSection}
+              selectedSpecialty={selectedSpecialty}
+              levels={levels}
+              students={students}
+              assignedStudents={assignedStudents}
+              setAssignedStudents={setAssignedStudents}
+              isBachillerato={isBachillerato}
+              isBasica={isBasica}
+            />
           </div>
         </div>
 
@@ -810,7 +1008,7 @@ const RegisterProject = ({
           </div>
         )}
 
-        {/* Botones de Acción - Responsive */}
+        {/* Botones de Acción */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
           <button
             type="submit"
@@ -840,7 +1038,7 @@ const RegisterProject = ({
         </div>
       </form>
 
-      {/* Info adicional - Responsive */}
+      {/* Info adicional */}
       <div className="mt-4 sm:mt-6 bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 rounded-r-lg">
         <div className="flex gap-2 sm:gap-3">
           <Info className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
@@ -850,6 +1048,7 @@ const RegisterProject = ({
               <li>• El número de equipo se asigna automáticamente</li>
               <li>• El ID se genera con formato: [Nivel][Sección][Equipo]-[Año]</li>
               <li>• El enlace de Google Sites se crea automáticamente</li>
+              <li>• Puedes seleccionar estudiantes de forma visual</li>
             </ul>
           </div>
         </div>
