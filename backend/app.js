@@ -21,6 +21,7 @@ import rubricRoutes from "./src/routes/rubric.js";
 import evaluationsRoutes from "./src/routes/evaluations.js";
 import heartbeatRoutes from "./src/routes/heartbeat.js";
 import projectScoreRoutes from "./src/routes/projectScore.js";
+import eventsRoutes from "./src/routes/events.js"; 
 
 // Importar middlewares
 import { authenticateToken } from "./src/middlewares/auth.js";
@@ -30,7 +31,6 @@ const app = express();
 // CONFIGURACIÓN CORS MUY ESPECÍFICA PARA COOKIES
 const corsOptions = {
   origin: function (origin, callback) {
-    // Permitir requests sin origin (mobile apps, postman, etc.)
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
@@ -48,7 +48,7 @@ const corsOptions = {
       callback(new Error('No permitido por CORS'));
     }
   },
-  credentials: true, // CRÍTICO: Permite cookies
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
     'Origin',
@@ -59,12 +59,10 @@ const corsOptions = {
     'Cookie'
   ],
   exposedHeaders: ['Set-Cookie'],
-  optionsSuccessStatus: 200 // Para legacy browsers
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
-
-// IMPORTANTE: cookieParser debe ir después de CORS
 app.use(cookieParser());
 app.use(express.json());
 
@@ -83,7 +81,6 @@ app.use("/api/login", loginRoutes);
 app.use("/api/logout", logoutRoutes);
 app.use("/api/register", registerRoutes);
 
-// Ruta de prueba PÚBLICA
 app.get("/api/test", (req, res) => {
   console.log('Test endpoint alcanzado');
   console.log('Cookies en test:', req.cookies);
@@ -94,7 +91,6 @@ app.get("/api/test", (req, res) => {
   });
 });
 
-// Ruta de verificación de estado de autenticación
 app.get("/api/auth/verify", authenticateToken, (req, res) => {
   res.json({
     authenticated: true,
@@ -112,7 +108,6 @@ app.get("/api/auth/verify", authenticateToken, (req, res) => {
 // ========================================
 // MIDDLEWARE DE AUTENTICACIÓN GLOBAL
 // ========================================
-// Todas las rutas debajo de este punto requieren autenticación
 app.use(authenticateToken);
 
 // ========================================
@@ -126,16 +121,16 @@ app.use("/api/students", studentsRoutes);
 app.use("/api/projects", projectsRoutes);
 app.use("/api/activities", activitiesRoutes);
 app.use("/api/stages", stagesRoutes);
-app.use("/api/user-activities", userActivitiesRoutes); // ← Ahora está protegida
+app.use("/api/user-activities", userActivitiesRoutes);
 app.use("/api/rubrics", rubricRoutes);
 app.use("/api/evaluations", evaluationsRoutes);
 app.use("/api/heartbeat", heartbeatRoutes);
 app.use("/api/project-scores", projectScoreRoutes);
+app.use("/api/events", eventsRoutes); 
 
 // ========================================
 // MANEJO DE ERRORES
 // ========================================
-// Middleware de manejo de errores
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(500).json({ 
@@ -144,7 +139,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Middleware para rutas no encontradas
 app.use("*", (req, res) => {
   res.status(404).json({ 
     message: "Ruta no encontrada",
