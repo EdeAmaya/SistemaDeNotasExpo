@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Mail, Lock, Shield, Crown, GraduationCap, Briefcase, Edit2, UserPlus, CheckCircle, Info } from 'lucide-react';
+import { User, Mail, Lock, Shield, Crown, GraduationCap, Briefcase, Edit2, UserPlus, CheckCircle, Info, RefreshCw, XCircle } from 'lucide-react';
 
 const RegisterUser = ({
   name, setName,
@@ -23,26 +23,54 @@ const RegisterUser = ({
     }
   };
 
+  // Generar contraseña aleatoria
+  const generatePassword = () => {
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const symbols = '!@#$%&*';
+    
+    const allChars = uppercase + lowercase + numbers + symbols;
+    let password = '';
+    
+    // Asegurar al menos un carácter de cada tipo
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += symbols[Math.floor(Math.random() * symbols.length)];
+    
+    // Completar hasta 12 caracteres
+    for (let i = password.length; i < 12; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)];
+    }
+    
+    // Mezclar la contraseña
+    password = password.split('').sort(() => Math.random() - 0.5).join('');
+    
+    setPassword(password);
+  };
+
+  // Opciones de rol con iconos y descripciones
   const roles = [
     { 
       value: 'Admin', 
       label: 'Administrador', 
       icon: Crown, 
-      gradient: 'from-purple-500 to-purple-700',
+      gradient: 'from-orange-500 to-orange-700',
       description: 'Control total del sistema'
     },
     { 
       value: 'Docente', 
       label: 'Docente', 
       icon: GraduationCap, 
-      gradient: 'from-green-500 to-green-700',
+      gradient: 'from-orange-500 to-orange-700',
       description: 'Gestión académica'
     },
     { 
       value: 'Evaluador', 
       label: 'Evaluador', 
       icon: Briefcase, 
-      gradient: 'from-blue-500 to-blue-700',
+      gradient: 'from-orange-500 to-orange-700',
       description: 'Evaluación de proyectos'
     }
   ];
@@ -52,20 +80,20 @@ const RegisterUser = ({
       
       {/* Header - Responsive */}
       <div className="mb-6 sm:mb-8">
-        <div className="flex flex-col xs:flex-row items-start xs:items-center gap-3 mb-3">
-          <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${id ? 'bg-gradient-to-br from-blue-500 to-blue-700' : 'bg-gradient-to-br from-green-500 to-green-700'} flex items-center justify-center shadow-lg flex-shrink-0`}>
-            {id ? <Edit2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
-          </div>
-          <div className="flex-1">
-            <h2 className="text-xl sm:text-2xl font-black text-gray-900">
-              {id ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-500">
-              {id ? 'Actualiza la información del usuario' : 'Completa los datos para registrar un nuevo usuario'}
-            </p>
-          </div>
-        </div>
-      </div>
+  <div className="flex flex-col sm:flex-row items-center gap-3 mb-3">
+    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${id ? 'bg-orange-500' : 'bg-orange-500'} flex items-center justify-center shadow-lg flex-shrink-0`}>
+      {id ? <Edit2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
+    </div>
+    <div className="flex-1 flex flex-col justify-center">
+      <h2 className="text-xl sm:text-2xl font-black text-gray-900">
+        {id ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
+      </h2>
+      <p className="text-xs sm:text-sm text-gray-500">
+        {id ? 'Actualiza la información del usuario' : 'Completa los datos para registrar un nuevo usuario'}
+      </p>
+    </div>
+  </div>
+</div>
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         
@@ -85,7 +113,7 @@ const RegisterUser = ({
                 type="text"
                 value={name || ''}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
                 placeholder="Ej: Juan"
                 required
               />
@@ -99,7 +127,7 @@ const RegisterUser = ({
                 type="text"
                 value={lastName || ''}
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
                 placeholder="Ej: Pérez"
                 required
               />
@@ -124,7 +152,7 @@ const RegisterUser = ({
                 type="email"
                 value={email || ''}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
                 placeholder="usuario@ricaldone.edu.sv"
                 required
               />
@@ -138,14 +166,24 @@ const RegisterUser = ({
                   {!id && ' *'}
                 </span>
               </label>
-              <input
-                type="password"
-                value={password || ''}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
-                placeholder={id ? "Nueva contraseña (opcional)" : "Contraseña segura"}
-                required={!id}
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={password || ''}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
+                  placeholder={id ? "Nueva contraseña (opcional)" : "Contraseña segura"}
+                  required={!id}
+                />
+                <button
+                  type="button"
+                  onClick={generatePassword}
+                  className="cursor-pointer px-3 sm:px-4 py-2 sm:py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-105 flex-shrink-0"
+                  title="Generar contraseña"
+                >
+                  <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              </div>
               {!id && (
                 <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
                   <Info className="w-3 h-3" />
@@ -184,7 +222,7 @@ const RegisterUser = ({
                   />
                   <div className={`p-4 sm:p-5 rounded-xl border-3 text-center transition-all duration-300 ${
                     role === roleOption.value
-                      ? `bg-gradient-to-br ${roleOption.gradient} text-white shadow-lg border-transparent`
+                      ? `bg-orange-500 text-white shadow-lg border-transparent`
                       : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-md'
                   }`}>
                     <IconComponent className={`w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2 sm:mb-3 ${
@@ -247,10 +285,10 @@ const RegisterUser = ({
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
           <button
             type="submit"
-            className={`flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
+            className={`cursor-pointer flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
               id
-                ? 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
-                : 'bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800'
+                ? 'bg-orange-500 hover:bg-orange-600'
+                : 'bg-orange-500 hover:bg-orange-600'
             }`}
           >
             {id ? <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />}
@@ -261,9 +299,9 @@ const RegisterUser = ({
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base"
+              className="cursor-pointer px-4 sm:px-6 py-3 sm:py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base"
             >
-              <span>↩️</span>
+              <XCircle className="w-5 h-5" />
               <span>Cancelar</span>
             </button>
           )}
@@ -271,9 +309,9 @@ const RegisterUser = ({
       </form>
 
       {/* Info adicional - Responsive */}
-      <div className="mt-4 sm:mt-6 bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 rounded-r-lg">
+      <div className="mt-4 sm:mt-6 bg-orange-50 border-l-4 border-orange-500 p-3 sm:p-4 rounded-r-lg">
         <div className="flex gap-2 sm:gap-3">
-          <Info className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+          <Info className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 flex-shrink-0" />
           <div className="flex-1 text-xs sm:text-sm text-gray-700">
             <p className="font-bold text-gray-900 mb-1">Campos obligatorios</p>
             <p>Todos los campos marcados con (*) son obligatorios{id && ', excepto la contraseña al editar'}</p>

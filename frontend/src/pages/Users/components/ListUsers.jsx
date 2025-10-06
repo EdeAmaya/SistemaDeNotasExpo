@@ -26,46 +26,82 @@ const ListUsers = ({ users, loading, deleteUser, updateUser }) => {
 
   const filterButtons = [
     { key: 'all', label: 'Todos', shortLabel: 'Todos', icon: UsersIcon, gradient: 'from-gray-500 to-gray-700' },
-    { key: 'Admin', label: 'Administradores', shortLabel: 'Admins', icon: Crown, gradient: 'from-purple-500 to-purple-700' },
-    { key: 'Docente', label: 'Docentes', shortLabel: 'Docentes', icon: GraduationCap, gradient: 'from-green-500 to-green-700' },
-    { key: 'Evaluador', label: 'Evaluadores', shortLabel: 'Evaluadores', icon: Briefcase, gradient: 'from-blue-500 to-blue-700' }
+    { key: 'Admin', label: 'Administradores', shortLabel: 'Admins', icon: Crown, gradient: 'from-orange-500 to-orange-700' },
+    { key: 'Docente', label: 'Docentes', shortLabel: 'Docentes', icon: GraduationCap, gradient: 'from-orange-500 to-orange-700' },
+    { key: 'Evaluador', label: 'Evaluadores', shortLabel: 'Evaluadores', icon: Briefcase, gradient: 'from-orange-500 to-orange-700' }
   ];
 
   return (
     <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
       
-      {/* Barra de herramientas - Responsive */}
-      <div className="flex flex-col gap-3 sm:gap-4">
-        
-        {/* Búsqueda */}
-        <div className="flex-1">
-          <div className="relative group">
-            <input
-              type="text"
-              placeholder="Buscar usuarios..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-2.5 sm:py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition-all text-xs sm:text-sm font-medium placeholder-gray-400"
-            />
-            <div className="absolute inset-y-0 left-3 sm:left-4 flex items-center pointer-events-none">
-              <Search className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-            </div>
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-red-500 transition-colors"
-              >
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            )}
+      {/* Barra de búsqueda */}
+      <div className="flex-1">
+        <div className="relative group">
+          <input
+            type="text"
+            placeholder="Buscar usuarios..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-2.5 sm:py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-orange-400 focus:ring-4 focus:ring-orange-100 transition-all text-xs sm:text-sm font-medium placeholder-gray-400"
+          />
+          <div className="absolute inset-y-0 left-3 sm:left-4 flex items-center pointer-events-none">
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
           </div>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Filtros y selector de vista en la misma línea */}
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+        {/* Filtros - Responsive con scroll horizontal */}
+        <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide flex-1">
+          {filterButtons.map(filter => {
+            const IconComponent = filter.icon;
+            return (
+              <button
+                key={filter.key}
+                onClick={() => setActiveFilter(filter.key)}
+                className={`cursor-pointer group relative overflow-hidden transition-all duration-300 flex-shrink-0 ${
+                  activeFilter === filter.key ? 'scale-105' : 'hover:scale-105'
+                }`}
+              >
+                <div className={`flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-all whitespace-nowrap ${
+                  activeFilter === filter.key
+                    ? `${filter.key === 'all' ? 'bg-gray-500' : 'bg-orange-500'} text-white shadow-lg`
+                    : 'bg-white text-gray-700 hover:shadow-lg border-2 border-gray-200'
+                }`}>
+                  <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                  <span className="hidden sm:inline">{filter.label}</span>
+                  <span className="sm:hidden">{filter.shortLabel}</span>
+                  <div className={`px-1.5 sm:px-2.5 py-0.5 rounded-full text-xs font-black ${
+                    activeFilter === filter.key
+                      ? 'bg-white/30 text-white'
+                      : 'bg-gray-100 text-gray-700'
+                  }`}>
+                    {stats[filter.key]}
+                  </div>
+                </div>
+                
+                {activeFilter === filter.key && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-full"></div>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Selector de vista */}
-        <div className="flex items-center gap-2 bg-gray-100 p-1.5 rounded-lg self-end">
+        <div className="flex items-center gap-2 bg-gray-100 p-1.5 rounded-lg self-end lg:self-auto">
           <button
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-md font-semibold text-xs sm:text-sm transition-all ${
+            className={`cursor-pointer flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-md font-semibold text-xs sm:text-sm transition-all ${
               viewMode === 'list'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -76,7 +112,7 @@ const ListUsers = ({ users, loading, deleteUser, updateUser }) => {
           </button>
           <button
             onClick={() => setViewMode('grid')}
-            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-md font-semibold text-xs sm:text-sm transition-all ${
+            className={`cursor-pointer flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-md font-semibold text-xs sm:text-sm transition-all ${
               viewMode === 'grid'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -86,43 +122,6 @@ const ListUsers = ({ users, loading, deleteUser, updateUser }) => {
             <span className="hidden xs:inline">Tarjetas</span>
           </button>
         </div>
-      </div>
-
-      {/* Filtros - Responsive con scroll horizontal */}
-      <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
-        {filterButtons.map(filter => {
-          const IconComponent = filter.icon;
-          return (
-            <button
-              key={filter.key}
-              onClick={() => setActiveFilter(filter.key)}
-              className={`group relative overflow-hidden transition-all duration-300 flex-shrink-0 ${
-                activeFilter === filter.key ? 'scale-105' : 'hover:scale-105'
-              }`}
-            >
-              <div className={`flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-all whitespace-nowrap ${
-                activeFilter === filter.key
-                  ? `bg-gradient-to-r ${filter.gradient} text-white shadow-lg`
-                  : 'bg-white text-gray-700 hover:shadow-lg border-2 border-gray-200'
-              }`}>
-                <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span className="hidden sm:inline">{filter.label}</span>
-                <span className="sm:hidden">{filter.shortLabel}</span>
-                <div className={`px-1.5 sm:px-2.5 py-0.5 rounded-full text-xs font-black ${
-                  activeFilter === filter.key
-                    ? 'bg-white/30 text-white'
-                    : 'bg-gray-100 text-gray-700'
-                }`}>
-                  {stats[filter.key]}
-                </div>
-              </div>
-              
-              {activeFilter === filter.key && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-full"></div>
-              )}
-            </button>
-          );
-        })}
       </div>
 
       {/* Información de resultados - Responsive */}
@@ -155,9 +154,9 @@ const ListUsers = ({ users, loading, deleteUser, updateUser }) => {
       {loading && (
         <div className="flex flex-col items-center justify-center py-16 sm:py-24 space-y-4">
           <div className="relative w-16 h-16 sm:w-20 sm:h-20">
-            <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-            <div className="absolute inset-2 border-4 border-blue-400 rounded-full border-t-transparent animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
+            <div className="absolute inset-0 border-4 border-orange-200 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-orange-600 rounded-full border-t-transparent animate-spin"></div>
+            <div className="absolute inset-2 border-4 border-orange-400 rounded-full border-t-transparent animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
           </div>
           <div className="text-center">
             <p className="text-gray-900 font-bold text-base sm:text-lg">Cargando usuarios</p>
@@ -170,10 +169,10 @@ const ListUsers = ({ users, loading, deleteUser, updateUser }) => {
       {!loading && (!users || users.length === 0) && (
         <div className="flex flex-col items-center justify-center py-16 sm:py-24 space-y-4 sm:space-y-6">
           <div className="relative">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
-              <UsersIcon className="w-12 h-12 sm:w-16 sm:h-16 text-blue-600" />
+            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-orange-100 rounded-full flex items-center justify-center">
+              <UsersIcon className="w-12 h-12 sm:w-16 sm:h-16 text-orange-600" />
             </div>
-            <div className="absolute -bottom-2 -right-2 w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+            <div className="absolute -bottom-2 -right-2 w-10 h-10 sm:w-12 sm:h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
               <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
           </div>
@@ -202,7 +201,7 @@ const ListUsers = ({ users, loading, deleteUser, updateUser }) => {
                 setSearchTerm('');
                 setActiveFilter('all');
               }}
-              className="mt-4 px-4 sm:px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-xs sm:text-sm transition-colors"
+              className="mt-4 px-4 sm:px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold text-xs sm:text-sm transition-colors"
             >
               Limpiar filtros
             </button>

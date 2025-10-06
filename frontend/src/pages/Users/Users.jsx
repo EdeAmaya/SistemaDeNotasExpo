@@ -62,10 +62,10 @@ const Users = () => {
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-2">
                 <span>Sistema</span>
                 <span>›</span>
-                <span className="text-blue-600 font-semibold">Gestión de Usuarios</span>
+                <span className="text-orange-600 font-semibold">Gestión de Usuarios</span>
               </div>
               <div className="flex items-center gap-2 sm:gap-3">
-                <UsersIcon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-900 flex-shrink-0" />
+                <UsersIcon className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500 flex-shrink-0" />
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-900">
                   Usuarios del Sistema
                 </h1>
@@ -74,21 +74,21 @@ const Users = () => {
 
             {/* Stats - Responsive */}
             <div className="grid grid-cols-3 lg:flex lg:items-center gap-2 sm:gap-3 lg:gap-4">
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
+              <div className="bg-orange-500 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
                 <div className="flex items-center justify-center mb-1">
                   <Crown className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="text-lg sm:text-2xl font-black text-center">{stats.admins}</div>
                 <div className="text-[10px] sm:text-xs font-semibold opacity-90 text-center">Admins</div>
               </div>
-              <div className="bg-gradient-to-br from-green-500 to-green-600 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
+              <div className="bg-orange-500 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
                 <div className="flex items-center justify-center mb-1">
                   <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="text-lg sm:text-2xl font-black text-center">{stats.docentes}</div>
                 <div className="text-[10px] sm:text-xs font-semibold opacity-90 text-center">Docentes</div>
               </div>
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
+              <div className="bg-orange-500 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
                 <div className="flex items-center justify-center mb-1">
                   <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
@@ -106,8 +106,8 @@ const Users = () => {
           <div className="flex gap-1 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => handleTabChange('list')}
-              className={`relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${
-                activeTab === 'list' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+              className={`cursor-pointer relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${
+                activeTab === 'list' ? 'text-orange-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -119,14 +119,14 @@ const Users = () => {
                 </span>
               </div>
               {activeTab === 'list' && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-full"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-orange-500 rounded-t-full"></div>
               )}
             </button>
             
             <button
               onClick={() => handleTabChange('register')}
-              className={`relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${
-                activeTab === 'register' ? 'text-green-600' : 'text-gray-500 hover:text-gray-700'
+              className={`cursor-pointer relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${
+                activeTab === 'register' ? 'text-orange-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -135,7 +135,7 @@ const Users = () => {
                 <span className="sm:hidden">{id ? 'Editar' : 'Nuevo'}</span>
               </div>
               {activeTab === 'register' && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-green-600 rounded-t-full"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-orange-500 rounded-t-full"></div>
               )}
             </button>
           </div>
@@ -182,26 +182,26 @@ const Users = () => {
         </div>
 
         {/* Footer - Responsive */}
-        <div className="mt-4 sm:mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-4 sm:p-5 rounded-r-xl">
+        <div className="mt-4 sm:mt-6 bg-orange-50 border-l-4 border-orange-500 p-4 sm:p-5 rounded-r-xl">
           <div className="flex flex-col sm:flex-row items-start gap-3">
-            <Info className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+            <Info className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 flex-shrink-0" />
             <div className="flex-1">
               <h4 className="font-bold text-gray-800 mb-2 text-sm sm:text-base">Gestión de Usuarios</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
                 <div className="flex items-center gap-2">
-                  <Crown className="w-3 h-3 sm:w-4 sm:h-4 text-purple-600 flex-shrink-0" />
+                  <Crown className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />
                   <span><span className="font-semibold text-gray-800">Administrador:</span> Control total</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <GraduationCap className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
+                  <GraduationCap className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />
                   <span><span className="font-semibold text-gray-800">Docente:</span> Gestión académica</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
+                  <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />
                   <span><span className="font-semibold text-gray-800">Evaluador:</span> Evaluación de proyectos</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
+                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />
                   <span><span className="font-semibold text-gray-800">Verificación:</span> Acceso completo</span>
                 </div>
               </div>

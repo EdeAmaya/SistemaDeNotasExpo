@@ -18,22 +18,22 @@ const UserCard = ({ user, deleteUser, updateUser, viewMode = 'list' }) => {
       case 'Admin':
         return { 
           icon: Crown, 
-          gradient: 'from-purple-500 via-purple-600 to-purple-700', 
-          bg: 'bg-purple-500',
+          gradient: 'from-orange-500 via-orange-600 to-orange-700', 
+          bg: 'bg-orange-500',
           text: 'Administrador'
         };
       case 'Docente':
         return { 
           icon: GraduationCap, 
-          gradient: 'from-green-500 via-green-600 to-green-700', 
-          bg: 'bg-green-500',
+          gradient: 'from-orange-500 via-orange-600 to-orange-700', 
+          bg: 'bg-orange-500',
           text: 'Docente'
         };
       case 'Evaluador':
         return { 
           icon: Briefcase, 
-          gradient: 'from-blue-500 via-blue-600 to-blue-700', 
-          bg: 'bg-blue-500',
+          gradient: 'from-orange-500 via-orange-600 to-orange-700', 
+          bg: 'bg-orange-500',
           text: 'Evaluador'
         };
       default:
@@ -55,12 +55,12 @@ const UserCard = ({ user, deleteUser, updateUser, viewMode = 'list' }) => {
       <div className="group relative bg-white rounded-xl shadow-sm hover:shadow-lg border-2 border-gray-100 hover:border-gray-200 transition-all duration-300 overflow-hidden">
         
         {/* Barra lateral colorida */}
-        <div className={`absolute left-0 top-0 bottom-0 w-1 sm:w-1.5 bg-gradient-to-b ${roleInfo.gradient}`}></div>
+        <div className={`absolute left-0 top-0 bottom-0 w-1 sm:w-1.5 bg-orange-500`}></div>
         
         <div className="pl-3 sm:pl-4 pr-3 sm:pr-5 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
           
           {/* Avatar con icono */}
-          <div className={`relative flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-br ${roleInfo.gradient} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 self-start sm:self-auto`}>
+          <div className={`relative flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-orange-500 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 self-start sm:self-auto`}>
             <RoleIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             
             {/* Indicador de verificación */}
@@ -78,7 +78,7 @@ const UserCard = ({ user, deleteUser, updateUser, viewMode = 'list' }) => {
           {/* Información del usuario */}
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1 sm:mb-2">
-              <h3 className="text-sm sm:text-base lg:text-lg font-black text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+              <h3 className="text-sm sm:text-base lg:text-lg font-black text-gray-900 truncate group-hover:text-orange-600 transition-colors">
                 {user.name} {user.lastName}
               </h3>
               
@@ -112,7 +112,7 @@ const UserCard = ({ user, deleteUser, updateUser, viewMode = 'list' }) => {
           <div className="flex-shrink-0 flex items-center gap-1.5 sm:gap-2 self-end sm:self-auto">
             <button
               onClick={handleEdit}
-              className="px-2 sm:px-4 py-1.5 sm:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-[10px] sm:text-sm shadow-sm hover:shadow-md transition-all duration-200"
+              className="cursor-pointer px-2 sm:px-4 py-1.5 sm:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-[10px] sm:text-sm shadow-sm hover:shadow-md transition-all duration-200"
               title="Editar usuario"
             >
               <span className="flex items-center gap-1 sm:gap-1.5">
@@ -123,7 +123,7 @@ const UserCard = ({ user, deleteUser, updateUser, viewMode = 'list' }) => {
             
             <button
               onClick={handleDelete}
-              className="px-2 sm:px-4 py-1.5 sm:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-[10px] sm:text-sm shadow-sm hover:shadow-md transition-all duration-200"
+              className="cursor-pointer px-2 sm:px-4 py-1.5 sm:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-[10px] sm:text-sm shadow-sm hover:shadow-md transition-all duration-200"
               title="Eliminar usuario"
             >
               <span className="flex items-center gap-1 sm:gap-1.5">
@@ -135,7 +135,7 @@ const UserCard = ({ user, deleteUser, updateUser, viewMode = 'list' }) => {
         </div>
 
         {/* Barra de progreso inferior en hover */}
-        <div className={`h-0.5 bg-gradient-to-r ${roleInfo.gradient} transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500`}></div>
+        <div className={`h-0.5 bg-orange-500 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500`}></div>
       </div>
     );
   }
@@ -145,7 +145,7 @@ const UserCard = ({ user, deleteUser, updateUser, viewMode = 'list' }) => {
     <div className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl border-2 border-gray-100 hover:border-gray-200 transition-all duration-300 overflow-hidden">
       
       {/* Header con gradiente */}
-      <div className={`relative bg-gradient-to-r ${roleInfo.gradient} p-4 sm:p-6 text-white`}>
+      <div className={`relative bg-orange-500 p-4 sm:p-6 text-white`}>
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="mb-2 sm:mb-3">
@@ -211,7 +211,7 @@ const UserCard = ({ user, deleteUser, updateUser, viewMode = 'list' }) => {
         <div className="flex gap-2 sm:gap-3 pt-2">
           <button
             onClick={handleEdit}
-            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2"
+            className="cursor-pointer flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2"
           >
             <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Editar</span>
@@ -219,7 +219,7 @@ const UserCard = ({ user, deleteUser, updateUser, viewMode = 'list' }) => {
           
           <button
             onClick={handleDelete}
-            className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2"
+            className="cursor-pointer flex-1 bg-red-500 hover:bg-red-600 text-white py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2"
           >
             <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Eliminar</span>
@@ -228,7 +228,7 @@ const UserCard = ({ user, deleteUser, updateUser, viewMode = 'list' }) => {
       </div>
 
       {/* Footer decorativo */}
-      <div className={`h-2 bg-gradient-to-r ${roleInfo.gradient}`}></div>
+      <div className={`h-2 bg-orange-500`}></div>
     </div>
   );
 };
