@@ -22,6 +22,7 @@ import evaluationsRoutes from "./src/routes/evaluations.js";
 import heartbeatRoutes from "./src/routes/heartbeat.js";
 import projectScoreRoutes from "./src/routes/projectScore.js";
 import eventsRoutes from "./src/routes/events.js"; 
+import diplomasRoutes from "./src/routes/diplomas.js";
 
 // Importar middlewares
 import { authenticateToken } from "./src/middlewares/auth.js";
@@ -127,6 +128,7 @@ app.use("/api/evaluations", evaluationsRoutes);
 app.use("/api/heartbeat", heartbeatRoutes);
 app.use("/api/project-scores", projectScoreRoutes);
 app.use("/api/events", eventsRoutes); 
+app.use("/api/diplomas", diplomasRoutes); 
 
 // ========================================
 // MANEJO DE ERRORES

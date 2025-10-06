@@ -46,6 +46,7 @@ const ProjectsListView = ({ section, level, onBack }) => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -91,8 +92,38 @@ const ProjectsListView = ({ section, level, onBack }) => {
     return 'bg-red-50 border-red-200';
   };
 
-  const handleDownloadDiplomas = () => {
-    alert(`Generando diplomas para:\n\nNivel: ${level.levelName}\nSección: ${section.sectionName}\n\n¡La descarga comenzará en breve!`);
+  const handleDownloadDiplomas = async () => {
+    if (downloading || projects.length === 0) return;
+
+    try {
+      setDownloading(true);
+
+      const response = await fetch(`${API}/diplomas/section/${section._id}`, { credentials: 'include' }, {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al generar los diplomas');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Diplomas_${level.levelName.replace(/\s+/g, '_')}_${section.sectionName}_Top3.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      alert('¡Diplomas descargados exitosamente!');
+    } catch (error) {
+      console.error('Error downloading diplomas:', error);
+      alert('Error al descargar los diplomas. Por favor intenta nuevamente.');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   if (loading) {
@@ -164,10 +195,20 @@ const ProjectsListView = ({ section, level, onBack }) => {
           </div>
           <button
             onClick={handleDownloadDiplomas}
-            className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-lg font-bold hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all"
+            disabled={downloading || projects.length === 0}
+            className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-lg font-bold hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Download className="w-5 h-5" />
-            Descargar Diplomas
+            {downloading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                Generando...
+              </>
+            ) : (
+              <>
+                <Download className="w-5 h-5" />
+                Descargar Diplomas
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -385,16 +426,6 @@ const TercerCicloDetail = ({ level, sections, onBack }) => {
     );
   }
 
-  const handleDownloadSection = (section) => {
-    console.log(`Descargando diplomas para ${level.levelName} - Sección ${section.sectionName}`);
-    alert(`Generando diplomas para:\n\nNivel: ${level.levelName}\nSección: ${section.sectionName}\n\n¡La descarga comenzará en breve!`);
-  };
-
-  const handleDownloadAll = () => {
-    console.log(`Descargando todos los diplomas para ${level.levelName}`);
-    alert(`Generando todos los diplomas para:\n\nNivel: ${level.levelName}\nSecciones: ${levelSections.map(s => s.sectionName).join(', ')}\n\n¡La descarga comenzará en breve!`);
-  };
-
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -415,13 +446,6 @@ const TercerCicloDetail = ({ level, sections, onBack }) => {
               <p className="text-gray-600">Selecciona una sección para ver proyectos y descargar diplomas</p>
             </div>
           </div>
-          <button
-            onClick={handleDownloadAll}
-            className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-lg font-bold hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all"
-          >
-            <Download className="w-5 h-5" />
-            Descargar Todas
-          </button>
         </div>
       </div>
 
@@ -444,13 +468,6 @@ const TercerCicloDetail = ({ level, sections, onBack }) => {
               >
                 <FileText className="w-4 h-4" />
                 Ver Proyectos
-              </button>
-              <button
-                onClick={() => handleDownloadSection(section)}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-2 px-4 rounded-lg font-bold hover:from-yellow-600 hover:to-yellow-700 transition-all text-sm"
-              >
-                <Download className="w-4 h-4" />
-                Descargar
               </button>
             </div>
           </div>
@@ -551,29 +568,6 @@ const BachilleratoDetail = ({ level, sections, specialties, onBack }) => {
                       <h4 className="text-2xl font-black text-white mb-1">Grupo 1</h4>
                       <p className="text-blue-100 text-sm font-semibold">
                         Secciones: {grupo1Sections.map(s => s.sectionName).join(', ')}
-                      </p>
-                    </div>
-                    <div className="p-6">
-                      <button
-                        onClick={() => handleDownloadSpecialtyGroup(specialty, 1, grupo1Sections)}
-                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 px-6 rounded-xl font-black text-lg hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
-                      >
-                        <Download className="w-6 h-6" />
-                        Descargar Grupo 1
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {grupo2Sections.length > 0 && (
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-green-200 hover:border-green-400 hover:shadow-xl transition-all duration-300 overflow-hidden">
-                    <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-center">
-                      <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
-                        <span className="text-4xl font-black text-green-600">2</span>
-                      </div>
-                      <h4 className="text-2xl font-black text-white mb-1">Grupo 2</h4>
-                      <p className="text-green-100 text-sm font-semibold">
-                        Secciones: {grupo2Sections.map(s => s.sectionName).join(', ')}
                       </p>
                     </div>
                     <div className="p-6">
@@ -711,6 +705,7 @@ const DiplomasSection = () => {
               <li>• <strong>Bachillerato:</strong> Haz clic en el nivel para ver especialidades con Grupo 1 (1A, 1B) y Grupo 2 (2A, 2B)</li>
               <li>• Puedes descargar diplomas por grupo, por especialidad completa o todas a la vez</li>
               <li>• Los proyectos se ordenan automáticamente por promedio total de mayor a menor</li>
+              <li>• <strong>Solo se generan diplomas para los 3 primeros lugares</strong></li>
             </ul>
           </div>
         </div>
