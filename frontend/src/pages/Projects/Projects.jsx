@@ -6,7 +6,10 @@ import useDataProjects from './hooks/useDataProjects';
 
 const Projects = () => {
   const [activeTab, setActiveTab] = useState('list');
-  
+  const [levels, setLevels] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [specialties, setSpecialties] = useState([]);
+
   const {
     projects,
     loading,
@@ -55,14 +58,36 @@ const Projects = () => {
     withLink: projects.filter(p => p.googleSitesLink).length,
   };
 
+  React.useEffect(() => {
+    const fetchCatalogs = async () => {
+      try {
+        const [levelsRes, sectionsRes, specialtiesRes, projectsRes] = await Promise.all([
+          fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/levels', { credentials: 'include' }),
+          fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/sections', { credentials: 'include' }),
+          fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/specialties', { credentials: 'include' }),
+          fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/projects', { credentials: 'include' })
+        ]);
+
+        if (levelsRes.ok) setLevels(await levelsRes.json());
+        if (sectionsRes.ok) setSections(await sectionsRes.json());
+        if (specialtiesRes.ok) setSpecialties(await specialtiesRes.json());
+        if (projectsRes.ok) setProjects(await projectsRes.json());
+      } catch (error) {
+        console.error('Error cargando catálogos:', error);
+      }
+    };
+
+    fetchCatalogs();
+  }, []);
+
   return (
     <div className="min-h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      
+
       {/* Header Superior - Responsive */}
       <div className="bg-white border-b-2 border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pt-20 lg:pt-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            
+
             <div className="flex-1">
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-2">
                 <span>Sistema</span>
@@ -111,9 +136,8 @@ const Projects = () => {
           <div className="flex gap-1 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => handleTabChange('list')}
-              className={`relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${
-                activeTab === 'list' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${activeTab === 'list' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
@@ -127,12 +151,11 @@ const Projects = () => {
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-full"></div>
               )}
             </button>
-            
+
             <button
               onClick={() => handleTabChange('register')}
-              className={`relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${
-                activeTab === 'register' ? 'text-green-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${activeTab === 'register' ? 'text-green-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <Plus className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
@@ -149,11 +172,11 @@ const Projects = () => {
 
       {/* Content - Responsive */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        
+
         {/* Contenido */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
           {activeTab === 'list' ? (
-            <ListProjects 
+            <ListProjects
               projects={projects}
               loading={loading}
               deleteProject={deleteProject}
@@ -161,6 +184,9 @@ const Projects = () => {
                 updateProject(project);
                 setActiveTab('register');
               }}
+              levels={levels}
+              sections={sections}
+              specialties={specialties}
             />
           ) : (
             <div className="p-4 sm:p-6 lg:p-8">
