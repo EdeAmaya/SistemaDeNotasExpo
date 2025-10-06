@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { CheckSquare, Plus, BookOpen, ClipboardList, Award, Layers, Info, FileText, BookOpenCheck } from 'lucide-react';
+import { CheckSquare, Plus, BookOpen, ClipboardList, Award, Info, FileText, BookOpenCheck } from 'lucide-react';
 import ListGrades from './components/ListGrades';
 import RegisterGrade from './components/RegisterGrade';
 import DiplomasSection from './components/DiplomasSection'; 
 import useDataEvaluations from './hooks/useDataEvaluations';
 import useDataProjectScores from './hooks/useDataProjectScores';
 import ProjectInfo from './components/ProjectInfo';
+import { useAuth } from '../context/AuthContext';
 
 const Grades = () => {
+  const { user } = useAuth();
+
   useEffect(() => {
     document.title = "Asignación de Notas | STC";
   }, []);
@@ -38,11 +41,25 @@ const Grades = () => {
   });
 
   useEffect(() => {
+    if (user?.role === 'Evaluador') {
+      setActiveTab('assign'); 
+    }
+  }, [user]);
+
+  useEffect(() => {
     getProjectScores();
     getEvaluations();
   }, [getProjectScores, getEvaluations]);
 
   const handleTabChange = (tab) => {
+    if (user?.role === 'Evaluador' && tab !== 'assign') {
+      return; 
+    }
+
+    if (user?.role === 'Docente' && tab === 'diplomas') {
+      return; 
+    }
+
     setActiveTab(tab);
     if (tab === 'list') clearForm();
   };
@@ -63,7 +80,12 @@ const Grades = () => {
         await createEvaluation(evaluationData);
       }
       clearForm();
-      setActiveTab('list');
+      
+      // Evaluador permanece en 'assign' después de guardar
+      if (user?.role !== 'Evaluador') {
+        setActiveTab('list');
+      }
+      
       await getEvaluations();
       await getProjectScores();
     } catch (error) {
@@ -73,7 +95,10 @@ const Grades = () => {
 
   const handleCancelEdit = () => {
     clearForm();
-    setActiveTab('list');
+    // Evaluador permanece en 'assign'
+    if (user?.role !== 'Evaluador') {
+      setActiveTab('list');
+    }
   };
 
   const stats = {
@@ -96,6 +121,22 @@ const Grades = () => {
     setActiveTab('list');
   };
 
+  const isTabEnabled = (tab) => {
+    if (!user) return false;
+
+    switch(user.role) {
+      case 'Evaluador':
+        return tab === 'assign'; 
+      case 'Docente':
+        return tab !== 'diplomas'; 
+      case 'Admin':
+      case 'Estudiante':
+        return true;
+      default:
+        return false;
+    }
+  };
+
   return (
     <div className="min-h-screen">
       {/* Header Superior */}
@@ -116,24 +157,26 @@ const Grades = () => {
               </div>
             </div>
 
-            {/* Stats desktop */}
-            <div className="hidden lg:flex items-center gap-4">
-              <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 text-white px-4 py-3 rounded-xl shadow-lg text-center">
-                <ClipboardList className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-2xl font-black">{stats.total}</div>
-                <div className="text-xs font-semibold opacity-90">Proyectos</div>
+            {/* Stats desktop - Solo visible para roles que pueden ver estadísticas */}
+            {user?.role !== 'Evaluador' && (
+              <div className="hidden lg:flex items-center gap-4">
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 text-white px-4 py-3 rounded-xl shadow-lg text-center">
+                  <ClipboardList className="w-5 h-5 mx-auto mb-1" />
+                  <div className="text-2xl font-black">{stats.total}</div>
+                  <div className="text-xs font-semibold opacity-90">Proyectos</div>
+                </div>
+                <div className="bg-gradient-to-br from-yellow-300 to-yellow-400 text-white px-4 py-3 rounded-xl shadow-lg text-center">
+                  <Award className="w-5 h-5 mx-auto mb-1" />
+                  <div className="text-2xl font-black">{stats.avgScore}</div>
+                  <div className="text-xs font-semibold opacity-90">Promedio</div>
+                </div>
+                <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white px-4 py-3 rounded-xl shadow-lg text-center">
+                  <FileText className="w-5 h-5 mx-auto mb-1" />
+                  <div className="text-2xl font-black">{stats.totalEvaluations}</div>
+                  <div className="text-xs font-semibold opacity-90">Evaluaciones</div>
+                </div>
               </div>
-              <div className="bg-gradient-to-br from-yellow-300 to-yellow-400 text-white px-4 py-3 rounded-xl shadow-lg text-center">
-                <Award className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-2xl font-black">{stats.avgScore}</div>
-                <div className="text-xs font-semibold opacity-90">Promedio</div>
-              </div>
-              <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white px-4 py-3 rounded-xl shadow-lg text-center">
-                <FileText className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-2xl font-black">{stats.totalEvaluations}</div>
-                <div className="text-xs font-semibold opacity-90">Evaluaciones</div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -142,53 +185,62 @@ const Grades = () => {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-8">
           <div className="flex gap-1 overflow-x-auto">
-            <button
-              onClick={() => handleTabChange('list')}
-              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 whitespace-nowrap ${
-                activeTab === 'list' ? 'text-yellow-500' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                <span>Proyectos Evaluados</span>
-                <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-black">
-                  {stats.total}
-                </span>
-              </div>
-              {activeTab === 'list' && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-t-full"></div>
-              )}
-            </button>
+            {/* TAB: Proyectos Evaluados */}
+            {isTabEnabled('list') && (
+              <button
+                onClick={() => handleTabChange('list')}
+                className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 whitespace-nowrap ${
+                  activeTab === 'list' ? 'text-yellow-500' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  <span>Proyectos Evaluados</span>
+                  <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-black">
+                    {stats.total}
+                  </span>
+                </div>
+                {activeTab === 'list' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-t-full"></div>
+                )}
+              </button>
+            )}
             
-            <button
-              onClick={() => handleTabChange('assign')}
-              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 whitespace-nowrap ${
-                activeTab === 'assign' ? 'text-yellow-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Plus className="w-5 h-5" />
-                <span>{formData.id ? 'Editar Evaluación' : 'Nueva Evaluación'}</span>
-              </div>
-              {activeTab === 'assign' && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-t-full"></div>
-              )}
-            </button>
+            {/* TAB: Nueva Evaluación (Visible para todos los roles que acceden a Grades) */}
+            {isTabEnabled('assign') && (
+              <button
+                onClick={() => handleTabChange('assign')}
+                className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 whitespace-nowrap ${
+                  activeTab === 'assign' ? 'text-yellow-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  <span>{formData.id ? 'Editar Evaluación' : 'Nueva Evaluación'}</span>
+                </div>
+                {activeTab === 'assign' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-t-full"></div>
+                )}
+              </button>
+            )}
 
-            <button
-              onClick={() => handleTabChange('diplomas')}
-              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 whitespace-nowrap ${
-                activeTab === 'diplomas' ? 'text-yellow-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Award className="w-5 h-5" />
-                <span>Diplomas</span>
-              </div>
-              {activeTab === 'diplomas' && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-t-full"></div>
-              )}
-            </button>
+            {/* TAB: Diplomas (NO visible para Docente ni Evaluador) */}
+            {isTabEnabled('diplomas') && (
+              <button
+                onClick={() => handleTabChange('diplomas')}
+                className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 whitespace-nowrap ${
+                  activeTab === 'diplomas' ? 'text-yellow-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Award className="w-5 h-5" />
+                  <span>Diplomas</span>
+                </div>
+                {activeTab === 'diplomas' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-t-full"></div>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -196,24 +248,26 @@ const Grades = () => {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-8 py-8">
         
-        {/* Stats móvil */}
-        <div className="lg:hidden grid grid-cols-3 gap-3 mb-6">
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 text-white p-3 rounded-xl shadow-lg text-center">
-            <ClipboardList className="w-5 h-5 mx-auto mb-1" />
-            <div className="text-xl font-black">{stats.total}</div>
-            <div className="text-xs font-semibold opacity-90">Proyectos</div>
+        {/* Stats móvil - Solo visible para roles que pueden ver estadísticas */}
+        {user?.role !== 'Evaluador' && (
+          <div className="lg:hidden grid grid-cols-3 gap-3 mb-6">
+            <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 text-white p-3 rounded-xl shadow-lg text-center">
+              <ClipboardList className="w-5 h-5 mx-auto mb-1" />
+              <div className="text-xl font-black">{stats.total}</div>
+              <div className="text-xs font-semibold opacity-90">Proyectos</div>
+            </div>
+            <div className="bg-gradient-to-br from-yellow-300 to-yellow-400 text-white p-3 rounded-xl shadow-lg text-center">
+              <Award className="w-5 h-5 mx-auto mb-1" />
+              <div className="text-xl font-black">{stats.avgScore}</div>
+              <div className="text-xs font-semibold opacity-90">Promedio</div>
+            </div>
+            <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-3 rounded-xl shadow-lg text-center">
+              <FileText className="w-5 h-5 mx-auto mb-1" />
+              <div className="text-xl font-black">{stats.totalEvaluations}</div>
+              <div className="text-xs font-semibold opacity-90">Evaluaciones</div>
+            </div>
           </div>
-          <div className="bg-gradient-to-br from-yellow-300 to-yellow-400 text-white p-3 rounded-xl shadow-lg text-center">
-            <Award className="w-5 h-5 mx-auto mb-1" />
-            <div className="text-xl font-black">{stats.avgScore}</div>
-            <div className="text-xs font-semibold opacity-90">Promedio</div>
-          </div>
-          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-3 rounded-xl shadow-lg text-center">
-            <FileText className="w-5 h-5 mx-auto mb-1" />
-            <div className="text-xl font-black">{stats.totalEvaluations}</div>
-            <div className="text-xs font-semibold opacity-90">Evaluaciones</div>
-          </div>
-        </div>
+        )}
 
         {/* Mensaje de error */}
         {error && (

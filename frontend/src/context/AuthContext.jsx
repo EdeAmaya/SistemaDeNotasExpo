@@ -8,7 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Configuración base para fetch con cookies
   const fetchWithCookies = (url, options = {}) => {
     return fetch(url, {
       ...options,
@@ -20,7 +19,6 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
-  // Verificar el estado de autenticación al cargar la app
   const checkAuthStatus = async () => {
     try {
       console.log('🔍 Verificando estado de autenticación...');
@@ -48,7 +46,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login function
   const login = async (email, password) => {
     try {
       console.log('Intentando login para:', email);
@@ -60,7 +57,6 @@ export const AuthProvider = ({ children }) => {
 
       console.log('Respuesta de login:', response.status);
       
-      // Verificar headers de respuesta
       console.log('Headers de respuesta:', Object.fromEntries(response.headers.entries()));
 
       const data = await response.json();
@@ -71,11 +67,9 @@ export const AuthProvider = ({ children }) => {
 
       console.log('Login exitoso:', data.user);
 
-      // Actualizar el estado con la información del usuario
       setUser(data.user);
       setIsAuthenticated(true);
 
-      // Verificar inmediatamente si las cookies se establecieron
       setTimeout(() => {
         console.log('Cookies después del login:', document.cookie);
       }, 100);
@@ -95,7 +89,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout function
   const logout = async () => {
     try {
       console.log('Cerrando sesión...');
@@ -114,14 +107,12 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error en logout:', error);
-      // Incluso si hay error, limpiar el estado local
       setUser(null);
       setIsAuthenticated(false);
       return { success: false, message: error.message };
     }
   };
 
-  // Register function
   const register = async (userData) => {
     try {
       const response = await fetchWithCookies(`${API}/register`, {
@@ -148,7 +139,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Verificar autenticación al montar el componente
   useEffect(() => {
     checkAuthStatus();
   }, []);
@@ -161,7 +151,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     register,
     checkAuthStatus,
-    fetchWithCookies, // Exponer la función para uso en hooks
+    fetchWithCookies, 
     API
   };
 

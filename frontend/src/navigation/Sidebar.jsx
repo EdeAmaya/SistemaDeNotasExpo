@@ -1,4 +1,3 @@
-// frontend/src/navigation/Sidebar.jsx
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Users, GraduationCap, Triangle, ClipboardList, LogOut, Menu, X, BookOpenCheck, Calendar, User, UserCheck, UserPlus, UserX } from 'lucide-react';
@@ -34,7 +33,7 @@ const NavBar = () => {
   const adminMenuItems = [
     { id: 'users', title: 'Usuarios', icon: Users, route: '/users', roles: ['Admin'] },
     { id: 'students', title: 'Estudiantes', icon: GraduationCap, route: '/students', roles: ['Admin', 'Docente'] },
-    { id: 'projects', title: 'Proyectos', icon: Triangle, route: '/projects', roles: ['Admin', 'Docente','Estudiante'] },
+    { id: 'projects', title: 'Proyectos', icon: Triangle, route: '/projects', roles: ['Admin', 'Docente', 'Estudiante'] },
     { id: 'evaluations', title: 'Evaluaciones', icon: ClipboardList, route: '/evaluations', roles: ['Admin', 'Estudiante'] },
     { id: 'grades', title: 'Notas', icon: BookOpenCheck, route: '/grades', roles: ['Admin', 'Docente', 'Evaluador', 'Estudiante'] }
   ];
