@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Award, Download, GraduationCap, Users, BookOpen } from 'lucide-react';
 import useLevels from '../hooks/useLevels';
 import useSections from '../hooks/useSections';
@@ -17,7 +17,14 @@ const isBachilleratoLevel = (levelName) => {
 const getSectionsForLevel = (levelName, allSections) => {
   const normalizedLevel = levelName.toLowerCase();
   
-  if (normalizedLevel.includes('tercer ciclo') || normalizedLevel.includes('3er ciclo')) {
+  if (normalizedLevel.includes('tercer ciclo') || 
+      normalizedLevel.includes('3er ciclo') ||
+      normalizedLevel.includes('octavo') ||
+      normalizedLevel.includes('noveno') ||
+      normalizedLevel.includes('séptimo') ||
+      normalizedLevel.includes('7') ||
+      normalizedLevel.includes('8') ||
+      normalizedLevel.includes('9')) {
     return allSections.filter(section => 
       /^[A-F]$/i.test(section.sectionName)
     );
@@ -33,8 +40,6 @@ const getSectionsForLevel = (levelName, allSections) => {
 };
 
 const LevelCard = ({ level, sections, specialties }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedSpecialty, setSelectedSpecialty] = useState(null);
   const levelSections = getSectionsForLevel(level.levelName, sections);
   const isBachillerato = isBachilleratoLevel(level.levelName);
 
@@ -45,72 +50,41 @@ const LevelCard = ({ level, sections, specialties }) => {
       sections: levelSections.map(s => ({
         id: s._id,
         name: s.sectionName
-      }))
-    };
-
-    if (isBachillerato && selectedSpecialty) {
-      downloadData.specialty = {
-        id: selectedSpecialty._id,
-        name: selectedSpecialty.specialtyName
-      };
-    } else if (isBachillerato && specialties.length > 0) {
-      
-      downloadData.specialties = specialties.map(sp => ({
+      })),
+      specialties: isBachillerato ? specialties.map(sp => ({
         id: sp._id,
         name: sp.specialtyName
-      }));
-    }
+      })) : []
+    };
 
     console.log('Descargando diplomas para:', downloadData);
     
-    const specialtyText = selectedSpecialty 
-      ? `\nEspecialidad: ${selectedSpecialty.specialtyName}`
-      : isBachillerato && specialties.length > 0
-        ? `\nTodas las especialidades (${specialties.length})`
-        : '';
-    
-    alert(`Generando diplomas para:\n\nNivel: ${level.levelName}\nSecciones: ${levelSections.map(s => s.sectionName).join(', ')}${specialtyText}\n\n¡La descarga comenzará en breve!`);
+    alert(`Generando diplomas para:\n\nNivel: ${level.levelName}\nSecciones: ${levelSections.map(s => s.sectionName).join(', ')}\n\n¡La descarga comenzará en breve!`);
   };
 
   return (
     <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:shadow-xl transition-all duration-300 overflow-hidden">
       {/* Header de la card */}
       <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-white p-3 rounded-lg shadow-md">
-              <GraduationCap className="w-8 h-8 text-yellow-600" />
-            </div>
-            <div>
-              <h3 className="text-xl font-black text-white">{level.levelName}</h3>
-              {level.letterLevel && (
-                <span className="text-sm font-semibold text-yellow-100">
-                  Código: {level.letterLevel}
-                </span>
-              )}
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="bg-white p-3 rounded-lg shadow-md">
+            <GraduationCap className="w-8 h-8 text-yellow-600" />
           </div>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all"
-            aria-label={isExpanded ? 'Contraer información' : 'Expandir información'}
-          >
-            <svg 
-              className={`w-6 h-6 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          <div>
+            <h3 className="text-xl font-black text-white">{level.levelName}</h3>
+            {level.letterLevel && (
+              <span className="text-sm font-semibold text-yellow-100">
+                Código: {level.letterLevel}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Body de la card */}
       <div className="p-6">
         {/* Información resumida */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="flex items-center gap-2 text-gray-600">
             <Users className="w-5 h-5 text-yellow-500" />
             <span className="text-sm">
@@ -127,106 +101,20 @@ const LevelCard = ({ level, sections, specialties }) => {
           )}
         </div>
 
-        {/* Contenido expandible */}
-        {isExpanded && (
-          <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
-            {/* Secciones */}
-            <div>
-              <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                <Users className="w-4 h-4 text-yellow-600" />
-                Secciones Disponibles
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {levelSections.length > 0 ? (
-                  levelSections.map((section) => (
-                    <span
-                      key={section._id}
-                      className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-semibold border border-yellow-200"
-                    >
-                      {section.sectionName}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-gray-500 text-sm italic">No hay secciones disponibles</span>
-                )}
-              </div>
-              {isBachillerato && (
-                <p className="text-xs text-gray-500 mt-2">
-                  * Todas las secciones (1A, 1B, 2A, 2B, etc.) están disponibles para este nivel
-                </p>
-              )}
-            </div>
-
-            {/* Especialidades (solo para bachillerato) */}
-            {isBachillerato && specialties.length > 0 && (
-              <div>
-                <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-yellow-600" />
-                  Especialidades
-                </h4>
-                <div className="space-y-2">
-                  {/* Opción para todas las especialidades */}
-                  <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <input
-                      type="radio"
-                      name={`specialty-${level._id}`}
-                      checked={selectedSpecialty === null}
-                      onChange={() => setSelectedSpecialty(null)}
-                      className="w-4 h-4 text-yellow-600 focus:ring-yellow-500"
-                    />
-                    <span className="text-sm font-semibold text-gray-700">
-                      Todas las especialidades
-                    </span>
-                  </label>
-                  
-                  {/* Opciones individuales */}
-                  {specialties.map((specialty) => (
-                    <label 
-                      key={specialty._id}
-                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name={`specialty-${level._id}`}
-                        checked={selectedSpecialty?._id === specialty._id}
-                        onChange={() => setSelectedSpecialty(specialty)}
-                        className="w-4 h-4 text-yellow-600 focus:ring-yellow-500"
-                      />
-                      <span className="text-sm text-gray-700">
-                        {specialty.specialtyName}
-                        {specialty.letterSpecialty && (
-                          <span className="text-gray-500 ml-1">({specialty.letterSpecialty})</span>
-                        )}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Botón de descarga */}
         <button
           onClick={handleDownloadDiplomas}
-          disabled={levelSections.length === 0}
-          className={`w-full mt-4 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-white transition-all duration-300 ${
-            levelSections.length === 0
-              ? 'bg-gray-300 cursor-not-allowed'
-              : 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
-          }`}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-white transition-all duration-300 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
         >
           <Download className="w-5 h-5" />
-          {selectedSpecialty 
-            ? `Descargar - ${selectedSpecialty.specialtyName}` 
-            : 'Descargar Diplomas'
-          }
+          Descargar Diplomas
         </button>
       </div>
     </div>
   );
 };
 
+// Componente principal de Diplomas
 const DiplomasSection = () => {
   const { levels, loading: loadingLevels, error: errorLevels } = useLevels();
   const { sections, loading: loadingSections } = useSections();
@@ -274,7 +162,7 @@ const DiplomasSection = () => {
           <h2 className="text-2xl font-black text-gray-800">Generación de Diplomas</h2>
         </div>
         <p className="text-gray-600">
-          Selecciona el nivel académico y especialidad (si aplica) para generar y descargar los diplomas correspondientes.
+          Selecciona el nivel académico para generar y descargar los diplomas correspondientes.
         </p>
       </div>
 
@@ -307,9 +195,9 @@ const DiplomasSection = () => {
           <div>
             <h4 className="font-bold text-gray-800 mb-2">Información sobre diplomas</h4>
             <ul className="space-y-1 text-sm text-gray-600">
-              <li>• <strong>Tercer Ciclo:</strong> Secciones A, B, C, D, E, F</li>
-              <li>• <strong>Bachillerato:</strong> Todas las secciones (1A, 1B, 2A, 2B, etc.) disponibles por especialidad</li>
-              <li>• Puedes generar diplomas para todas las especialidades o seleccionar una específica</li>
+              <li>• <strong>Tercer Ciclo:</strong> Incluye niveles Séptimo, Octavo y Noveno con secciones A-F</li>
+              <li>• <strong>Bachillerato:</strong> Incluye 1°, 2° y 3° con todas las secciones (1A, 1B, 2A, 2B, etc.)</li>
+              <li>• Los diplomas se generan para todas las especialidades disponibles</li>
               <li>• Los archivos se descargarán en formato PDF</li>
             </ul>
           </div>
