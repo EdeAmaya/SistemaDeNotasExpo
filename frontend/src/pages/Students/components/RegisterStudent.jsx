@@ -14,7 +14,7 @@ const RegisterStudent = ({
   handleEdit,
   onCancel
 }) => {
-  
+
   const [levels, setLevels] = useState([]);
   const [sections, setSections] = useState([]);
   const [specialties, setSpecialties] = useState([]);
@@ -28,44 +28,44 @@ const RegisterStudent = ({
     if (!levelName) return false;
     const levelLower = levelName.toLowerCase();
     return levelLower.includes('1°') || levelLower.includes('2°') || levelLower.includes('3°') ||
-           levelLower.includes('primer') || levelLower.includes('segundo') || levelLower.includes('tercer') ||
-           levelLower.includes('bachillerato') || levelLower.includes('1') || levelLower.includes('2') || levelLower.includes('3');
+      levelLower.includes('primer') || levelLower.includes('segundo') || levelLower.includes('tercer') ||
+      levelLower.includes('bachillerato') || levelLower.includes('1') || levelLower.includes('2') || levelLower.includes('3');
   };
 
   const isBasica = (levelName) => {
     if (!levelName) return false;
     const levelLower = levelName.toLowerCase();
     return levelLower.includes('7°') || levelLower.includes('8°') || levelLower.includes('9°') ||
-           levelLower.includes('séptimo') || levelLower.includes('octavo') || levelLower.includes('noveno') ||
-           levelLower.includes('7') || levelLower.includes('8') || levelLower.includes('9');
+      levelLower.includes('séptimo') || levelLower.includes('octavo') || levelLower.includes('noveno') ||
+      levelLower.includes('7') || levelLower.includes('8') || levelLower.includes('9');
   };
 
   const getFilteredSections = () => {
     if (!idLevel) return sections;
-    
+
     const selectedLevel = levels.find(level => level._id === idLevel);
     if (!selectedLevel) return sections;
-    
+
     const levelName = selectedLevel.name || selectedLevel.levelName || '';
-    
+
     if (isBachillerato(levelName)) {
       return sections.filter(section => {
         const sectionName = (section.name || section.sectionName || '').toLowerCase();
-        return /[123][ab]/.test(sectionName) || 
-               sectionName.includes('1a') || sectionName.includes('1b') ||
-               sectionName.includes('2a') || sectionName.includes('2b') ||
-               sectionName.includes('3a') || sectionName.includes('3b');
+        return /[123][ab]/.test(sectionName) ||
+          sectionName.includes('1a') || sectionName.includes('1b') ||
+          sectionName.includes('2a') || sectionName.includes('2b') ||
+          sectionName.includes('3a') || sectionName.includes('3b');
       });
     } else if (isBasica(levelName)) {
       return sections.filter(section => {
         const sectionName = (section.name || section.sectionName || '').toLowerCase().trim();
-        return /^[abcdef]$/.test(sectionName) && 
-               !sectionName.includes('1') && 
-               !sectionName.includes('2') && 
-               !sectionName.includes('3');
+        return /^[abcdef]$/.test(sectionName) &&
+          !sectionName.includes('1') &&
+          !sectionName.includes('2') &&
+          !sectionName.includes('3');
       });
     }
-    
+
     return sections;
   };
 
@@ -73,7 +73,7 @@ const RegisterStudent = ({
     if (!idLevel) return false;
     const selectedLevel = levels.find(level => level._id === idLevel);
     if (!selectedLevel) return false;
-    
+
     const levelName = selectedLevel.name || selectedLevel.levelName || '';
     return isBachillerato(levelName);
   };
@@ -83,12 +83,12 @@ const RegisterStudent = ({
       const selectedLevel = levels.find(level => level._id === idLevel);
       if (selectedLevel) {
         const levelName = selectedLevel.name || selectedLevel.levelName || '';
-        
+
         const currentSectionValid = getFilteredSections().some(section => section._id === idSection);
         if (!currentSectionValid) {
           setIdSection("");
         }
-        
+
         if (!isBachillerato(levelName)) {
           setIdSpecialty("");
         }
@@ -103,22 +103,22 @@ const RegisterStudent = ({
     }
 
     setIsCheckingCode(true);
-    
+
     try {
       const response = await fetch(`https://stc-instituto-tecnico-ricaldone.onrender.com/api/students`, {
         credentials: 'include'
       });
       if (response.ok) {
         const allStudents = await response.json();
-        
-        const filteredStudents = id ? 
-          allStudents.filter(student => student._id !== id) : 
+
+        const filteredStudents = id ?
+          allStudents.filter(student => student._id !== id) :
           allStudents;
-        
+
         const existingStudent = filteredStudents.find(
           student => student.studentCode.toString() === code.toString()
         );
-        
+
         if (existingStudent) {
           setCodeValidation({
             isValid: false,
@@ -156,7 +156,7 @@ const RegisterStudent = ({
     const fetchCatalogData = async () => {
       setLoadingData(true);
       setErrors({});
-      
+
       try {
         const [levelsResponse, sectionsResponse, specialtiesResponse, projectsResponse] = await Promise.all([
           fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/levels', { credentials: 'include' }),
@@ -205,15 +205,15 @@ const RegisterStudent = ({
 
     fetchCatalogData();
   }, []);
-  
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (codeValidation.isValid === false) {
       alert('No se puede guardar: El código de estudiante ya existe');
       return;
     }
-    
+
     if (id) {
       handleEdit(e);
     } else {
@@ -223,19 +223,28 @@ const RegisterStudent = ({
 
   return (
     <div className="max-w-4xl mx-auto">
-      
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">
-          <div className={`w-12 h-12 rounded-xl ${id ? 'bg-gradient-to-br from-blue-500 to-blue-700' : 'bg-gradient-to-br from-green-500 to-green-700'} flex items-center justify-center shadow-lg`}>
-            {id ? <Edit2 className="w-6 h-6 text-white" /> : <UserPlus className="w-6 h-6 text-white" />}
+          <div
+            className={`w-12 h-12 rounded-xl ${id ? 'bg-green-600' : 'bg-green-600'
+              } flex items-center justify-center shadow-lg`}
+          >
+            {id ? (
+              <Edit2 className="w-6 h-6 text-white" />
+            ) : (
+              <UserPlus className="w-6 h-6 text-white" />
+            )}
           </div>
           <div>
             <h2 className="text-2xl font-black text-gray-900">
               {id ? 'Editar Estudiante' : 'Crear Nuevo Estudiante'}
             </h2>
             <p className="text-sm text-gray-500">
-              {id ? 'Actualiza la información del estudiante' : 'Completa los datos para registrar un nuevo estudiante'}
+              {id
+                ? 'Actualiza la información del estudiante'
+                : 'Completa los datos para registrar un nuevo estudiante'}
             </p>
           </div>
         </div>
@@ -252,14 +261,14 @@ const RegisterStudent = ({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        
+
         {/* Información Personal */}
         <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <User className="w-5 h-5" />
             <span>Información Personal</span>
           </h3>
-          
+
           <div className="grid md:grid-cols-3 gap-4">
             {/* Código */}
             <div>
@@ -272,13 +281,12 @@ const RegisterStudent = ({
                   type="number"
                   value={studentCode || ''}
                   onChange={(e) => setStudentCode(e.target.value)}
-                  className={`w-full px-4 py-3 bg-white border-2 rounded-lg focus:ring-4 transition-all text-gray-900 font-medium ${
-                    codeValidation.isValid === false
-                      ? 'border-red-500 focus:border-red-600 focus:ring-red-100'
-                      : codeValidation.isValid === true
+                  className={`w-full px-4 py-3 bg-white border-2 rounded-lg focus:ring-4 transition-all text-gray-900 font-medium ${codeValidation.isValid === false
+                    ? 'border-red-500 focus:border-red-600 focus:ring-red-100'
+                    : codeValidation.isValid === true
                       ? 'border-green-500 focus:border-green-600 focus:ring-green-100'
                       : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
-                  }`}
+                    }`}
                   placeholder="Ej: 202301001"
                   required
                 />
@@ -293,10 +301,9 @@ const RegisterStudent = ({
                 </div>
               </div>
               {codeValidation.message && (
-                <p className={`mt-1 text-xs font-medium ${
-                  codeValidation.isValid === false ? 'text-red-600' : 
+                <p className={`mt-1 text-xs font-medium ${codeValidation.isValid === false ? 'text-red-600' :
                   codeValidation.isValid === true ? 'text-green-600' : 'text-gray-500'
-                }`}>
+                  }`}>
                   {codeValidation.message}
                 </p>
               )}
@@ -340,7 +347,7 @@ const RegisterStudent = ({
             <BookOpen className="w-5 h-5" />
             <span>Información Académica</span>
           </h3>
-          
+
           <div className="grid md:grid-cols-2 gap-4">
             {/* Nivel */}
             <div>
@@ -386,11 +393,11 @@ const RegisterStudent = ({
                 disabled={loadingData || !idLevel}
               >
                 <option value="">
-                  {!idLevel 
-                    ? 'Primero selecciona un nivel...' 
-                    : loadingData 
-                    ? 'Cargando secciones...' 
-                    : 'Seleccionar sección...'}
+                  {!idLevel
+                    ? 'Primero selecciona un nivel...'
+                    : loadingData
+                      ? 'Cargando secciones...'
+                      : 'Seleccionar sección...'}
                 </option>
                 {getFilteredSections().map((section) => (
                   <option key={section._id} value={section._id}>
@@ -415,11 +422,10 @@ const RegisterStudent = ({
               <select
                 value={idSpecialty || ''}
                 onChange={(e) => setIdSpecialty(e.target.value)}
-                className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-4 transition-all text-gray-900 font-medium ${
-                  requiresSpecialty()
-                    ? 'bg-white border-gray-200 focus:border-purple-500 focus:ring-purple-100'
-                    : 'bg-gray-100 border-gray-200 cursor-not-allowed'
-                }`}
+                className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-4 transition-all text-gray-900 font-medium ${requiresSpecialty()
+                  ? 'bg-white border-gray-200 focus:border-purple-500 focus:ring-purple-100'
+                  : 'bg-gray-100 border-gray-200 cursor-not-allowed'
+                  }`}
                 disabled={loadingData || !requiresSpecialty()}
                 required={requiresSpecialty()}
               >
@@ -427,8 +433,8 @@ const RegisterStudent = ({
                   {!requiresSpecialty()
                     ? 'No disponible para este nivel...'
                     : loadingData
-                    ? 'Cargando especialidades...'
-                    : 'Seleccionar especialidad...'}
+                      ? 'Cargando especialidades...'
+                      : 'Seleccionar especialidad...'}
                 </option>
                 {requiresSpecialty() && specialties.map((specialty) => (
                   <option key={specialty._id} value={specialty._id}>
@@ -486,13 +492,12 @@ const RegisterStudent = ({
           <button
             type="submit"
             disabled={loadingData || codeValidation.isValid === false}
-            className={`flex-1 py-4 px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 ${
-              loadingData || codeValidation.isValid === false
-                ? 'bg-gray-400 cursor-not-allowed'
-                : id
+            className={`cursor-pointer flex-1 py-4 px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 ${loadingData || codeValidation.isValid === false
+              ? 'bg-gray-400 cursor-not-allowed'
+              : id
                 ? 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
                 : 'bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800'
-            }`}
+              }`}
           >
             {id ? <Edit2 className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
             <span>{id ? 'Actualizar Estudiante' : 'Registrar Estudiante'}</span>
@@ -502,7 +507,7 @@ const RegisterStudent = ({
             <button
               type="button"
               onClick={onCancel}
-              className="px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+              className="cursor-pointer px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
             >
               <XCircle className="w-5 h-5" />
               <span>Cancelar</span>
@@ -512,12 +517,15 @@ const RegisterStudent = ({
       </form>
 
       {/* Info adicional */}
-      <div className="mt-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+      <div className="mt-6 bg-green-50 border-l-4 border-green-600 p-4 rounded-r-lg">
         <div className="flex gap-3">
-          <Info className="w-6 h-6 text-blue-600 flex-shrink-0" />
+          <Info className="w-6 h-6 text-green-600 flex-shrink-0" />
           <div className="flex-1 text-sm text-gray-700">
             <p className="font-bold text-gray-900 mb-1">Campos obligatorios</p>
-            <p>Todos los campos marcados con (*) son obligatorios{id && ', el código debe ser único en el sistema'}</p>
+            <p>
+              Todos los campos marcados con (*) son obligatorios
+              {id && ', el código debe ser único en el sistema'}
+            </p>
           </div>
         </div>
       </div>

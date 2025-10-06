@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, X, List, LayoutGrid, Users as UsersIcon, Crown, GraduationCap, Briefcase, UserPlus, AlertCircle } from 'lucide-react';
+import { Search, X, List, LayoutGrid, Users as UsersIcon, Crown, GraduationCap, Briefcase, UserPlus, AlertCircle, User } from 'lucide-react';
 import UserCard from "./UserCard";
 
 const ListUsers = ({ users, loading, deleteUser, updateUser }) => {
@@ -15,11 +15,12 @@ const ListUsers = ({ users, loading, deleteUser, updateUser }) => {
     return matchesFilter && matchesSearch;
   });
 
-  const getRoleStats = () => ({
+   const getRoleStats = () => ({
     all: users.length,
     Admin: users.filter(u => u.role === 'Admin').length,
     Docente: users.filter(u => u.role === 'Docente').length,
-    Evaluador: users.filter(u => u.role === 'Evaluador').length
+    Evaluador: users.filter(u => u.role === 'Evaluador').length,
+    Estudiante: users.filter(u => u.role === 'Estudiante').length
   });
 
   const stats = getRoleStats();
@@ -28,7 +29,8 @@ const ListUsers = ({ users, loading, deleteUser, updateUser }) => {
     { key: 'all', label: 'Todos', shortLabel: 'Todos', icon: UsersIcon, gradient: 'from-gray-500 to-gray-700' },
     { key: 'Admin', label: 'Administradores', shortLabel: 'Admins', icon: Crown, gradient: 'from-orange-500 to-orange-700' },
     { key: 'Docente', label: 'Docentes', shortLabel: 'Docentes', icon: GraduationCap, gradient: 'from-orange-500 to-orange-700' },
-    { key: 'Evaluador', label: 'Evaluadores', shortLabel: 'Evaluadores', icon: Briefcase, gradient: 'from-orange-500 to-orange-700' }
+    { key: 'Evaluador', label: 'Evaluadores', shortLabel: 'Evaluadores', icon: Briefcase, gradient: 'from-orange-500 to-orange-700' },
+    { key: 'Estudiante', label: 'Estudiantes', shortLabel: 'Estudiantes', icon: User, gradient: 'from-orange-500 to-orange-700' }
   ];
 
   return (

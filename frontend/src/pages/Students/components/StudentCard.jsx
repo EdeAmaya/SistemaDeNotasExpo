@@ -40,18 +40,14 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
         
         {/* Barra lateral colorida */}
         <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
-          student.projectId 
-            ? 'bg-gradient-to-b from-green-500 via-green-600 to-green-700'
-            : 'bg-gradient-to-b from-orange-500 via-orange-600 to-orange-700'
+          student.projectId ? 'bg-green-600' : 'bg-green-600/50'
         }`}></div>
         
         <div className="pl-4 pr-5 py-4 flex items-center gap-5">
           
           {/* Avatar con icono */}
           <div className={`relative flex-shrink-0 w-16 h-16 rounded-xl ${
-            student.projectId
-              ? 'bg-gradient-to-br from-green-500 via-green-600 to-green-700'
-              : 'bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700'
+            student.projectId ? 'bg-green-600' : 'bg-green-600/50'
           } flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
             <GraduationCap className="w-8 h-8 text-white" />
             
@@ -104,7 +100,7 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
           <div className="flex-shrink-0 flex items-center gap-2">
             <button
               onClick={handleEdit}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-sm shadow-sm hover:shadow-md transition-all duration-200"
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-sm shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
               title="Editar estudiante"
             >
               <span className="flex items-center gap-1.5">
@@ -115,7 +111,7 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
             
             <button
               onClick={handleDelete}
-              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-sm shadow-sm hover:shadow-md transition-all duration-200"
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-sm shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
               title="Eliminar estudiante"
             >
               <span className="flex items-center gap-1.5">
@@ -126,12 +122,8 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
           </div>
         </div>
 
-        {/* Barra de progreso inferior en hover */}
-        <div className={`h-0.5 ${
-          student.projectId
-            ? 'bg-gradient-to-r from-green-500 via-green-600 to-green-700'
-            : 'bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700'
-        } transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500`}></div>
+        {/* Barra inferior */}
+        <div className={`h-0.5 ${student.projectId ? 'bg-green-600' : 'bg-green-600/50'} transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500`}></div>
       </div>
     );
   }
@@ -140,12 +132,8 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
   return (
     <div className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl border-2 border-gray-100 hover:border-gray-200 transition-all duration-300 overflow-hidden">
       
-      {/* Header con gradiente */}
-      <div className={`relative ${
-        student.projectId
-          ? 'bg-gradient-to-r from-green-500 via-green-600 to-green-700'
-          : 'bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700'
-      } p-6 text-white`}>
+      {/* Header verde sólido */}
+      <div className={`relative ${student.projectId ? 'bg-green-600' : 'bg-green-600/50'} p-6 text-white`}>
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="mb-3">
@@ -176,7 +164,7 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
         
         {/* Nivel */}
         <div className="flex items-center gap-2 text-gray-700">
-          <BookOpen className="w-5 h-5 text-green-500" />
+          <BookOpen className="w-5 h-5 text-green-600" />
           <div>
             <div className="text-xs text-gray-500 font-semibold">Nivel</div>
             <div className="text-sm font-bold">{getLevelName(student.idLevel)}</div>
@@ -185,7 +173,7 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
 
         {/* Sección */}
         <div className="flex items-center gap-2 text-gray-700">
-          <FileText className="w-5 h-5 text-blue-500" />
+          <FileText className="w-5 h-5 text-blue-600" />
           <div>
             <div className="text-xs text-gray-500 font-semibold">Sección</div>
             <div className="text-sm font-bold">{getSectionName(student.idSection)}</div>
@@ -195,7 +183,7 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
         {/* Especialidad */}
         {student.idSpecialty && (
           <div className="flex items-center gap-2 text-gray-700">
-            <Award className="w-5 h-5 text-purple-500" />
+            <Award className="w-5 h-5 text-purple-600" />
             <div>
               <div className="text-xs text-gray-500 font-semibold">Especialidad</div>
               <div className="text-sm font-bold">{getSpecialtyName(student.idSpecialty)}</div>
@@ -205,7 +193,7 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
 
         {/* Proyecto */}
         {student.projectId ? (
-          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg bg-blue-50 border-2 border-blue-200`}>
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-blue-50 border-2 border-blue-200">
             <Briefcase className="w-5 h-5 text-blue-600" />
             <div className="flex-1">
               <div className="text-xs text-blue-600 font-semibold">Proyecto Asignado</div>
@@ -213,11 +201,11 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
             </div>
           </div>
         ) : (
-          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg bg-orange-50 border-2 border-orange-200`}>
-            <XCircle className="w-5 h-5 text-orange-600" />
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-green-50 border-2 border-green-200">
+            <XCircle className="w-5 h-5 text-green-600" />
             <div className="flex-1">
-              <div className="text-xs text-orange-600 font-semibold">Sin Proyecto</div>
-              <div className="text-sm font-bold text-orange-800">No asignado</div>
+              <div className="text-xs text-green-600 font-semibold">Sin Proyecto</div>
+              <div className="text-sm font-bold text-green-800">No asignado</div>
             </div>
           </div>
         )}
@@ -238,7 +226,7 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
         <div className="flex gap-3 pt-2">
           <button
             onClick={handleEdit}
-            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2.5 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2.5 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Edit2 className="w-4 h-4" />
             <span>Editar</span>
@@ -246,7 +234,7 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
           
           <button
             onClick={handleDelete}
-            className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+            className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-lg font-bold text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Trash2 className="w-4 h-4" />
             <span>Eliminar</span>
@@ -254,12 +242,8 @@ const StudentCard = ({ student, deleteStudent, updateStudent, viewMode = 'list' 
         </div>
       </div>
 
-      {/* Footer decorativo */}
-      <div className={`h-2 ${
-        student.projectId
-          ? 'bg-gradient-to-r from-green-500 via-green-600 to-green-700'
-          : 'bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700'
-      }`}></div>
+      {/* Footer verde */}
+      <div className={`${student.projectId ? 'bg-green-600' : 'bg-green-600/50'} h-2`}></div>
     </div>
   );
 };

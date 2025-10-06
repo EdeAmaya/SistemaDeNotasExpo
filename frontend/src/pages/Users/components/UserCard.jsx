@@ -36,6 +36,13 @@ const UserCard = ({ user, deleteUser, updateUser, viewMode = 'list' }) => {
           bg: 'bg-orange-500',
           text: 'Evaluador'
         };
+      case 'Estudiante':
+        return { 
+          icon: User, 
+          gradient: 'from-orange-500 via-orange-600 to-orange-700', 
+          bg: 'bg-orange-500',
+          text: 'Estudiante'
+        };
       default:
         return { 
           icon: User, 

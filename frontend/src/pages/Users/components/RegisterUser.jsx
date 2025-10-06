@@ -72,6 +72,13 @@ const RegisterUser = ({
       icon: Briefcase, 
       gradient: 'from-orange-500 to-orange-700',
       description: 'Evaluación de proyectos'
+    },
+    { 
+      value: 'Estudiante', 
+      label: 'Estudiante', 
+      icon: User, 
+      gradient: 'from-orange-500 to-orange-700',
+      description: 'Acceso a proyectos'
     }
   ];
 

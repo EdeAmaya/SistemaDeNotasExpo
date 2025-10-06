@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
-import { Users as UsersIcon, UserPlus, Crown, GraduationCap, Briefcase, CheckCircle, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users as UsersIcon, UserPlus, Crown, GraduationCap, Briefcase, CheckCircle, Info, User } from 'lucide-react';
 import ListUsers from './components/ListUsers';
 import RegisterUser from './components/RegisterUser';
 import useDataUsers from './hooks/useDataUsers';
 
 const Users = () => {
+  useEffect(() => {
+    document.title = "Usuarios | STC";
+  }, []);
+
   const [activeTab, setActiveTab] = useState('list');
-  
+
   const {
     users,
     loading,
@@ -47,17 +51,18 @@ const Users = () => {
     admins: users.filter(u => u.role === 'Admin').length,
     docentes: users.filter(u => u.role === 'Docente').length,
     evaluadores: users.filter(u => u.role === 'Evaluador').length,
+    estudiantes: users.filter(u => u.role === 'Estudiante').length,
     verificados: users.filter(u => u.isVerified).length,
   };
 
   return (
     <div className="min-h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      
+
       {/* Header Superior - Responsive */}
       <div className="bg-white border-b-2 border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pt-20 lg:pt-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            
+
             <div className="flex-1">
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-2">
                 <span>Sistema</span>
@@ -106,9 +111,8 @@ const Users = () => {
           <div className="flex gap-1 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => handleTabChange('list')}
-              className={`cursor-pointer relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${
-                activeTab === 'list' ? 'text-orange-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`cursor-pointer relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${activeTab === 'list' ? 'text-orange-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <UsersIcon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
@@ -122,12 +126,11 @@ const Users = () => {
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-orange-500 rounded-t-full"></div>
               )}
             </button>
-            
+
             <button
               onClick={() => handleTabChange('register')}
-              className={`cursor-pointer relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${
-                activeTab === 'register' ? 'text-orange-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`cursor-pointer relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${activeTab === 'register' ? 'text-orange-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
@@ -144,11 +147,11 @@ const Users = () => {
 
       {/* Content - Responsive */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        
+
         {/* Contenido */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
           {activeTab === 'list' ? (
-            <ListUsers 
+            <ListUsers
               users={users}
               loading={loading}
               deleteUser={deleteUser}

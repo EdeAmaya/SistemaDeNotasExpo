@@ -34,10 +34,10 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
   const stats = getStats();
 
   const filterButtons = [
-    { key: 'all', label: 'Todos', icon: Users, gradient: 'from-gray-500 to-gray-700' },
-    { key: 'withProject', label: 'Con Proyecto', icon: Briefcase, gradient: 'from-blue-500 to-blue-700' },
-    { key: 'withoutProject', label: 'Sin Proyecto', icon: AlertCircle, gradient: 'from-orange-500 to-orange-700' },
-    { key: 'withSpecialty', label: 'Con Especialidad', icon: Award, gradient: 'from-purple-500 to-purple-700' }
+    { key: 'all', label: 'Todos', icon: Users, color: 'bg-gray-600' },
+    { key: 'withProject', label: 'Con Proyecto', icon: Briefcase, color: 'bg-green-600' },
+    { key: 'withoutProject', label: 'Sin Proyecto', icon: AlertCircle, color: 'bg-green-600' },
+    { key: 'withSpecialty', label: 'Con Especialidad', icon: Award, color: 'bg-green-600' }
   ];
 
   return (
@@ -54,7 +54,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
               placeholder="Buscar estudiantes por nombre, apellido, código, nivel o sección..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-green-400 focus:ring-4 focus:ring-green-100 transition-all text-sm font-medium placeholder-gray-400"
+              className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-sm font-medium placeholder-gray-400"
             />
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
               <Search className="w-5 h-5 text-gray-400" />
@@ -62,7 +62,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-red-500 transition-colors"
+                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -74,7 +74,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
         <div className="flex items-center gap-2 bg-gray-100 p-1.5 rounded-lg">
           <button
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm transition-all cursor-pointer ${
               viewMode === 'list'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -85,7 +85,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
           </button>
           <button
             onClick={() => setViewMode('grid')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm transition-all cursor-pointer ${
               viewMode === 'grid'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -105,13 +105,13 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
             <button
               key={filter.key}
               onClick={() => setActiveFilter(filter.key)}
-              className={`group relative overflow-hidden transition-all duration-300 ${
+              className={`group relative overflow-hidden transition-all duration-300 cursor-pointer ${
                 activeFilter === filter.key ? 'scale-105' : 'hover:scale-105'
               }`}
             >
               <div className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all ${
                 activeFilter === filter.key
-                  ? `bg-gradient-to-r ${filter.gradient} text-white shadow-lg`
+                  ? `${filter.color} text-white shadow-lg`
                   : 'bg-white text-gray-700 hover:shadow-lg border-2 border-gray-200'
               }`}>
                 <IconComponent className="w-5 h-5" />
@@ -124,7 +124,6 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
                   {stats[filter.key]}
                 </div>
               </div>
-              
               {activeFilter === filter.key && (
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-full"></div>
               )}
@@ -144,7 +143,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
           </div>
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
               <span className="text-gray-600 font-medium">
                 {students.filter(s => s.projectId).length} con proyecto
               </span>
@@ -178,10 +177,10 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
       {!loading && (!students || students.length === 0) && (
         <div className="flex flex-col items-center justify-center py-24 space-y-6">
           <div className="relative">
-            <div className="w-32 h-32 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center">
+            <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center">
               <GraduationCap className="w-16 h-16 text-green-600" />
             </div>
-            <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+            <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-green-600 rounded-full flex items-center justify-center shadow-lg">
               <UserPlus className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -197,7 +196,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
       {/* No Results */}
       {!loading && students.length > 0 && filteredStudents.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 space-y-6">
-          <div className="w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+          <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center">
             <AlertCircle className="w-16 h-16 text-gray-600" />
           </div>
           <div className="text-center space-y-2">
@@ -210,7 +209,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
                 setSearchTerm('');
                 setActiveFilter('all');
               }}
-              className="mt-4 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-sm transition-colors"
+              className="mt-4 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-sm transition-colors cursor-pointer"
             >
               Limpiar filtros
             </button>
