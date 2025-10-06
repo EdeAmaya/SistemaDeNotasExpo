@@ -189,26 +189,30 @@ eventController.updateEvent = async (req, res) => {
       return res.status(404).json({ message: "Evento no encontrado" });
     }
 
-    // Preparar datos de actualización
     const updateData = {
       title: title?.trim() || currentEvent.title,
       description: description !== undefined ? description.trim() : currentEvent.description,
       color: color || currentEvent.color
     };
 
-    // Manejar fechas si se proporcionan
+    // Manejar fechas - crear objetos Date correctamente
+    let finalStartDate = currentEvent.startDate;
+    let finalEndDate = currentEvent.endDate;
+
     if (startDate) {
-      updateData.startDate = new Date(startDate);
+      // Si viene como YYYY-MM-DD, agregar tiempo para evitar problemas de zona horaria
+      finalStartDate = new Date(startDate + 'T00:00:00.000Z');
+      updateData.startDate = finalStartDate;
     }
+    
     if (endDate) {
-      updateData.endDate = new Date(endDate);
+      // Si viene como YYYY-MM-DD, agregar tiempo al final del día
+      finalEndDate = new Date(endDate + 'T23:59:59.999Z');
+      updateData.endDate = finalEndDate;
     }
 
-    // Verificar que la fecha de fin no sea anterior a la de inicio
-    const finalStartDate = updateData.startDate || currentEvent.startDate;
-    const finalEndDate = updateData.endDate || currentEvent.endDate;
-    
-    if (new Date(finalEndDate) < new Date(finalStartDate)) {
+    // Validar que la fecha de fin no sea anterior a la de inicio
+    if (finalEndDate < finalStartDate) {
       return res.status(400).json({ 
         message: "La fecha de fin debe ser posterior o igual a la fecha de inicio" 
       });
@@ -220,7 +224,6 @@ eventController.updateEvent = async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    // Poblar manualmente solo si no es "Admin"
     if (updatedEvent.createdBy !== 'Admin') {
       await updatedEvent.populate('createdBy', 'name lastName email');
     } else {
@@ -231,7 +234,6 @@ eventController.updateEvent = async (req, res) => {
       };
     }
 
-    // Log de actividad
     await ActivityLogger.log(
       req.user._id,
       'UPDATE_EVENT',
