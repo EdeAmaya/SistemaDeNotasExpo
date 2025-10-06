@@ -16,7 +16,14 @@ const isBachilleratoLevel = (levelName) => {
     normalized.includes('contaduría');
 };
 
-const getSectionsForLevel = (levelName, allSections) => {
+const getSectionsForLevel = (level, allSections) => {
+  if (level._id) {
+    return allSections.filter(section =>
+      section.levelId === level._id || section.level === level._id
+    );
+  }
+
+  const levelName = level.levelName || level;
   const normalizedLevel = levelName.toLowerCase();
 
   if (normalizedLevel.includes('tercer ciclo') ||
@@ -28,14 +35,16 @@ const getSectionsForLevel = (levelName, allSections) => {
     normalizedLevel.includes('8') ||
     normalizedLevel.includes('9')) {
     return allSections.filter(section =>
-      /^[A-F]$/i.test(section.sectionName)
+      /^[A-F]$/i.test(section.sectionName) &&
+      (section.levelId === level._id || section.level === level._id)
     );
   }
 
   if (isBachilleratoLevel(levelName)) {
     return allSections.filter(section => {
       const name = section.sectionName;
-      return name === '1A' || name === '1B' || name === '2A' || name === '2B';
+      const isCorrectFormat = name === '1A' || name === '1B' || name === '2A' || name === '2B';
+      return isCorrectFormat && (section.levelId === level._id || section.level === level._id);
     });
   }
 
