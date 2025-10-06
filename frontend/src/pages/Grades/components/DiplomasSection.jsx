@@ -51,7 +51,7 @@ const ProjectsListView = ({ section, level, onBack }) => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API}/project-scores/section/${section._id}`);
+        const response = await fetch(`${API}/project-scores/section/${section._id}`, {credentials: 'include'});
         
         if (!response.ok) {
           throw new Error('Error al cargar los proyectos');
