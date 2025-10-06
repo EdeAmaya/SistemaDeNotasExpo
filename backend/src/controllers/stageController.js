@@ -35,25 +35,49 @@ stageController.getStageById = async (req, res) => {
   }
 };
 
-// Select - Obtener etapa activa actual
+// Select - Obtener etapa activa actual (CORREGIDO)
 stageController.getCurrentStage = async (req, res) => {
   try {
     const now = new Date();
+    
+    console.log('🔍 Buscando etapa actual. Fecha actual:', now.toISOString());
+    
+    // Buscar etapa que esté dentro del rango de fechas y activa
     const currentStage = await stageModel.findOne({
       startDate: { $lte: now },
       endDate: { $gte: now },
       isActive: true
     }).sort({ order: 1 });
 
+    console.log('📊 Etapa encontrada:', currentStage ? currentStage.name : 'ninguna');
+
+    // Si no hay etapa activa, retornar respuesta exitosa con null
     if (!currentStage) {
-      return res.status(404).json({ 
-        message: "No hay etapa activa en este momento" 
+      // Verificar si todas las etapas ya pasaron
+      const allStages = await stageModel.find().sort({ endDate: -1 }).limit(1);
+      const lastStage = allStages[0];
+      
+      if (lastStage && now > lastStage.endDate) {
+        console.log('✅ Todas las etapas completadas');
+        return res.status(200).json({ 
+          message: "Todas las etapas han sido completadas",
+          currentStage: null,
+          allCompleted: true
+        });
+      }
+      
+      console.log('ℹ️ No hay etapa activa en este momento');
+      return res.status(200).json({ 
+        message: "No hay etapa activa en este momento",
+        currentStage: null,
+        allCompleted: false
       });
     }
 
+    console.log('✅ Retornando etapa actual:', currentStage.name);
     res.json(currentStage);
   } catch (error) {
-    console.error('Error al obtener etapa actual:', error);
+    console.error('❌ Error al obtener etapa actual:', error);
     res.status(500).json({ 
       message: "Error al obtener etapa actual", 
       error: error.message 
