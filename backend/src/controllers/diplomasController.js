@@ -5,11 +5,11 @@ import Project from "../models/Project.js";
 
 const diplomasController = {};
 
-const generateDiplomaPDF = async (studentName, place, projectName, date) => {
+const generateProjectDiplomaPDF = async (students, place, projectName, date) => {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({
-        size: [792, 612], 
+        size: 'LETTER',
         margins: { top: 50, bottom: 50, left: 50, right: 50 }
       });
 
@@ -18,89 +18,56 @@ const generateDiplomaPDF = async (studentName, place, projectName, date) => {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
-      const redBrown = '#8B4513';
-      const gold = '#DAA520';
-      const darkGray = '#2C2C2C';
+      students.forEach((student, index) => {
+        if (index > 0) {
+          doc.addPage();
+        }
 
-      doc.rect(20, 20, 752, 572)
-         .lineWidth(3)
-         .strokeColor(gold)
-         .stroke();
+        const studentName = `${student.name} ${student.lastName}`;
+        const placeText = place === 1 ? 'PRIMER LUGAR' : place === 2 ? 'SEGUNDO LUGAR' : 'TERCER LUGAR';
 
-      doc.rect(30, 30, 732, 552)
-         .lineWidth(2)
-         .strokeColor(darkGray)
-         .stroke();
+        const pageHeight = doc.page.height;
+        const startY = pageHeight / 2 - 150;
 
-      doc.rect(50, 40, 692, 80)
-         .fillColor(redBrown)
-         .fill();
+        doc.fontSize(28)
+           .font('Helvetica-Bold')
+           .text(studentName.toUpperCase(), 50, startY, {
+             width: doc.page.width - 100,
+             align: 'center'
+           });
 
-      doc.fontSize(24)
-         .fillColor('#FFFFFF')
-         .font('Helvetica-Bold')
-         .text('EXPO', 70, 60, { width: 100, align: 'left' });
-      
-      doc.fontSize(18)
-         .text('TÉCNICA', 70, 90, { width: 100, align: 'left' });
+        doc.moveDown(2);
+        doc.fontSize(22)
+           .font('Helvetica-Bold')
+           .text(placeText, {
+             width: doc.page.width - 100,
+             align: 'center'
+           });
 
-      doc.fontSize(48)
-         .fillColor(gold)
-         .font('Helvetica-Bold')
-         .text('EXPOTÉCNICA', 200, 140, { width: 400, align: 'center' });
+        doc.moveDown(2);
+        doc.fontSize(18)
+           .font('Helvetica')
+           .text('PROYECTO:', {
+             width: doc.page.width - 100,
+             align: 'center'
+           });
 
-      doc.fontSize(24)
-         .fillColor(darkGray)
-         .font('Helvetica-Bold')
-         .text('INSTITUTO TÉCNICO RICALDONE', 100, 200, { width: 592, align: 'center' });
+        doc.moveDown(0.5);
+        doc.fontSize(20)
+           .font('Helvetica-Bold')
+           .text(projectName.toUpperCase(), {
+             width: doc.page.width - 100,
+             align: 'center'
+           });
 
-      doc.fontSize(14)
-         .fillColor(darkGray)
-         .font('Helvetica')
-         .text('Extiende el presente reconocimiento:', 100, 260, { width: 592, align: 'center' });
-
-      doc.fontSize(22)
-         .fillColor(darkGray)
-         .font('Helvetica-Bold')
-         .text(`A: ${studentName.toUpperCase()}`, 100, 300, { width: 592, align: 'center' });
-
-      const placeText = place === 1 ? 'PRIMER LUGAR' : place === 2 ? 'SEGUNDO LUGAR' : 'TERCER LUGAR';
-      doc.fontSize(16)
-         .fillColor(darkGray)
-         .font('Helvetica')
-         .text('POR HABER OBTENIDO:', 100, 350, { width: 592, align: 'center' });
-      
-      doc.fontSize(20)
-         .font('Helvetica-Bold')
-         .text(placeText, 100, 375, { width: 592, align: 'center' });
-
-      doc.fontSize(14)
-         .font('Helvetica')
-         .text('PROYECTO:', 100, 420, { width: 592, align: 'center' });
-      
-      doc.fontSize(16)
-         .font('Helvetica-Bold')
-         .text(projectName.toUpperCase(), 100, 445, { width: 592, align: 'center' });
-
-      doc.fontSize(12)
-         .font('Helvetica')
-         .text(date, 100, 495, { width: 592, align: 'center' });
-
-      doc.fontSize(10)
-         .font('Helvetica-Bold')
-         .text('Pbro. Alex Figueroa. SDB.', 250, 530, { width: 292, align: 'center' });
-      
-      doc.fontSize(10)
-         .font('Helvetica')
-         .text('Director', 250, 545, { width: 292, align: 'center' });
-
-      doc.rect(50, 150, 15, 40).fillColor('#8B0000').fill();
-      doc.rect(50, 200, 15, 40).fillColor('#B22222').fill();
-      doc.rect(50, 250, 15, 40).fillColor(gold).fill();
-      doc.rect(50, 300, 15, 40).fillColor('#DAA520').fill();
-
-      doc.rect(727, 150, 15, 40).fillColor(gold).fill();
-      doc.rect(727, 200, 15, 40).fillColor('#DAA520').fill();
+        doc.moveDown(3);
+        doc.fontSize(14)
+           .font('Helvetica')
+           .text(date, {
+             width: doc.page.width - 100,
+             align: 'center'
+           });
+      });
 
       doc.end();
     } catch (error) {
@@ -169,18 +136,18 @@ diplomasController.downloadDiplomasSection = async (req, res) => {
       const place = i + 1;
       const students = project.assignedStudents;
 
-      const placeFolder = `${place === 1 ? '1er' : place === 2 ? '2do' : '3er'}_Lugar_${project.projectName.replace(/[^a-zA-Z0-9]/g, '_')}`;
-
-      for (const student of students) {
-        const studentName = `${student.name} ${student.lastName}`;
-        const pdfBuffer = await generateDiplomaPDF(
-          studentName,
+      if (students && students.length > 0) {
+        const pdfBuffer = await generateProjectDiplomaPDF(
+          students,
           place,
           project.projectName,
           `San Salvador, ${fecha}`
         );
 
-        const fileName = `${studentName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+        const placeFolder = `${place === 1 ? '1er' : place === 2 ? '2do' : '3er'}_Lugar`;
+        const projectNameClean = project.projectName.replace(/[^a-zA-Z0-9]/g, '_');
+        const fileName = `${projectNameClean}_${students.length}_estudiantes.pdf`;
+        
         zip.folder(placeFolder).file(fileName, pdfBuffer);
       }
     }

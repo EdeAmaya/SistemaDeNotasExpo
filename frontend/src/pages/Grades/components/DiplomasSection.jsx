@@ -548,13 +548,6 @@ const BachilleratoDetail = ({ level, sections, specialties, onBack }) => {
                   )}
                 </div>
               </div>
-              <button
-                onClick={() => handleDownloadSpecialty(specialty)}
-                className="flex items-center gap-2 bg-white text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-50 transition-all shadow-lg"
-              >
-                <Download className="w-4 h-4" />
-                Descargar Especialidad
-              </button>
             </div>
 
             <div className="p-6">
