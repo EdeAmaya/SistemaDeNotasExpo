@@ -254,41 +254,43 @@ stageController.updateStage = async (req, res) => {
     }
 
     // Validar fechas si se proporcionan - CORREGIDO
-    if (startDate && endDate) {
-      // Extraer solo la parte de fecha para comparación sin conversión de zona horaria
-      const startDateOnly = startDate.split('T')[0];
-      const endDateOnly = endDate.split('T')[0];
-      
-      // Comparar strings de fecha directamente
-      if (endDateOnly <= startDateOnly) {
-        return res.status(400).json({
-          error: "INVALID_DATES",
-          message: "La fecha de fin debe ser posterior a la fecha de inicio"
-        });
-      }
-
-      // Para la validación de solapamiento, usar las fechas ISO directamente
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-
-      // Verificar solapamiento de fechas (excluyendo la etapa actual)
-      const overlappingStage = await stageModel.findOne({
-        _id: { $ne: req.params.id },
-        isActive: true,
-        $or: [
-          {
-            startDate: { $lte: end },
-            endDate: { $gte: start }
-          }
-        ]
+    // Determinar qué fechas usar para validación (nuevas o existentes)
+    const finalStartDate = startDate || existingStage.startDate.toISOString();
+    const finalEndDate = endDate || existingStage.endDate.toISOString();
+    
+    // Extraer solo la parte de fecha para comparación sin conversión de zona horaria
+    const startDateOnly = finalStartDate.split('T')[0];
+    const endDateOnly = finalEndDate.split('T')[0];
+    
+    // Comparar strings de fecha directamente
+    if (endDateOnly <= startDateOnly) {
+      return res.status(400).json({
+        error: "INVALID_DATES",
+        message: "La fecha de fin debe ser posterior a la fecha de inicio"
       });
+    }
 
-      if (overlappingStage && (isActive !== false)) {
-        return res.status(400).json({
-          error: "DATE_OVERLAP",
-          message: `Las fechas se solapan con la etapa: ${overlappingStage.name}`
-        });
-      }
+    // Para la validación de solapamiento, usar las fechas ISO directamente
+    const start = new Date(finalStartDate);
+    const end = new Date(finalEndDate);
+
+    // Verificar solapamiento de fechas (excluyendo la etapa actual)
+    const overlappingStage = await stageModel.findOne({
+      _id: { $ne: req.params.id },
+      isActive: true,
+      $or: [
+        {
+          startDate: { $lte: end },
+          endDate: { $gte: start }
+        }
+      ]
+    });
+
+    if (overlappingStage && (isActive !== false)) {
+      return res.status(400).json({
+        error: "DATE_OVERLAP",
+        message: `Las fechas se solapan con la etapa: ${overlappingStage.name}`
+      });
     }
 
     const updatedStage = await stageModel.findByIdAndUpdate(

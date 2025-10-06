@@ -5,7 +5,7 @@ const stageSchema = new Schema({
         type: String,
         required: [true, 'El porcentaje de etapa es requerido'],
         trim: true,
-        maxLength: [10, 'El porcentaje no puede exceder 10 caracteres']
+        
     },
 
     startDate: {
