@@ -6,7 +6,7 @@ import DiplomasSection from './components/DiplomasSection';
 import useDataEvaluations from './hooks/useDataEvaluations';
 import useDataProjectScores from './hooks/useDataProjectScores';
 import ProjectInfo from './components/ProjectInfo';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const Grades = () => {
   const { user } = useAuth();
