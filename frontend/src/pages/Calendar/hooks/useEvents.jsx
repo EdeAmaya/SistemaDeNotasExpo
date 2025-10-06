@@ -31,7 +31,9 @@ const useEvents = () => {
         url += `?${params.toString()}`;
       }
 
-      const response = await fetchWithCookies(url);
+      const response = await fetch(url, {
+        credentials: 'include'
+      });
       
       if (!response.ok) {
         throw new Error('Error al obtener eventos');
@@ -71,24 +73,28 @@ const useEvents = () => {
   // Crear nuevo evento
   const createEvent = async (eventData) => {
     try {
-      console.log('Creando evento:', eventData); // Debug
+      console.log('Creando evento:', eventData);
       
-      const response = await fetchWithCookies(EVENTS_API, {
+      const response = await fetch(EVENTS_API, {
         method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(eventData)
       });
 
-      console.log('Respuesta del servidor:', response.status); // Debug
+      console.log('Respuesta del servidor:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error del servidor:', errorData); // Debug
+        console.error('Error del servidor:', errorData);
         throw new Error(errorData.message || 'Error al crear evento');
       }
 
       const data = await response.json();
       toast.success('Evento creado exitosamente');
-      await fetchEvents(); // Recargar eventos
+      await fetchEvents();
       return { success: true, event: data.event };
     } catch (error) {
       console.error('Error al crear evento:', error);
