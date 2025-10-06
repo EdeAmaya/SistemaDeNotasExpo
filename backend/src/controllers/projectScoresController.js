@@ -147,6 +147,95 @@ projectScoreController.getProjectScoreByProjectId = async (req, res) => {
 };
 
 // ===============================
+// GET - Obtener proyectos con puntajes por sección
+// ===============================
+projectScoreController.getProjectScoresBySection = async (req, res) => {
+  try {
+    const { sectionId } = req.params;
+
+    const projects = await Project.find({ idSection: sectionId })
+      .populate("idLevel")
+      .populate("idSection")
+      .populate("selectedSpecialty")
+      .populate("assignedStudents")
+      .sort({ teamNumber: 1 });
+
+    if (!projects || projects.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No projects found for this section"
+      });
+    }
+
+    const projectsWithScores = await Promise.all(
+      projects.map(async (project) => {
+        const score = await ProjectScore.findOne({ projectId: project._id });
+
+        const internas = score?.evaluacionesInternas || [];
+        const externas = score?.evaluacionesExternas || [];
+
+        const notasInternas = internas.map(ev => ev.notaFinal || 0);
+        const notasExternas = externas.map(ev => ev.notaFinal || 0);
+
+        const promedioInterno = notasInternas.length
+          ? notasInternas.reduce((a, b) => a + b, 0) / notasInternas.length
+          : 0;
+
+        const promedioExterno = notasExternas.length
+          ? notasExternas.reduce((a, b) => a + b, 0) / notasExternas.length
+          : 0;
+
+        const totalNotas = [...notasInternas, ...notasExternas];
+        const promedioTotal = totalNotas.length
+          ? totalNotas.reduce((a, b) => a + b, 0) / totalNotas.length
+          : 0;
+
+        return {
+          _id: project._id,
+          projectId: project.projectId,
+          projectName: project.projectName,
+          teamNumber: project.teamNumber,
+          googleSitesLink: project.googleSitesLink,
+          level: project.idLevel,
+          section: project.idSection,
+          specialty: project.selectedSpecialty,
+          students: project.assignedStudents,
+          status: project.status,
+          scores: {
+            promedioInterno: parseFloat(promedioInterno.toFixed(2)),
+            promedioExterno: parseFloat(promedioExterno.toFixed(2)),
+            promedioTotal: parseFloat(promedioTotal.toFixed(2)),
+            totalEvaluaciones: totalNotas.length,
+            evaluacionesInternas: internas.length,
+            evaluacionesExternas: externas.length,
+            notaFinalGlobal: score?.notaFinalGlobal || 0
+          }
+        };
+      })
+    );
+
+    projectsWithScores.sort((a, b) => b.scores.promedioTotal - a.scores.promedioTotal);
+
+    res.status(200).json({
+      success: true,
+      data: projectsWithScores,
+      meta: {
+        total: projectsWithScores.length,
+        section: projects[0]?.idSection?.sectionName || "N/A",
+        level: projects[0]?.idLevel?.levelName || "N/A"
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching project scores by section",
+      error: error.message,
+      stack: error.stack
+    });
+  }
+};
+
+// ===============================
 // POST - Crear puntaje
 // ===============================
 projectScoreController.createProjectScore = async (req, res) => {

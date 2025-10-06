@@ -39,9 +39,14 @@ const eventSchema = new Schema({
     },
 
     createdBy: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: [true, 'El usuario creador es requerido']
+        type: Schema.Types.Mixed,
+        required: [true, 'El usuario creador es requerido'],
+        validate: {
+            validator: function(value) {
+                return value === 'Admin' || (typeof value === 'object' && value !== null);
+            },
+            message: 'El creador debe ser un ID de usuario válido o "Admin"'
+        }
     }
 }, {
     timestamps: true
