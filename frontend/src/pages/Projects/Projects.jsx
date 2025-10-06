@@ -102,7 +102,7 @@ const Projects = () => {
               </div>
             </div>
 
-            {/* Stats - Responsive */}
+            {/* Stats - Responsive
             <div className="grid grid-cols-3 lg:flex lg:items-center gap-2 sm:gap-3 lg:gap-4">
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
                 <div className="flex items-center justify-center mb-1">
@@ -125,7 +125,7 @@ const Projects = () => {
                 <div className="text-lg sm:text-2xl font-black text-center">{stats.withLink}</div>
                 <div className="text-[10px] sm:text-xs font-semibold opacity-90 text-center">Con Sitio</div>
               </div>
-            </div>
+            </div>*/}
           </div>
         </div>
       </div>

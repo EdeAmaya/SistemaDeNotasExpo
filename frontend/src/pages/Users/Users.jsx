@@ -82,7 +82,7 @@ const Users = () => {
               </div>
             </div>
 
-            {/* Stats */}
+            {/* Stats
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-3">
               <div className="bg-orange-500 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
                 <div className="flex items-center justify-center mb-1">
@@ -105,7 +105,7 @@ const Users = () => {
                 <div className="text-lg sm:text-2xl font-black text-center">{stats.estudiantes}</div>
                 <div className="text-[10px] sm:text-xs font-semibold opacity-90 text-center">Estudiantes</div>
               </div>
-            </div>
+            </div>*/}
           </div>
         </div>
       </div>

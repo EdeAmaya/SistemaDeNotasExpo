@@ -157,7 +157,7 @@ const Grades = () => {
               </div>
             </div>
 
-            {/* Stats desktop - Solo visible para roles que pueden ver estadísticas */}
+            {/* Stats desktop - Solo visible para roles que pueden ver estadísticas
             {user?.role !== 'Evaluador' && (
               <div className="hidden lg:flex items-center gap-4">
                 <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 text-white px-4 py-3 rounded-xl shadow-lg text-center">
@@ -176,7 +176,7 @@ const Grades = () => {
                   <div className="text-xs font-semibold opacity-90">Evaluaciones</div>
                 </div>
               </div>
-            )}
+            )}*/}
           </div>
         </div>
       </div>

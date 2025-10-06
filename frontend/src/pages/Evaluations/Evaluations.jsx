@@ -136,7 +136,7 @@ const Evaluations = () => {
               </div>
             </div>
 
-            {/* Stats desktop */}
+            {/* Stats desktop 
             <div className="hidden lg:flex items-center gap-4">
               <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white px-4 py-3 rounded-xl shadow-lg">
                 <div className="flex items-center justify-center mb-1">
@@ -159,7 +159,7 @@ const Evaluations = () => {
                 <div className="text-2xl font-black text-center">{stats.withSpecialty}</div>
                 <div className="text-xs font-semibold opacity-90 text-center">Especialidad</div>
               </div>
-            </div>
+            </div>*/}
           </div>
         </div>
       </div>
@@ -207,7 +207,7 @@ const Evaluations = () => {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-8 py-8">
         
-        {/* Stats móvil */}
+        {/* Stats móvil 
         <div className="lg:hidden grid grid-cols-3 gap-3 mb-6">
           <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-3 rounded-xl shadow-lg text-center">
             <ClipboardList className="w-5 h-5 mx-auto mb-1" />
@@ -224,7 +224,7 @@ const Evaluations = () => {
             <div className="text-xl font-black">{stats.withSpecialty}</div>
             <div className="text-xs font-semibold opacity-90">Especial.</div>
           </div>
-        </div>
+        </div>*/}
 
         {/* Mensaje de error */}
         {error && (

@@ -108,7 +108,7 @@ const Students = () => {
               </div>
             </div>
 
-            <div className="hidden lg:flex items-center gap-4">
+            {/*<div className="hidden lg:flex items-center gap-4">
               <div className="bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg">
                 <div className="flex items-center justify-center mb-1">
                   <Users className="w-5 h-5" />
@@ -130,7 +130,7 @@ const Students = () => {
                 <div className="text-2xl font-black text-center">{stats.withSpecialty}</div>
                 <div className="text-xs font-semibold opacity-90 text-center">Especialidad</div>
               </div>
-            </div>
+            </div>*/}
           </div>
         </div>
       </div>

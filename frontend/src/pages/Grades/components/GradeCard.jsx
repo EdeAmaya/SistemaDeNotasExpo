@@ -62,7 +62,7 @@ const GradeCard = ({ project, viewMode = 'list', onViewDetails }) => {
                 </h3>
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r ${getScoreGradient(promedioTotal)} text-white rounded-lg text-xs font-bold shadow-sm`}>
                   <Award className="w-3 h-3" />
-                  <span>Promedio: {promedioTotal.toFixed(2)}</span>
+                  <span>Promedio: {promedioTotal.toFixed(5)}</span>
                 </span>
               </div>
 
@@ -85,15 +85,15 @@ const GradeCard = ({ project, viewMode = 'list', onViewDetails }) => {
               <div className="mt-3 flex gap-4 flex-wrap text-sm">
                 <div className="flex items-center gap-1.5 bg-blue-100 text-blue-800 px-3 py-1 rounded-lg font-semibold shadow-sm">
                   <Users className="w-4 h-4" />
-                  <span>Interno: {promedioInterno.toFixed(2)}</span>
+                  <span>Interno: {promedioInterno.toFixed(3)}</span>
                 </div>
                 <div className="flex items-center gap-1.5 bg-purple-100 text-purple-800 px-3 py-1 rounded-lg font-semibold shadow-sm">
                   <UserCheck className="w-4 h-4" />
-                  <span>Externo: {promedioExterno.toFixed(2)}</span>
+                  <span>Externo: {promedioExterno.toFixed(3)}</span>
                 </div>
                 <div className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-black shadow-sm text-white bg-gradient-to-r ${getScoreGradient(promedioTotal)}`}>
                   <Award className="w-4 h-4" />
-                  <span>Total: {promedioTotal.toFixed(2)}</span>
+                  <span>Total: {promedioTotal.toFixed(3)}</span>
                 </div>
               </div>
             </div>
@@ -193,19 +193,19 @@ const GradeCard = ({ project, viewMode = 'list', onViewDetails }) => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg px-2 py-2 text-center">
               <div className="text-[10px] font-semibold text-blue-600 mb-1">Interno</div>
               <div className="text-lg font-bold text-blue-800">
-                {promedioInterno.toFixed(2)}
+                {promedioInterno.toFixed(5)}
               </div>
             </div>
             <div className="bg-purple-50 border border-purple-200 rounded-lg px-2 py-2 text-center">
               <div className="text-[10px] font-semibold text-purple-600 mb-1">Externo</div>
               <div className="text-lg font-bold text-purple-800">
-                {promedioExterno.toFixed(2)}
+                {promedioExterno.toFixed(5)}
               </div>
             </div>
             <div className={`bg-gradient-to-br ${getScoreGradient(promedioTotal)} rounded-lg px-2 py-2 text-center shadow-md`}>
               <div className="text-[10px] font-semibold text-white mb-1">Total</div>
               <div className="text-lg font-black text-white">
-                {promedioTotal.toFixed(2)}
+                {promedioTotal.toFixed(5)}
               </div>
             </div>
           </div>
