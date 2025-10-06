@@ -1,40 +1,36 @@
 const projectController = {};
 
 import projectModel from "../models/Project.js";
+import studentModel from "../models/Student.js";
 import ActivityLogger from "../utils/activityLogger.js";
 
 //Select - Con filtrado según rol del usuario
 projectController.getProjects = async (req, res) => {
   try {
-    const user = req.user; // Usuario autenticado desde el middleware
+    const user = req.user;
     
     let query = {};
 
-    // Si es Docente o Evaluador, solo puede ver los proyectos de su nivel, sección y especialidad
     if (user.role === 'Docente' || user.role === 'Evaluador') {
       query = {
         idLevel: user.idLevel
       };
 
-      // Si el usuario tiene especialidad, también filtrar por ella
       if (user.idSpecialty) {
         query.selectedSpecialty = user.idSpecialty;
       }
 
-      // Si el usuario tiene sección, también filtrar por ella
       if (user.idSection) {
         query.idSection = user.idSection;
       }
     }
 
-    // Si es Estudiante, mostrar solo su proyecto asignado
     if (user.role === 'Estudiante') {
       query = {
         assignedStudents: user._id
       };
     }
 
-    // Admin ve todos los proyectos
     const projects = await projectModel.find(query)
       .populate("idLevel")
       .populate("idSection")
@@ -99,7 +95,14 @@ projectController.insertProject = async (req,res) => {
 
     const savedProject = await newProject.save();
     
-    // ← NUEVO: LOG DE ACTIVIDAD
+    // Actualizar el projectId en los estudiantes asignados
+    if (assignedStudents && assignedStudents.length > 0) {
+      await studentModel.updateMany(
+        { _id: { $in: assignedStudents } },
+        { $set: { projectId: savedProject._id } }
+      );
+    }
+    
     await ActivityLogger.log(
       req.user._id,
       'CREATE_PROJECT',
@@ -153,7 +156,14 @@ projectController.deleteProject = async(req,res) => {
       });
     }
     
-    // ← NUEVO: LOG DE ACTIVIDAD
+    // Remover la referencia del proyecto en los estudiantes asignados
+    if (deletedProject.assignedStudents && deletedProject.assignedStudents.length > 0) {
+      await studentModel.updateMany(
+        { _id: { $in: deletedProject.assignedStudents } },
+        { $set: { projectId: null } }
+      );
+    }
+    
     await ActivityLogger.log(
       req.user._id,
       'DELETE_PROJECT',
@@ -220,6 +230,32 @@ projectController.updateProject = async(req,res) => {
       });
     }
 
+    // Obtener estudiantes anteriores
+    const previousStudents = existingProject.assignedStudents.map(id => id.toString());
+    const newStudents = (assignedStudents || []).map(id => id.toString());
+
+    // Estudiantes que fueron removidos del proyecto
+    const removedStudents = previousStudents.filter(id => !newStudents.includes(id));
+    
+    // Estudiantes que fueron agregados al proyecto
+    const addedStudents = newStudents.filter(id => !previousStudents.includes(id));
+
+    // Remover projectId de estudiantes que ya no están en el proyecto
+    if (removedStudents.length > 0) {
+      await studentModel.updateMany(
+        { _id: { $in: removedStudents } },
+        { $set: { projectId: null } }
+      );
+    }
+
+    // Agregar projectId a los nuevos estudiantes
+    if (addedStudents.length > 0) {
+      await studentModel.updateMany(
+        { _id: { $in: addedStudents } },
+        { $set: { projectId: req.params.id } }
+      );
+    }
+
     const updatedProject = await projectModel.findByIdAndUpdate(
       req.params.id,
       {
@@ -239,7 +275,6 @@ projectController.updateProject = async(req,res) => {
       }
     );
 
-    // ← NUEVO: LOG DE ACTIVIDAD
     await ActivityLogger.log(
       req.user._id,
       'UPDATE_PROJECT',
