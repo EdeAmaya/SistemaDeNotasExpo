@@ -31,9 +31,10 @@ const getSectionsForLevel = (levelName, allSections) => {
   }
   
   if (isBachilleratoLevel(levelName)) {
-    return allSections.filter(section => 
-      /^[1-9][A-Z]$/i.test(section.sectionName)
-    );
+    return allSections.filter(section => {
+      const name = section.sectionName;
+      return name === '1A' || name === '1B' || name === '2A' || name === '2B';
+    });
   }
   
   return [];
@@ -164,20 +165,23 @@ const TercerCicloDetail = ({ level, sections, onBack }) => {
 
 const BachilleratoDetail = ({ level, sections, specialties, onBack }) => {
   const levelSections = getSectionsForLevel(level.levelName, sections);
+  
+  const grupo1Sections = levelSections.filter(s => s.sectionName.startsWith('1'));
+  const grupo2Sections = levelSections.filter(s => s.sectionName.startsWith('2'));
 
-  const handleDownloadSpecialtySection = (specialty, section) => {
-    console.log(`Descargando diplomas para ${level.levelName} - ${specialty.specialtyName} - Sección ${section.sectionName}`);
-    alert(`Generando diplomas para:\n\nNivel: ${level.levelName}\nEspecialidad: ${specialty.specialtyName}\nSección: ${section.sectionName}\n\n¡La descarga comenzará en breve!`);
+  const handleDownloadSpecialtyGroup = (specialty, groupNumber, groupSections) => {
+    console.log(`Descargando diplomas para ${level.levelName} - ${specialty.specialtyName} - Grupo ${groupNumber}`);
+    alert(`Generando diplomas para:\n\nNivel: ${level.levelName}\nEspecialidad: ${specialty.specialtyName}\nGrupo: ${groupNumber}\nSecciones: ${groupSections.map(s => s.sectionName).join(', ')}\n\n¡La descarga comenzará en breve!`);
   };
 
   const handleDownloadSpecialty = (specialty) => {
     console.log(`Descargando todos los diplomas para ${level.levelName} - ${specialty.specialtyName}`);
-    alert(`Generando todos los diplomas para:\n\nNivel: ${level.levelName}\nEspecialidad: ${specialty.specialtyName}\nSecciones: ${levelSections.map(s => s.sectionName).join(', ')}\n\n¡La descarga comenzará en breve!`);
+    alert(`Generando todos los diplomas para:\n\nNivel: ${level.levelName}\nEspecialidad: ${specialty.specialtyName}\nTodos los grupos\n\n¡La descarga comenzará en breve!`);
   };
 
   const handleDownloadAll = () => {
     console.log(`Descargando todos los diplomas para ${level.levelName}`);
-    alert(`Generando todos los diplomas para:\n\nNivel: ${level.levelName}\nTodas las especialidades\nTodas las secciones\n\n¡La descarga comenzará en breve!`);
+    alert(`Generando todos los diplomas para:\n\nNivel: ${level.levelName}\nTodas las especialidades\nTodos los grupos\n\n¡La descarga comenzará en breve!`);
   };
 
   return (
@@ -198,7 +202,7 @@ const BachilleratoDetail = ({ level, sections, specialties, onBack }) => {
             </div>
             <div>
               <h2 className="text-2xl font-black text-gray-800">{level.levelName}</h2>
-              <p className="text-gray-600">Selecciona especialidad y sección para descargar diplomas</p>
+              <p className="text-gray-600">Selecciona especialidad y grupo para descargar diplomas</p>
             </div>
           </div>
           <button
@@ -242,30 +246,56 @@ const BachilleratoDetail = ({ level, sections, specialties, onBack }) => {
               </button>
             </div>
 
-            {/* Grid de secciones */}
+            {/* Grid de grupos */}
             <div className="p-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {levelSections.map((section) => (
-                  <div
-                    key={section._id}
-                    className="bg-gray-50 rounded-lg border-2 border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all duration-300 overflow-hidden"
-                  >
-                    <div className="bg-gradient-to-br from-blue-400 to-blue-500 p-4 text-center">
-                      <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 shadow-md">
-                        <span className="text-xl font-black text-blue-600">{section.sectionName}</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Grupo 1 */}
+                {grupo1Sections.length > 0 && (
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200 hover:border-blue-400 hover:shadow-xl transition-all duration-300 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-center">
+                      <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                        <span className="text-4xl font-black text-blue-600">1</span>
                       </div>
+                      <h4 className="text-2xl font-black text-white mb-1">Grupo 1</h4>
+                      <p className="text-blue-100 text-sm font-semibold">
+                        Secciones: {grupo1Sections.map(s => s.sectionName).join(', ')}
+                      </p>
                     </div>
-                    <div className="p-3">
+                    <div className="p-6">
                       <button
-                        onClick={() => handleDownloadSpecialtySection(specialty, section)}
-                        className="w-full flex items-center justify-center gap-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-3 rounded-lg font-bold hover:from-blue-600 hover:to-blue-700 transition-all text-xs"
+                        onClick={() => handleDownloadSpecialtyGroup(specialty, 1, grupo1Sections)}
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 px-6 rounded-xl font-black text-lg hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
                       >
-                        <Download className="w-3 h-3" />
-                        Descargar
+                        <Download className="w-6 h-6" />
+                        Descargar Grupo 1
                       </button>
                     </div>
                   </div>
-                ))}
+                )}
+
+                {/* Grupo 2 */}
+                {grupo2Sections.length > 0 && (
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-green-200 hover:border-green-400 hover:shadow-xl transition-all duration-300 overflow-hidden">
+                    <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-center">
+                      <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                        <span className="text-4xl font-black text-green-600">2</span>
+                      </div>
+                      <h4 className="text-2xl font-black text-white mb-1">Grupo 2</h4>
+                      <p className="text-green-100 text-sm font-semibold">
+                        Secciones: {grupo2Sections.map(s => s.sectionName).join(', ')}
+                      </p>
+                    </div>
+                    <div className="p-6">
+                      <button
+                        onClick={() => handleDownloadSpecialtyGroup(specialty, 2, grupo2Sections)}
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-xl font-black text-lg hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+                      >
+                        <Download className="w-6 h-6" />
+                        Descargar Grupo 2
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -390,8 +420,8 @@ const DiplomasSection = () => {
             <h4 className="font-bold text-gray-800 mb-2">Información sobre diplomas</h4>
             <ul className="space-y-1 text-sm text-gray-600">
               <li>• <strong>Tercer Ciclo:</strong> Haz clic en el nivel para ver las secciones A-F disponibles</li>
-              <li>• <strong>Bachillerato:</strong> Haz clic en el nivel para ver especialidades y secciones (1A, 1B, 2A, 2B, etc.)</li>
-              <li>• Puedes descargar diplomas por sección individual o todas a la vez</li>
+              <li>• <strong>Bachillerato:</strong> Haz clic en el nivel para ver especialidades con Grupo 1 (1A, 1B) y Grupo 2 (2A, 2B)</li>
+              <li>• Puedes descargar diplomas por grupo, por especialidad completa o todas a la vez</li>
               <li>• Los archivos se descargarán en formato PDF</li>
             </ul>
           </div>
