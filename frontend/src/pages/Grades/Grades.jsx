@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CheckSquare, Plus, BookOpen, ClipboardList, Award, Layers, Info, FileText, BookOpenCheck } from 'lucide-react';
 import ListGrades from './components/ListGrades';
 import RegisterGrade from './components/RegisterGrade';
+import DiplomasSection from './components/DiplomasSection'; 
 import useDataEvaluations from './hooks/useDataEvaluations';
 import useDataProjectScores from './hooks/useDataProjectScores';
 import ProjectInfo from './components/ProjectInfo';
@@ -11,16 +12,14 @@ const Grades = () => {
     document.title = "Asignación de Notas | STC";
   }, []);
 
-  const [selectedProjectId, setSelectedProjectId] = useState(null); // Proyecto seleccionado para ver detalles
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
 
-  // Hook para obtener los project scores (para la lista)
   const { 
     projectScores, 
     loading: loadingScores, 
     getProjectScores 
   } = useDataProjectScores();
 
-  // Hook para las evaluaciones (para el registro/edición)
   const {
     evaluations,
     loading: loadingEvaluations,
@@ -38,7 +37,6 @@ const Grades = () => {
     rubricId: null
   });
 
-  // Cargar datos al montar el componente
   useEffect(() => {
     getProjectScores();
     getEvaluations();
@@ -66,7 +64,6 @@ const Grades = () => {
       }
       clearForm();
       setActiveTab('list');
-      // Recargar ambos datos
       await getEvaluations();
       await getProjectScores();
     } catch (error) {
@@ -79,7 +76,6 @@ const Grades = () => {
     setActiveTab('list');
   };
 
-  // Calcular estadísticas desde projectScores
   const stats = {
     total: projectScores.length,
     avgScore: projectScores.length > 0 
@@ -88,7 +84,6 @@ const Grades = () => {
     totalEvaluations: projectScores.reduce((acc, p) => acc + (p.totalEvaluaciones || 0), 0)
   };
 
-  // Determinar qué loading mostrar según la pestaña activa
   const currentLoading = activeTab === 'list' ? loadingScores : loadingEvaluations;
 
   const handleViewProjectDetails = (projectId) => {
@@ -146,10 +141,10 @@ const Grades = () => {
       {/* Tabs */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-8">
-          <div className="flex gap-1">
+          <div className="flex gap-1 overflow-x-auto">
             <button
               onClick={() => handleTabChange('list')}
-              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
+              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 whitespace-nowrap ${
                 activeTab === 'list' ? 'text-yellow-500' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -167,7 +162,7 @@ const Grades = () => {
             
             <button
               onClick={() => handleTabChange('assign')}
-              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
+              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 whitespace-nowrap ${
                 activeTab === 'assign' ? 'text-yellow-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -176,6 +171,21 @@ const Grades = () => {
                 <span>{formData.id ? 'Editar Evaluación' : 'Nueva Evaluación'}</span>
               </div>
               {activeTab === 'assign' && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-t-full"></div>
+              )}
+            </button>
+
+            <button
+              onClick={() => handleTabChange('diplomas')}
+              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 whitespace-nowrap ${
+                activeTab === 'diplomas' ? 'text-yellow-600' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                <span>Diplomas</span>
+              </div>
+              {activeTab === 'diplomas' && (
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-t-full"></div>
               )}
             </button>
@@ -243,6 +253,8 @@ const Grades = () => {
               projectId={selectedProjectId}
               onBack={handleBackToList}
             />
+          ) : activeTab === 'diplomas' ? (
+            <DiplomasSection />
           ) : (
             <div className="p-8">
               <RegisterGrade
@@ -257,45 +269,47 @@ const Grades = () => {
         </div>
 
         {/* Footer informativo */}
-        <div className="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-5 rounded-r-xl">
-          <div className="flex items-start gap-3">
-            <Info className="w-6 h-6 text-yellow-600 flex-shrink-0" />
-            <div className="flex-1">
-              <h4 className="font-bold text-gray-800 mb-2">Sistema de Evaluación de Proyectos</h4>
-              <div className="grid md:grid-cols-2 gap-3 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <ClipboardList className="w-4 h-4 text-yellow-600" />
-                  <span><span className="font-semibold text-gray-800">Rúbricas:</span> Instrumentos de evaluación con criterios específicos</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-yellow-600" />
-                  <span><span className="font-semibold text-gray-800">Criterios:</span> Aspectos a evaluar con puntajes definidos</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Award className="w-4 h-4 text-yellow-600" />
-                  <span><span className="font-semibold text-gray-800">Evaluaciones:</span> Internas (docentes) y externas (jurados)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckSquare className="w-4 h-4 text-yellow-600" />
-                  <span><span className="font-semibold text-gray-800">Promedios:</span> Cálculo automático por tipo y total</span>
-                </div>
-              </div>
-              
-              {/* Información adicional */}
-              <div className="mt-4 pt-4 border-t border-yellow-200">
-                <h5 className="font-semibold text-gray-800 mb-2 text-sm">Cálculo de notas:</h5>
-                <div className="grid md:grid-cols-2 gap-2 text-xs text-gray-600">
-                  <div className="bg-yellow-100 px-3 py-2 rounded-lg">
-                    <span className="font-bold text-yellow-700">Escala Estimativa:</span> Nota = Σ (Puntaje × Peso/100)
+        {activeTab !== 'diplomas' && (
+          <div className="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-5 rounded-r-xl">
+            <div className="flex items-start gap-3">
+              <Info className="w-6 h-6 text-yellow-600 flex-shrink-0" />
+              <div className="flex-1">
+                <h4 className="font-bold text-gray-800 mb-2">Sistema de Evaluación de Proyectos</h4>
+                <div className="grid md:grid-cols-2 gap-3 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <ClipboardList className="w-4 h-4 text-yellow-600" />
+                    <span><span className="font-semibold text-gray-800">Rúbricas:</span> Instrumentos de evaluación con criterios específicos</span>
                   </div>
-                  <div className="bg-yellow-100 px-3 py-2 rounded-lg">
-                    <span className="font-bold text-yellow-700">Rúbrica:</span> Nota = Σ (Puntajes obtenidos)
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-yellow-600" />
+                    <span><span className="font-semibold text-gray-800">Criterios:</span> Aspectos a evaluar con puntajes definidos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Award className="w-4 h-4 text-yellow-600" />
+                    <span><span className="font-semibold text-gray-800">Evaluaciones:</span> Internas (docentes) y externas (jurados)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckSquare className="w-4 h-4 text-yellow-600" />
+                    <span><span className="font-semibold text-gray-800">Promedios:</span> Cálculo automático por tipo y total</span>
+                  </div>
+                </div>
+                
+                {/* Información adicional */}
+                <div className="mt-4 pt-4 border-t border-yellow-200">
+                  <h5 className="font-semibold text-gray-800 mb-2 text-sm">Cálculo de notas:</h5>
+                  <div className="grid md:grid-cols-2 gap-2 text-xs text-gray-600">
+                    <div className="bg-yellow-100 px-3 py-2 rounded-lg">
+                      <span className="font-bold text-yellow-700">Escala Estimativa:</span> Nota = Σ (Puntaje × Peso/100)
+                    </div>
+                    <div className="bg-yellow-100 px-3 py-2 rounded-lg">
+                      <span className="font-bold text-yellow-700">Rúbrica:</span> Nota = Σ (Puntajes obtenidos)
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
