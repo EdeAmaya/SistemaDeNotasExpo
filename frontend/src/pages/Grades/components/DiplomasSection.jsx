@@ -98,7 +98,7 @@ const ProjectsListView = ({ section, level, onBack }) => {
     try {
       setDownloading(true);
 
-      const response = await fetch(`${API}/diplomas/section/${section._id}`, { credentials: 'include' }, {
+      const response = await fetch(`${API}/diplomas/section/${section._id}`, {
         method: 'GET',
         credentials: 'include'
       });
