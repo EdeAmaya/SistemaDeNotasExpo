@@ -11,7 +11,7 @@ const useSpecialties = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_URL}/specialties`);
+            const response = await fetch(`${API_URL}/specialties`, {credentials: 'include'});
             if (!response.ok) throw new Error('Error al obtener las especialidades');
             const data = await response.json();
             setSpecialties(data);

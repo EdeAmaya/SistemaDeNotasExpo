@@ -11,7 +11,7 @@ const useLevels = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/levels`);
+      const response = await fetch(`${API_URL}/levels`, {credentials: 'include'});
       if (!response.ok) throw new Error('Error al obtener los niveles');
       const data = await response.json();
       setLevels(data);

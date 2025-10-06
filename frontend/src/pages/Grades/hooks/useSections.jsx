@@ -11,7 +11,7 @@ const useSections = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_URL}/sections`);
+            const response = await fetch(`${API_URL}/sections`, {credentials: 'include'});
             if (!response.ok) throw new Error('Error al obtener las secciones');
             const data = await response.json();
             setSections(data);
