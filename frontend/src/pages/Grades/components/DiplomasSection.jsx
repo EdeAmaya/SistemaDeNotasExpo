@@ -3,7 +3,6 @@ import { Award, Download, GraduationCap, Users, BookOpen, ArrowLeft, FileText, T
 import useLevels from '../hooks/useLevels';
 import useSections from '../hooks/useSections';
 import useSpecialties from '../hooks/useSpecialties';
-import axios from 'axios';
 
 const API = "https://stc-instituto-tecnico-ricaldone.onrender.com/api";
 
@@ -52,11 +51,17 @@ const ProjectsListView = ({ section, level, onBack }) => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API}/project-scores/section/${section._id}`);
-        setProjects(response.data.data || []);
+        const response = await fetch(`${API}/project-scores/section/${section._id}`);
+        
+        if (!response.ok) {
+          throw new Error('Error al cargar los proyectos');
+        }
+        
+        const data = await response.json();
+        setProjects(data.data || []);
         setError(null);
       } catch (err) {
-        setError(err.response?.data?.message || 'Error al cargar los proyectos');
+        setError(err.message || 'Error al cargar los proyectos');
         setProjects([]);
       } finally {
         setLoading(false);
