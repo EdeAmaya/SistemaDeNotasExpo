@@ -44,7 +44,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
     const fetchRubrics = async () => {
       setLoadingRubrics(true);
       try {
-        const response = await fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/rubrics');
+        const response = await fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/rubrics', { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           setRubrics(data);
@@ -67,7 +67,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
       }
       setLoadingProjects(true);
       try {
-        const response = await fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/projects');
+        const response = await fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/projects', { credentials: 'include' });
         if (response.ok) {
           const allProjects = await response.json();
           const filteredProjects = allProjects.filter(project => {
