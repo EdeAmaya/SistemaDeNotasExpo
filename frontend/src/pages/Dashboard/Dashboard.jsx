@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Settings, X, Calendar, Save } from 'lucide-react';
 import useStages from '../../hooks/useStages';
 import useConnectedUsers from '../../hooks/useConnectedUsers';
 import useRecentActivities from '../../hooks/useRecentActivities';
 import usePresence from '../../hooks/usePresence';
+import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const currentUser = "Eduardo";
   
-  const { calculateProgress, loading: stagesLoading } = useStages();
+  const { stages, calculateProgress, fetchStages, loading: stagesLoading } = useStages();
+  const { fetchWithCookies, API } = useAuth();
   const currentProgress = calculateProgress();
   
   const { 
@@ -20,6 +24,10 @@ const Dashboard = () => {
   const { recentActivities, loading: activitiesLoading, formatTimeAgo: formatActivityTime } = useRecentActivities();
   
   usePresence();
+  
+  const [showStageModal, setShowStageModal] = useState(false);
+  const [selectedStage, setSelectedStage] = useState(null);
+  const [editingStage, setEditingStage] = useState(null);
   
   const getCurrentGreeting = () => {
     const hour = new Date().getHours();
@@ -63,6 +71,130 @@ const Dashboard = () => {
     }
   };
 
+  const handleOpenModal = () => {
+    setSelectedStage(null);
+    setEditingStage(null);
+    setShowStageModal(true);
+  };
+
+  const handleSelectStage = (stage) => {
+    setSelectedStage(stage);
+    setEditingStage({ ...stage });
+  };
+
+  const handleDateChange = (field, value) => {
+    setEditingStage(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveStage = async () => {
+    try {
+      // Validar que tengamos valores válidos
+      if (!editingStage.startDate || !editingStage.endDate) {
+        toast.error('Por favor selecciona ambas fechas.');
+        return;
+      }
+
+      // Extraer solo las fechas sin hora para comparación
+      // Si ya es formato YYYY-MM-DD, usarlo directamente; si tiene hora, extraerla
+      const startDateOnly = editingStage.startDate.includes('T') 
+        ? editingStage.startDate.split('T')[0] 
+        : editingStage.startDate;
+      const endDateOnly = editingStage.endDate.includes('T') 
+        ? editingStage.endDate.split('T')[0] 
+        : editingStage.endDate;
+      
+      const start = new Date(startDateOnly + 'T00:00:00');
+      const end = new Date(endDateOnly + 'T00:00:00');
+      
+      if (end <= start) {
+        toast.error('La fecha de fin debe ser posterior a la fecha de inicio.');
+        return;
+      }
+
+      const otherStages = stages.filter(s => s._id !== editingStage._id);
+      
+      for (const otherStage of otherStages) {
+        const otherStartOnly = otherStage.startDate.split('T')[0];
+        const otherEndOnly = otherStage.endDate.split('T')[0];
+        const otherStart = new Date(otherStartOnly + 'T00:00:00');
+        const otherEnd = new Date(otherEndOnly + 'T00:00:00');
+        
+        // Verificar si hay cualquier tipo de solapamiento
+        const hasOverlap = (
+          (start >= otherStart && start <= otherEnd) || 
+          (end >= otherStart && end <= otherEnd) ||
+          (start <= otherStart && end >= otherEnd) ||
+          (start.getTime() === otherStart.getTime()) ||
+          (end.getTime() === otherEnd.getTime())
+        );
+        
+        if (hasOverlap) {
+          toast.error(
+            `Las fechas se solapan con la etapa "${otherStage.name}". ` +
+            `"${otherStage.name}" va del ${formatDate(otherStage.startDate)} al ${formatDate(otherStage.endDate)}.`
+          );
+          return;
+        }
+      }
+
+      toast.loading('Actualizando etapa...', { id: 'saving-stage' });
+
+      // Enviar fechas en formato ISO simple (YYYY-MM-DD)
+      // Agregamos 'T00:00:00.000Z' para inicio y 'T23:59:59.999Z' para fin
+      const startDateISO = `${editingStage.startDate}T00:00:00.000Z`;
+      const endDateISO = `${editingStage.endDate}T23:59:59.999Z`;
+
+      console.log('📅 Fechas a enviar:', {
+        startDateInput: editingStage.startDate,
+        endDateInput: editingStage.endDate,
+        startDateISO,
+        endDateISO
+      });
+
+      const response = await fetchWithCookies(`${API}/stages/${editingStage._id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          startDate: startDateISO,
+          endDate: endDateISO,
+          name: editingStage.name,
+          percentage: editingStage.percentage,
+          order: editingStage.order,
+          isActive: editingStage.isActive,
+          description: editingStage.description
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al actualizar etapa');
+      }
+      
+      await fetchStages();
+      setShowStageModal(false);
+      setSelectedStage(null);
+      setEditingStage(null);
+      toast.success('Etapa actualizada correctamente', { id: 'saving-stage' });
+    } catch (error) {
+      console.error('Error actualizando etapa:', error);
+      toast.error(error.message || 'Error al actualizar la etapa', { id: 'saving-stage' });
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric'
+    });
+  };
+
+  const getDateValue = (dateString) => {
+    // Extraer solo la fecha sin conversión de zona horaria
+    const dateOnly = dateString.split('T')[0];
+    return dateOnly;
+  };
+
   const actions = [
     {
       id: 1,
@@ -103,7 +235,6 @@ const Dashboard = () => {
     <div className="h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-y-auto">
       <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl mx-auto">
         
-        {/* Header Section - Responsive */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-1">
@@ -123,8 +254,18 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Current Stage Section - Responsive */}
-        <div className="mb-6 sm:mb-8 bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
+        <div className="mb-6 sm:mb-8 bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 relative">
+          <button
+            onClick={handleOpenModal}
+            className="absolute top-4 right-4 p-2 rounded-lg hover:bg-slate-100 transition-colors group"
+            title="Configurar fechas de etapas"
+          >
+            <Settings 
+              size={20} 
+              className="text-slate-400 group-hover:text-blue-600 group-hover:rotate-90 transition-all duration-300"
+            />
+          </button>
+
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="flex-1">
               <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-2">
@@ -143,7 +284,6 @@ const Dashboard = () => {
               </div>
             </div>
             
-            {/* Circular Progress - Responsive */}
             <div className="flex justify-center lg:justify-end">
               <div className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48">
                 <svg className="transform -rotate-90" width="100%" height="100%" viewBox="0 0 192 192">
@@ -178,10 +318,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Main Content Grid - Responsive */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           
-          {/* Description Section - Responsive */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
               Acerca del Proyecto
@@ -194,7 +332,6 @@ const Dashboard = () => {
             </button>
           </div>
 
-          {/* Usuarios Conectados - Responsive */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
               Usuarios Activos
@@ -280,10 +417,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Second Row Grid - Responsive */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           
-          {/* Actividades Recientes - Responsive */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
               Actividad Reciente
@@ -334,7 +469,6 @@ const Dashboard = () => {
             )}
           </div>
 
-          {/* Quick Stats - Responsive */}
           <div className="space-y-3 sm:space-y-4">
             <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-sm p-4 sm:p-6 text-white">
               <div className="flex items-center justify-between mb-2">
@@ -358,7 +492,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Actions Section - Responsive */}
         <div>
           <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
             Acciones Rápidas
@@ -389,6 +522,164 @@ const Dashboard = () => {
         </div>
 
       </div>
+
+      {showStageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+              <div className="flex items-center space-x-3">
+                <Calendar className="text-blue-600" size={24} />
+                <h2 className="text-2xl font-bold text-slate-800">
+                  {selectedStage ? 'Editar Fechas de Etapa' : 'Seleccionar Etapa'}
+                </h2>
+              </div>
+              <button
+                onClick={() => {
+                  setShowStageModal(false);
+                  setSelectedStage(null);
+                  setEditingStage(null);
+                }}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X size={24} className="text-slate-400" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+              {!selectedStage ? (
+                <div className="space-y-3">
+                  <p className="text-slate-600 mb-4">
+                    Selecciona la etapa que deseas modificar:
+                  </p>
+                  {stages.map((stage) => (
+                    <button
+                      key={stage._id}
+                      onClick={() => handleSelectStage(stage)}
+                      className="w-full bg-slate-50 hover:bg-blue-50 rounded-lg p-4 border border-slate-200 hover:border-blue-300 transition-all text-left"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <h3 className="font-semibold text-slate-800 text-lg">
+                            {stage.name}
+                          </h3>
+                          <span className="text-sm text-slate-500">
+                            Progreso: {stage.percentage}
+                          </span>
+                        </div>
+                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                          Orden: {stage.order}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm text-slate-600">
+                        <span>📅 Inicio: {formatDate(stage.startDate)}</span>
+                        <span>📅 Fin: {formatDate(stage.endDate)}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <button
+                    onClick={() => {
+                      setSelectedStage(null);
+                      setEditingStage(null);
+                    }}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium mb-4"
+                  >
+                    ← Volver a selección de etapas
+                  </button>
+
+                  <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="font-semibold text-slate-800 text-xl">
+                          {editingStage.name}
+                        </h3>
+                        <span className="text-sm text-slate-500">
+                          Progreso: {editingStage.percentage}
+                        </span>
+                      </div>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                        Orden: {editingStage.order}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Fecha de Inicio
+                        </label>
+                        <input
+                          type="date"
+                          value={getDateValue(editingStage.startDate)}
+                          onChange={(e) => handleDateChange('startDate', e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">
+                          Actual: {formatDate(editingStage.startDate)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Fecha de Fin
+                        </label>
+                        <input
+                          type="date"
+                          value={getDateValue(editingStage.endDate)}
+                          onChange={(e) => handleDateChange('endDate', e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">
+                          Actual: {formatDate(editingStage.endDate)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {new Date(editingStage.endDate.split('T')[0]) <= new Date(editingStage.startDate.split('T')[0]) && (
+                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                        ⚠️ La fecha de fin debe ser posterior (al menos un día después) a la fecha de inicio
+                      </div>
+                    )}
+
+                    {editingStage.description && (
+                      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          <span className="font-medium">Descripción:</span> {editingStage.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 p-6 border-t border-slate-200 bg-slate-50">
+              <button
+                onClick={() => {
+                  setShowStageModal(false);
+                  setSelectedStage(null);
+                  setEditingStage(null);
+                }}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              {selectedStage && (
+                <button
+                  onClick={handleSaveStage}
+                  disabled={new Date(editingStage.endDate.split('T')[0]) <= new Date(editingStage.startDate.split('T')[0])}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save size={18} />
+                  <span>Guardar Cambios</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
