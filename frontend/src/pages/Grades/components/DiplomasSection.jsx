@@ -1,5 +1,5 @@
-import React from 'react';
-import { Award, Download, GraduationCap, Users, BookOpen } from 'lucide-react';
+import React, { useState } from 'react';
+import { Award, Download, GraduationCap, Users, BookOpen, ArrowLeft, FileText } from 'lucide-react';
 import useLevels from '../hooks/useLevels';
 import useSections from '../hooks/useSections';
 import useSpecialties from '../hooks/useSpecialties';
@@ -39,31 +39,15 @@ const getSectionsForLevel = (levelName, allSections) => {
   return [];
 };
 
-const LevelCard = ({ level, sections, specialties }) => {
+const LevelCard = ({ level, sections, specialties, onSelectLevel }) => {
   const levelSections = getSectionsForLevel(level.levelName, sections);
   const isBachillerato = isBachilleratoLevel(level.levelName);
 
-  const handleDownloadDiplomas = () => {
-    const downloadData = {
-      level: level.levelName,
-      levelId: level._id,
-      sections: levelSections.map(s => ({
-        id: s._id,
-        name: s.sectionName
-      })),
-      specialties: isBachillerato ? specialties.map(sp => ({
-        id: sp._id,
-        name: sp.specialtyName
-      })) : []
-    };
-
-    console.log('Descargando diplomas para:', downloadData);
-    
-    alert(`Generando diplomas para:\n\nNivel: ${level.levelName}\nSecciones: ${levelSections.map(s => s.sectionName).join(', ')}\n\n¡La descarga comenzará en breve!`);
-  };
-
   return (
-    <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:shadow-xl transition-all duration-300 overflow-hidden">
+    <div 
+      onClick={() => onSelectLevel(level)}
+      className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:shadow-xl hover:border-yellow-400 transition-all duration-300 overflow-hidden cursor-pointer transform hover:scale-105"
+    >
       {/* Header de la card */}
       <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-6">
         <div className="flex items-center gap-3">
@@ -84,7 +68,7 @@ const LevelCard = ({ level, sections, specialties }) => {
       {/* Body de la card */}
       <div className="p-6">
         {/* Información resumida */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-4">
           <div className="flex items-center gap-2 text-gray-600">
             <Users className="w-5 h-5 text-yellow-500" />
             <span className="text-sm">
@@ -100,27 +84,213 @@ const LevelCard = ({ level, sections, specialties }) => {
             </div>
           )}
         </div>
-
-        {/* Botón de descarga */}
-        <button
-          onClick={handleDownloadDiplomas}
-          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-white transition-all duration-300 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-        >
-          <Download className="w-5 h-5" />
-          Descargar Diplomas
-        </button>
       </div>
     </div>
   );
 };
 
-// Componente principal de Diplomas
+const TercerCicloDetail = ({ level, sections, onBack }) => {
+  const levelSections = getSectionsForLevel(level.levelName, sections);
+
+  const handleDownloadSection = (section) => {
+    console.log(`Descargando diplomas para ${level.levelName} - Sección ${section.sectionName}`);
+    alert(`Generando diplomas para:\n\nNivel: ${level.levelName}\nSección: ${section.sectionName}\n\n¡La descarga comenzará en breve!`);
+  };
+
+  const handleDownloadAll = () => {
+    console.log(`Descargando todos los diplomas para ${level.levelName}`);
+    alert(`Generando todos los diplomas para:\n\nNivel: ${level.levelName}\nSecciones: ${levelSections.map(s => s.sectionName).join(', ')}\n\n¡La descarga comenzará en breve!`);
+  };
+
+  return (
+    <div className="p-8">
+      {/* Header con botón de regreso */}
+      <div className="mb-8">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-4 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Volver a niveles
+        </button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-4 rounded-xl shadow-lg">
+              <GraduationCap className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-gray-800">{level.levelName}</h2>
+              <p className="text-gray-600">Selecciona una sección para descargar diplomas</p>
+            </div>
+          </div>
+          <button
+            onClick={handleDownloadAll}
+            className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-lg font-bold hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all"
+          >
+            <Download className="w-5 h-5" />
+            Descargar Todas
+          </button>
+        </div>
+      </div>
+
+      {/* Grid de secciones */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {levelSections.map((section) => (
+          <div
+            key={section._id}
+            className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:border-yellow-400 hover:shadow-xl transition-all duration-300 overflow-hidden"
+          >
+            <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 p-6 text-center">
+              <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <span className="text-3xl font-black text-yellow-600">{section.sectionName}</span>
+              </div>
+              <h3 className="text-lg font-black text-white">Sección {section.sectionName}</h3>
+            </div>
+            <div className="p-4">
+              <button
+                onClick={() => handleDownloadSection(section)}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-2 px-4 rounded-lg font-bold hover:from-yellow-600 hover:to-yellow-700 transition-all text-sm"
+              >
+                <Download className="w-4 h-4" />
+                Descargar
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const BachilleratoDetail = ({ level, sections, specialties, onBack }) => {
+  const levelSections = getSectionsForLevel(level.levelName, sections);
+
+  const handleDownloadSpecialtySection = (specialty, section) => {
+    console.log(`Descargando diplomas para ${level.levelName} - ${specialty.specialtyName} - Sección ${section.sectionName}`);
+    alert(`Generando diplomas para:\n\nNivel: ${level.levelName}\nEspecialidad: ${specialty.specialtyName}\nSección: ${section.sectionName}\n\n¡La descarga comenzará en breve!`);
+  };
+
+  const handleDownloadSpecialty = (specialty) => {
+    console.log(`Descargando todos los diplomas para ${level.levelName} - ${specialty.specialtyName}`);
+    alert(`Generando todos los diplomas para:\n\nNivel: ${level.levelName}\nEspecialidad: ${specialty.specialtyName}\nSecciones: ${levelSections.map(s => s.sectionName).join(', ')}\n\n¡La descarga comenzará en breve!`);
+  };
+
+  const handleDownloadAll = () => {
+    console.log(`Descargando todos los diplomas para ${level.levelName}`);
+    alert(`Generando todos los diplomas para:\n\nNivel: ${level.levelName}\nTodas las especialidades\nTodas las secciones\n\n¡La descarga comenzará en breve!`);
+  };
+
+  return (
+    <div className="p-8">
+      {/* Header con botón de regreso */}
+      <div className="mb-8">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-4 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Volver a niveles
+        </button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-4 rounded-xl shadow-lg">
+              <GraduationCap className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-gray-800">{level.levelName}</h2>
+              <p className="text-gray-600">Selecciona especialidad y sección para descargar diplomas</p>
+            </div>
+          </div>
+          <button
+            onClick={handleDownloadAll}
+            className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-lg font-bold hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all"
+          >
+            <Download className="w-5 h-5" />
+            Descargar Todas
+          </button>
+        </div>
+      </div>
+
+      {/* Especialidades con sus secciones */}
+      <div className="space-y-6">
+        {specialties.map((specialty) => (
+          <div
+            key={specialty._id}
+            className="bg-white rounded-xl shadow-lg border-2 border-gray-200 overflow-hidden"
+          >
+            {/* Header de especialidad */}
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-white p-3 rounded-lg shadow-md">
+                  <BookOpen className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-white">{specialty.specialtyName}</h3>
+                  {specialty.letterSpecialty && (
+                    <span className="text-sm font-semibold text-blue-100">
+                      Código: {specialty.letterSpecialty}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => handleDownloadSpecialty(specialty)}
+                className="flex items-center gap-2 bg-white text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-50 transition-all shadow-lg"
+              >
+                <Download className="w-4 h-4" />
+                Descargar Especialidad
+              </button>
+            </div>
+
+            {/* Grid de secciones */}
+            <div className="p-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {levelSections.map((section) => (
+                  <div
+                    key={section._id}
+                    className="bg-gray-50 rounded-lg border-2 border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all duration-300 overflow-hidden"
+                  >
+                    <div className="bg-gradient-to-br from-blue-400 to-blue-500 p-4 text-center">
+                      <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 shadow-md">
+                        <span className="text-xl font-black text-blue-600">{section.sectionName}</span>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <button
+                        onClick={() => handleDownloadSpecialtySection(specialty, section)}
+                        className="w-full flex items-center justify-center gap-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-3 rounded-lg font-bold hover:from-blue-600 hover:to-blue-700 transition-all text-xs"
+                      >
+                        <Download className="w-3 h-3" />
+                        Descargar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const DiplomasSection = () => {
   const { levels, loading: loadingLevels, error: errorLevels } = useLevels();
   const { sections, loading: loadingSections } = useSections();
   const { specialties, loading: loadingSpecialties } = useSpecialties();
+  
+  const [selectedLevel, setSelectedLevel] = useState(null);
 
   const loading = loadingLevels || loadingSections || loadingSpecialties;
+
+  const handleSelectLevel = (level) => {
+    setSelectedLevel(level);
+  };
+
+  const handleBack = () => {
+    setSelectedLevel(null);
+  };
 
   if (loading) {
     return (
@@ -153,6 +323,29 @@ const DiplomasSection = () => {
     );
   }
 
+  if (selectedLevel) {
+    const isBachillerato = isBachilleratoLevel(selectedLevel.levelName);
+    
+    if (isBachillerato) {
+      return (
+        <BachilleratoDetail
+          level={selectedLevel}
+          sections={sections}
+          specialties={specialties}
+          onBack={handleBack}
+        />
+      );
+    } else {
+      return (
+        <TercerCicloDetail
+          level={selectedLevel}
+          sections={sections}
+          onBack={handleBack}
+        />
+      );
+    }
+  }
+
   return (
     <div className="p-8">
       {/* Header de la sección */}
@@ -162,7 +355,7 @@ const DiplomasSection = () => {
           <h2 className="text-2xl font-black text-gray-800">Generación de Diplomas</h2>
         </div>
         <p className="text-gray-600">
-          Selecciona el nivel académico para generar y descargar los diplomas correspondientes.
+          Selecciona el nivel académico para ver las secciones y descargar los diplomas correspondientes.
         </p>
       </div>
 
@@ -175,6 +368,7 @@ const DiplomasSection = () => {
               level={level}
               sections={sections}
               specialties={specialties}
+              onSelectLevel={handleSelectLevel}
             />
           ))}
         </div>
@@ -195,9 +389,9 @@ const DiplomasSection = () => {
           <div>
             <h4 className="font-bold text-gray-800 mb-2">Información sobre diplomas</h4>
             <ul className="space-y-1 text-sm text-gray-600">
-              <li>• <strong>Tercer Ciclo:</strong> Incluye niveles Séptimo, Octavo y Noveno con secciones A-F</li>
-              <li>• <strong>Bachillerato:</strong> Incluye 1°, 2° y 3° con todas las secciones (1A, 1B, 2A, 2B, etc.)</li>
-              <li>• Los diplomas se generan para todas las especialidades disponibles</li>
+              <li>• <strong>Tercer Ciclo:</strong> Haz clic en el nivel para ver las secciones A-F disponibles</li>
+              <li>• <strong>Bachillerato:</strong> Haz clic en el nivel para ver especialidades y secciones (1A, 1B, 2A, 2B, etc.)</li>
+              <li>• Puedes descargar diplomas por sección individual o todas a la vez</li>
               <li>• Los archivos se descargarán en formato PDF</li>
             </ul>
           </div>
