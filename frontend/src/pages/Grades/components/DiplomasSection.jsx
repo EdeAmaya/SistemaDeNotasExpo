@@ -572,6 +572,28 @@ const BachilleratoDetail = ({ level, sections, specialties, onBack }) => {
                     </div>
                     <div className="p-6">
                       <button
+                        onClick={() => handleDownloadSpecialtyGroup(specialty, 1, grupo1Sections)}
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-xl font-black text-lg hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+                      >
+                        <Download className="w-6 h-6" />
+                        Descargar Grupo 1
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {grupo2Sections.length > 0 && (
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border-2 border-purple-200 hover:border-purple-400 hover:shadow-xl transition-all duration-300 overflow-hidden">
+                    <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 text-center">
+                      <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                        <span className="text-4xl font-black text-purple-600">2</span>
+                      </div>
+                      <h4 className="text-2xl font-black text-white mb-1">Grupo 2</h4>
+                      <p className="text-purple-100 text-sm font-semibold">
+                        Secciones: {grupo2Sections.map(s => s.sectionName).join(', ')}
+                      </p>
+                    </div>
+                    <div className="p-6">
+                      <button
                         onClick={() => handleDownloadSpecialtyGroup(specialty, 2, grupo2Sections)}
                         className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-xl font-black text-lg hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
                       >
