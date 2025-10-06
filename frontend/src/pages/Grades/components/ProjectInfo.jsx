@@ -1,17 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Users, UserCheck, Award, BookOpen, Target, Calendar, Layers, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react';
 import useProjectDetails from '../hooks/useDataProjectDetails';
+import useUpdatePromedioInterno from '../hooks/useUpdatePromedioInterno';
 
 const ProjectInfo = ({ projectId, onBack }) => {
+    const { loading: updating, error: updateError, success, updatePromedioInterno } = useUpdatePromedioInterno();
     const { loading, error, projectDetails, fetchProjectDetails } = useProjectDetails();
     const [activeSection, setActiveSection] = useState(null);
     const [expandedEvaluations, setExpandedEvaluations] = useState({});
+    const [editablePromedioInterno, setEditablePromedioInterno] = useState(null);
 
     useEffect(() => {
         if (projectId) {
             fetchProjectDetails(projectId);
         }
     }, [projectId, fetchProjectDetails]);
+
+    useEffect(() => {
+        if (projectDetails?.promedioInterno != null) {
+            setEditablePromedioInterno(projectDetails.promedioInterno.toFixed(2));
+        }
+    }, [projectDetails]);
 
     const toggleEvaluation = (evaluationId) => {
         setExpandedEvaluations(prev => ({
@@ -120,11 +129,17 @@ const ProjectInfo = ({ projectId, onBack }) => {
                             </div>
                         </div>
                         <div className="text-right">
-                            <div className={`text-3xl font-black ${activeSection === 'internal' ? 'text-blue-600' : 'text-gray-700'}`}>
-                                {(projectDetails.promedioInterno || 0).toFixed(2)}
-                            </div>
-                            <div className="text-xs text-gray-500 font-semibold">Promedio</div>
-                        </div>
+    <input
+        type="number"
+        step="0.01"
+        max={10}
+        min={0}
+        className="w-24 text-3xl font-black bg-transparent text-right border-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-blue-600"
+        value={editablePromedioInterno ?? ''}
+        onChange={(e) => setEditablePromedioInterno(e.target.value)}
+    />
+    <div className="text-xs text-gray-500 font-semibold">Promedio</div>
+</div>
                     </div>
                     <div className={`h-1 rounded-full transition-all ${activeSection === 'internal' ? 'bg-gradient-to-r from-blue-400 to-blue-600' : 'bg-gray-200 group-hover:bg-blue-300'
                         }`}></div>
@@ -362,14 +377,35 @@ const ProjectInfo = ({ projectId, onBack }) => {
                                 );
                             })}
 
-                            {(activeSection === 'internal'
-                                ? projectDetails.evaluacionesInternas
-                                : projectDetails.evaluacionesExternas
-                            )?.length === 0 && (
-                                    <div className="text-center py-8 text-gray-500">
-                                        No hay evaluaciones {activeSection === 'internal' ? 'internas' : 'externas'} registradas
-                                    </div>
-                                )}
+                            {activeSection === 'internal' && (
+    <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <button
+            onClick={() => updatePromedioInterno(projectId, parseFloat(editablePromedioInterno))}
+            disabled={updating || editablePromedioInterno === ''}
+            className={`px-4 py-2 rounded-lg font-semibold text-white transition-all 
+                ${updating ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+        >
+            {updating ? 'Guardando...' : 'Guardar Promedio Interno'}
+        </button>
+
+        {success && (
+            <p className="text-green-600 text-sm font-medium">¡Promedio actualizado con éxito!</p>
+        )}
+        {updateError && (
+            <p className="text-red-600 text-sm font-medium">Error: {updateError}</p>
+        )}
+    </div>
+)}
+
+
+{(activeSection === 'internal'
+  ? projectDetails.evaluacionesInternas
+  : projectDetails.evaluacionesExternas
+)?.length === 0 && (
+    <div className="text-center py-8 text-gray-500">
+        No hay evaluaciones {activeSection === 'internal' ? 'internas' : 'externas'} registradas
+    </div>
+)}
                         </div>
                     </div>
                 </div>

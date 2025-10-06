@@ -11,6 +11,7 @@ router.get("/project-averages", projectScoreController.getProjectFinalScores);
 router.get("/project/:projectId", projectScoreController.getProjectScoreByProjectId);
 
 router.get("/section/:sectionId", projectScoreController.getProjectScoresBySection);
+router.patch("/:projectId/promedio-interno", projectScoreController.updatePromedioInterno);
 
 router.route("/:id")
   .get(projectScoreController.getProjectScoreById)

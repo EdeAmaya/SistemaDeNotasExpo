@@ -337,4 +337,68 @@ projectScoreController.deleteProjectScore = async (req, res) => {
   }
 };
 
+// Provisional
+// ===============================
+// PATCH - Actualizar promedio interno manualmente
+// ===============================
+projectScoreController.updatePromedioInterno = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { nuevoPromedioInterno } = req.body;
+
+    if (typeof nuevoPromedioInterno !== "number") {
+      return res.status(400).json({
+        success: false,
+        message: "nuevoPromedioInterno debe ser un número"
+      });
+    }
+
+    const score = await ProjectScore.findOne({ projectId });
+
+    if (!score) {
+      return res.status(404).json({
+        success: false,
+        message: "No se encontró puntaje para este proyecto"
+      });
+    }
+
+    // Obtener promedio externo actual
+    const externas = score.evaluacionesExternas || [];
+    const notasExternas = externas.map(ev => ev.notaFinal || 0);
+
+    const promedioExterno = notasExternas.length
+      ? notasExternas.reduce((a, b) => a + b, 0) / notasExternas.length
+      : 0;
+
+    // Recalcular nota final global con el nuevo promedio interno
+    const totalNotas = [nuevoPromedioInterno, ...notasExternas];
+    const nuevoPromedioTotal = totalNotas.length
+      ? totalNotas.reduce((a, b) => a + b, 0) / totalNotas.length
+      : nuevoPromedioInterno;
+
+    // Actualizar los valores
+    score.promedioInterno = parseFloat(nuevoPromedioInterno.toFixed(8));
+    score.notaFinalGlobal = parseFloat(nuevoPromedioTotal.toFixed(8));
+
+    await score.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Promedio interno actualizado correctamente",
+      data: {
+        promedioInterno: score.promedioInterno,
+        promedioExterno,
+        notaFinalGlobal: score.notaFinalGlobal
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error actualizando promedio interno",
+      error: error.message,
+      stack: error.stack
+    });
+  }
+};
+
 export default projectScoreController;
