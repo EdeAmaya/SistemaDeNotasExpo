@@ -1,3 +1,4 @@
+// frontend/src/navigation/Navigation.jsx
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 
@@ -11,6 +12,7 @@ import Students from "../pages/Students/Students";
 import Projects from "../pages/Projects/Projects";
 import Evaluations from "../pages/Evaluations/Evaluations";
 import Grades from "../pages/Grades/Grades";
+import Calendar from "../pages/Calendar/Calendar"; // ← NUEVA IMPORTACIÓN
 import Login from "../pages/Login/Login";
 
 // Navegación
@@ -65,6 +67,13 @@ function Navigation() {
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } />
+
+          {/* Ruta de Calendario - Todos los usuarios autenticados */}
+          <Route path="/calendar" element={
+            <ProtectedRoute>
+              <Calendar />
             </ProtectedRoute>
           } />
 

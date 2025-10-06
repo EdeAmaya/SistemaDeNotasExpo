@@ -87,6 +87,13 @@ eventController.createEvent = async (req, res) => {
   try {
     const { title, startDate, endDate, description, color } = req.body;
 
+    // Verificar que el usuario esté autenticado
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ 
+        message: "Usuario no autenticado" 
+      });
+    }
+
     if (!title || !startDate || !endDate) {
       return res.status(400).json({ 
         message: "Título, fecha de inicio y fecha de fin son requeridos" 
@@ -106,13 +113,22 @@ eventController.createEvent = async (req, res) => {
       endDate: new Date(endDate),
       description: description?.trim() || '',
       color: color || '#3b82f6',
-      createdBy: req.user._id
+      createdBy: req.user._id // Asegurarse de usar el ID del usuario autenticado
     });
 
     const savedEvent = await newEvent.save();
     
-    // Poblar información del creador
-    await savedEvent.populate('createdBy', 'name lastName email');
+    // Poblar información del creador solo si NO es Admin string
+    if (req.user._id !== "Admin") {
+      await savedEvent.populate('createdBy', 'name lastName email');
+    } else {
+      // Para Admin string, crear objeto temporal
+      savedEvent._doc.createdBy = {
+        name: 'Sistema',
+        lastName: 'Administrador',
+        email: req.user.email
+      };
+    }
 
     // Log de actividad
     await ActivityLogger.log(
