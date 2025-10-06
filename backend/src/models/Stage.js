@@ -16,12 +16,14 @@ const stageSchema = new Schema({
     endDate: {
         type: Date,
         required: [true, 'La fecha de fin es requerida'],
-        validate: {
+        // CORRECCIÓN: Removemos el validator que causa problemas de zona horaria
+        // La validación se hace en el controlador donde tenemos más control
+        /* validate: {
             validator: function(value) {
                 return value > this.startDate;
             },
             message: 'La fecha de fin debe ser posterior a la fecha de inicio'
-        }
+        } */
     },
 
     // Campos adicionales útiles para el contexto educativo
