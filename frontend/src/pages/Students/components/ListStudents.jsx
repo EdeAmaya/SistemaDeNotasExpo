@@ -1,11 +1,17 @@
 import React, { useState } from "react";
-import { Search, X, List, LayoutGrid, GraduationCap, Briefcase, Award, Users, UserPlus, AlertCircle } from 'lucide-react';
+import { Search, X, List, LayoutGrid, GraduationCap, Briefcase, Award, Users, UserPlus, AlertCircle, Filter } from 'lucide-react';
 import StudentCard from "./StudentCard";
 
-const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
+const ListStudents = ({ students, loading, deleteStudent, updateStudent, levels, sections, specialties }) => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('list');
+  
+  // Filtros académicos
+  const [selectedLevel, setSelectedLevel] = useState('');
+  const [selectedSection, setSelectedSection] = useState('');
+  const [selectedSpecialty, setSelectedSpecialty] = useState('');
+  const [showAcademicFilters, setShowAcademicFilters] = useState(false);
 
   const filteredStudents = students.filter(student => {
     const searchLower = searchTerm.toLowerCase();
@@ -21,7 +27,17 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
       (activeFilter === 'withoutProject' && !student.projectId) ||
       (activeFilter === 'withSpecialty' && student.idSpecialty);
     
-    return matchesSearch && matchesFilter;
+    // Filtros académicos
+    const matchesLevel = !selectedLevel || 
+      (student.idLevel?._id === selectedLevel || student.idLevel === selectedLevel);
+    
+    const matchesSection = !selectedSection || 
+      (student.idSection?._id === selectedSection || student.idSection === selectedSection);
+    
+    const matchesSpecialty = !selectedSpecialty || 
+      (student.idSpecialty?._id === selectedSpecialty || student.idSpecialty === selectedSpecialty);
+    
+    return matchesSearch && matchesFilter && matchesLevel && matchesSection && matchesSpecialty;
   });
 
   const getStats = () => ({
@@ -39,6 +55,16 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
     { key: 'withoutProject', label: 'Sin Proyecto', icon: AlertCircle, color: 'bg-green-600' },
     { key: 'withSpecialty', label: 'Con Especialidad', icon: Award, color: 'bg-green-600' }
   ];
+
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setActiveFilter('all');
+    setSelectedLevel('');
+    setSelectedSection('');
+    setSelectedSpecialty('');
+  };
+
+  const hasActiveAcademicFilters = selectedLevel || selectedSection || selectedSpecialty;
 
   return (
     <div className="p-6 space-y-6">
@@ -71,31 +97,177 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
         </div>
 
         {/* Selector de vista */}
-        <div className="flex items-center gap-2 bg-gray-100 p-1.5 rounded-lg">
+        <div className="flex items-center gap-2">
+          {/* Botón de filtros académicos */}
           <button
-            onClick={() => setViewMode('list')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm transition-all cursor-pointer ${
-              viewMode === 'list'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+            onClick={() => setShowAcademicFilters(!showAcademicFilters)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all cursor-pointer border-2 ${
+              showAcademicFilters || hasActiveAcademicFilters
+                ? 'bg-green-50 border-green-500 text-green-700'
+                : 'bg-white border-gray-200 text-gray-700 hover:border-green-300'
             }`}
           >
-            <List className="w-4 h-4" />
-            <span className="hidden sm:inline">Lista</span>
+            <Filter className="w-4 h-4" />
+            <span className="hidden sm:inline">Filtros</span>
+            {hasActiveAcademicFilters && (
+              <span className="bg-green-500 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold">
+                {[selectedLevel, selectedSection, selectedSpecialty].filter(Boolean).length}
+              </span>
+            )}
           </button>
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm transition-all cursor-pointer ${
-              viewMode === 'grid'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <LayoutGrid className="w-4 h-4" />
-            <span className="hidden sm:inline">Tarjetas</span>
-          </button>
+
+          {/* Vista */}
+          <div className="flex items-center gap-2 bg-gray-100 p-1.5 rounded-lg">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm transition-all cursor-pointer ${
+                viewMode === 'list'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">Lista</span>
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm transition-all cursor-pointer ${
+                viewMode === 'grid'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden sm:inline">Tarjetas</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Panel de filtros académicos */}
+      {showAcademicFilters && (
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 space-y-4 animate-slideDown">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-green-600" />
+              <h3 className="font-bold text-gray-900">Filtros Académicos</h3>
+            </div>
+            {hasActiveAcademicFilters && (
+              <button
+                onClick={() => {
+                  setSelectedLevel('');
+                  setSelectedSection('');
+                  setSelectedSpecialty('');
+                }}
+                className="text-sm text-red-600 hover:text-red-700 font-semibold cursor-pointer flex items-center gap-1"
+              >
+                <X className="w-4 h-4" />
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Filtro por Nivel */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Nivel Académico
+              </label>
+              <select
+                value={selectedLevel}
+                onChange={(e) => setSelectedLevel(e.target.value)}
+                className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-sm font-medium cursor-pointer"
+              >
+                <option value="">Todos los niveles</option>
+                {levels?.map(level => (
+                  <option key={level._id} value={level._id}>
+                    {level.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filtro por Sección */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Sección
+              </label>
+              <select
+                value={selectedSection}
+                onChange={(e) => setSelectedSection(e.target.value)}
+                className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-sm font-medium cursor-pointer"
+              >
+                <option value="">Todas las secciones</option>
+                {sections?.map(section => (
+                  <option key={section._id} value={section._id}>
+                    {section.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filtro por Especialidad */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Especialidad
+              </label>
+              <select
+                value={selectedSpecialty}
+                onChange={(e) => setSelectedSpecialty(e.target.value)}
+                className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-sm font-medium cursor-pointer"
+              >
+                <option value="">Todas las especialidades</option>
+                {specialties?.map(specialty => (
+                  <option key={specialty._id} value={specialty._id}>
+                    {specialty.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Resumen de filtros activos */}
+          {hasActiveAcademicFilters && (
+            <div className="pt-4 border-t border-green-200">
+              <div className="flex flex-wrap gap-2">
+                {selectedLevel && (
+                  <span className="inline-flex items-center gap-1 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                    {levels?.find(l => l._id === selectedLevel)?.name}
+                    <button
+                      onClick={() => setSelectedLevel('')}
+                      className="hover:bg-green-600 rounded-full p-0.5 cursor-pointer"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {selectedSection && (
+                  <span className="inline-flex items-center gap-1 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                    {sections?.find(s => s._id === selectedSection)?.name}
+                    <button
+                      onClick={() => setSelectedSection('')}
+                      className="hover:bg-green-600 rounded-full p-0.5 cursor-pointer"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {selectedSpecialty && (
+                  <span className="inline-flex items-center gap-1 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                    {specialties?.find(sp => sp._id === selectedSpecialty)?.name}
+                    <button
+                      onClick={() => setSelectedSpecialty('')}
+                      className="hover:bg-green-600 rounded-full p-0.5 cursor-pointer"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3">
@@ -140,6 +312,11 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
             <span className="text-gray-600">
               {filteredStudents.length === 1 ? 'estudiante encontrado' : 'estudiantes encontrados'}
             </span>
+            {filteredStudents.length !== students.length && (
+              <span className="text-gray-500">
+                (de {students.length} totales)
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1.5">
@@ -202,16 +379,13 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
           <div className="text-center space-y-2">
             <h3 className="text-2xl font-black text-gray-900">Sin resultados</h3>
             <p className="text-gray-600 max-w-md">
-              No encontramos estudiantes que coincidan con tu búsqueda
+              No encontramos estudiantes que coincidan con tu búsqueda o filtros
             </p>
             <button
-              onClick={() => {
-                setSearchTerm('');
-                setActiveFilter('all');
-              }}
+              onClick={clearAllFilters}
               className="mt-4 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-sm transition-colors cursor-pointer"
             >
-              Limpiar filtros
+              Limpiar todos los filtros
             </button>
           </div>
         </div>
@@ -256,6 +430,19 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent }) => {
         }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-slideDown {
+          animation: slideDown 0.3s ease-out;
         }
       `}</style>
     </div>

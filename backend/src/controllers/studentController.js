@@ -1,16 +1,39 @@
 const studentController = {};
 
 import studentModel from "../models/Student.js";
-import ActivityLogger from "../utils/activityLogger.js"; // ← NUEVO IMPORT
+import ActivityLogger from "../utils/activityLogger.js";
 
-//Select
+//Select - Con filtrado según rol del usuario
 studentController.getStudents = async (req, res) => {
   try {
-    const students = await studentModel.find()
+    const user = req.user; // Usuario autenticado desde el middleware
+    
+    let query = {};
+    
+    // Si es Docente o Evaluador, filtrar por sus datos académicos
+    if (user.role === 'Docente' || user.role === 'Evaluador') {
+      query = {
+        idLevel: user.idLevel        
+      };
+      
+      // Si el usuario tiene especialidad, también filtrar por ella
+      if (user.idSpecialty) {
+        query.idSpecialty = user.idSpecialty;
+      }
+
+      // Si el usuario tiene sección, también filtrar por ella
+      if (user.idSection) {
+        query.idSection = user.idSection;
+      }
+    }
+    // Admin y Estudiante ven todos los estudiantes
+    
+    const students = await studentModel.find(query)
       .populate("idLevel")
       .populate("idSection")
       .populate("idSpecialty")
       .populate("projectId");
+      
     res.json(students);
   } catch (error) {
     res.status(500).json({
@@ -82,7 +105,6 @@ studentController.insertStudent = async (req, res) => {
 
     const savedStudent = await newStudent.save();
 
-    // ← NUEVO: LOG DE ACTIVIDAD
     await ActivityLogger.log(
       req.user._id,
       'CREATE_STUDENT',
@@ -129,7 +151,6 @@ studentController.deleteStudent = async (req, res) => {
       });
     }
 
-    // ← NUEVO: LOG DE ACTIVIDAD
     await ActivityLogger.log(
       req.user._id,
       'DELETE_STUDENT',
@@ -194,7 +215,6 @@ studentController.updateStudent = async (req, res) => {
       });
     }
 
-    // ← NUEVO: LOG DE ACTIVIDAD
     await ActivityLogger.log(
       req.user._id,
       'UPDATE_STUDENT',
@@ -230,6 +250,7 @@ studentController.updateStudent = async (req, res) => {
   }
 };
 
+// Carga masiva de estudiantes
 studentController.bulkInsertStudents = async (req, res) => {
   try {
     const { students } = req.body;
@@ -332,6 +353,7 @@ studentController.bulkInsertStudents = async (req, res) => {
   }
 };
 
+// Eliminar todos los estudiantes
 studentController.deleteAllStudents = async (req, res) => {
   try {
     const count = await studentModel.countDocuments();
@@ -366,4 +388,4 @@ studentController.deleteAllStudents = async (req, res) => {
   }
 };
 
-export default studentController;
+export default studentController

@@ -225,6 +225,9 @@ const Students = () => {
                 updateStudent(student);
                 setActiveTab('register');
               }}
+              levels={levels}
+              sections={sections}
+              specialties={specialties}
             />
           ) : activeTab === 'register' ? (
             <div className="p-8">
