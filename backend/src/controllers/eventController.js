@@ -184,10 +184,15 @@ eventController.updateEvent = async (req, res) => {
     const { id } = req.params;
     const { title, startDate, endDate, description, color } = req.body;
 
+    console.log('📝 Actualizando evento:', id);
+    console.log('📦 Datos recibidos:', { title, startDate, endDate, description, color });
+
     const currentEvent = await eventModel.findById(id);
     if (!currentEvent) {
       return res.status(404).json({ message: "Evento no encontrado" });
     }
+
+    console.log('📄 Evento actual:', currentEvent);
 
     const updateData = {
       title: title?.trim() || currentEvent.title,
@@ -195,34 +200,40 @@ eventController.updateEvent = async (req, res) => {
       color: color || currentEvent.color
     };
 
-    // Manejar fechas - crear objetos Date correctamente
     let finalStartDate = currentEvent.startDate;
     let finalEndDate = currentEvent.endDate;
 
     if (startDate) {
-      // Si viene como YYYY-MM-DD, agregar tiempo para evitar problemas de zona horaria
       finalStartDate = new Date(startDate + 'T00:00:00.000Z');
       updateData.startDate = finalStartDate;
+      console.log('📅 Nueva fecha de inicio:', finalStartDate);
     }
     
     if (endDate) {
-      // Si viene como YYYY-MM-DD, agregar tiempo al final del día
       finalEndDate = new Date(endDate + 'T23:59:59.999Z');
       updateData.endDate = finalEndDate;
+      console.log('📅 Nueva fecha de fin:', finalEndDate);
     }
 
-    // Validar que la fecha de fin no sea anterior a la de inicio
+    console.log('🔍 Validando fechas:', { finalStartDate, finalEndDate });
+
     if (finalEndDate < finalStartDate) {
+      console.log('❌ Validación fallida: fecha de fin anterior a inicio');
       return res.status(400).json({ 
         message: "La fecha de fin debe ser posterior o igual a la fecha de inicio" 
       });
     }
+
+    console.log('✅ Fechas válidas, actualizando...');
+    console.log('📦 Datos a actualizar:', updateData);
 
     const updatedEvent = await eventModel.findByIdAndUpdate(
       id,
       updateData,
       { new: true, runValidators: true }
     );
+
+    console.log('✅ Evento actualizado:', updatedEvent);
 
     if (updatedEvent.createdBy !== 'Admin') {
       await updatedEvent.populate('createdBy', 'name lastName email');
@@ -234,22 +245,25 @@ eventController.updateEvent = async (req, res) => {
       };
     }
 
-    await ActivityLogger.log(
-      req.user._id,
-      'UPDATE_EVENT',
-      `Actualizó el evento "${updatedEvent.title}"`,
-      'Event',
-      updatedEvent._id,
-      { title: updatedEvent.title, startDate: updatedEvent.startDate, endDate: updatedEvent.endDate },
-      req
-    );
+    if (ActivityLogger && ActivityLogger.log) {
+      await ActivityLogger.log(
+        req.user._id,
+        'UPDATE_EVENT',
+        `Actualizó el evento "${updatedEvent.title}"`,
+        'Event',
+        updatedEvent._id,
+        { title: updatedEvent.title, startDate: updatedEvent.startDate, endDate: updatedEvent.endDate },
+        req
+      );
+    }
 
     res.json({
       message: "Evento actualizado exitosamente",
       event: updatedEvent
     });
   } catch (error) {
-    console.error('Error al actualizar evento:', error);
+    console.error('❌ Error completo al actualizar evento:', error);
+    console.error('Stack trace:', error.stack);
     
     if (error.name === 'ValidationError') {
       const errorMessages = Object.values(error.errors).map(err => err.message);
