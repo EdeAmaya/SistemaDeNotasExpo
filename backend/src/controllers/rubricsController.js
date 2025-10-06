@@ -45,21 +45,43 @@ rubricController.createRubrics = async (req, res) => {
     }
 };
 
-// Obtener todas las rúbricas
+//Select - Con filtrado según rol del usuario
 rubricController.getRubrics = async (req, res) => {
-    try {
-        const rubrics = await Rubric.find()
-            .populate("specialtyId", "specialtyName")
-            .populate("stageId", "name")
-            .populate("levelId", "levelName"); // Trae el nombre del nivel
+  try {
+    const user = req.user; // Usuario autenticado desde el middleware
+    let query = {};
 
-        res.status(200).json(rubrics);
-    } catch (error) {
-        res.status(500).json({
-            message: "Error fetching rubrics",
-            error: error.message
-        });
+    // Si es Docente o Evaluador, filtrar por sus datos académicos
+    if (user.role === 'Docente' || user.role === 'Evaluador') {
+      query = {
+        levelId: user.idLevel
+      };
+
+      // Si el usuario tiene especialidad, también filtrar por ella
+      if (user.idSpecialty) {
+        query.specialtyId = user.idSpecialty;
+      }
+
+      // Si el usuario tiene sección, también podría filtrarse por ella si aplica
+      if (user.idSection) {
+        query.sectionId = user.idSection;
+      }
     }
+
+    // Admin y Estudiante ven todas las rúbricas
+    const rubrics = await Rubric.find(query)
+      .populate("specialtyId", "specialtyName")
+      .populate("stageId", "name")
+      .populate("levelId", "levelName");
+
+    res.status(200).json(rubrics);
+  } catch (error) {
+    console.error("Error al obtener rúbricas:", error);
+    res.status(500).json({
+      message: "Error al obtener rúbricas",
+      error: error.message
+    });
+  }
 };
 
 // Obtener una rúbrica por ID

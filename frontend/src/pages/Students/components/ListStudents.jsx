@@ -181,7 +181,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent, levels,
                 <option value="">Todos los niveles</option>
                 {levels?.map(level => (
                   <option key={level._id} value={level._id}>
-                    {level.name}
+                    {level.levelName}
                   </option>
                 ))}
               </select>
@@ -200,7 +200,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent, levels,
                 <option value="">Todas las secciones</option>
                 {sections?.map(section => (
                   <option key={section._id} value={section._id}>
-                    {section.name}
+                    {section.sectionName}
                   </option>
                 ))}
               </select>
@@ -219,7 +219,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent, levels,
                 <option value="">Todas las especialidades</option>
                 {specialties?.map(specialty => (
                   <option key={specialty._id} value={specialty._id}>
-                    {specialty.name}
+                    {specialty.specialtyName}
                   </option>
                 ))}
               </select>
@@ -232,7 +232,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent, levels,
               <div className="flex flex-wrap gap-2">
                 {selectedLevel && (
                   <span className="inline-flex items-center gap-1 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                    {levels?.find(l => l._id === selectedLevel)?.name}
+                    {levels?.find(l => l._id === selectedLevel)?.levelName}
                     <button
                       onClick={() => setSelectedLevel('')}
                       className="hover:bg-green-600 rounded-full p-0.5 cursor-pointer"
@@ -243,7 +243,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent, levels,
                 )}
                 {selectedSection && (
                   <span className="inline-flex items-center gap-1 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                    {sections?.find(s => s._id === selectedSection)?.name}
+                    {sections?.find(s => s._id === selectedSection)?.sectionName}
                     <button
                       onClick={() => setSelectedSection('')}
                       className="hover:bg-green-600 rounded-full p-0.5 cursor-pointer"
@@ -254,7 +254,7 @@ const ListStudents = ({ students, loading, deleteStudent, updateStudent, levels,
                 )}
                 {selectedSpecialty && (
                   <span className="inline-flex items-center gap-1 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                    {specialties?.find(sp => sp._id === selectedSpecialty)?.name}
+                    {specialties?.find(sp => sp._id === selectedSpecialty)?.specialtyName}
                     <button
                       onClick={() => setSelectedSpecialty('')}
                       className="hover:bg-green-600 rounded-full p-0.5 cursor-pointer"

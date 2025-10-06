@@ -1,19 +1,54 @@
 const projectController = {};
 
 import projectModel from "../models/Project.js";
-import ActivityLogger from "../utils/activityLogger.js"; // ← NUEVO IMPORT
+import ActivityLogger from "../utils/activityLogger.js";
 
-//Select
-projectController.getProjects = async (req,res) => {
+//Select - Con filtrado según rol del usuario
+projectController.getProjects = async (req, res) => {
   try {
-    const projects = await projectModel.find()
+    const user = req.user; // Usuario autenticado desde el middleware
+    
+    let query = {};
+
+    // Si es Docente o Evaluador, solo puede ver los proyectos de su nivel, sección y especialidad
+    if (user.role === 'Docente' || user.role === 'Evaluador') {
+      query = {
+        idLevel: user.idLevel
+      };
+
+      // Si el usuario tiene especialidad, también filtrar por ella
+      if (user.idSpecialty) {
+        query.selectedSpecialty = user.idSpecialty;
+      }
+
+      // Si el usuario tiene sección, también filtrar por ella
+      if (user.idSection) {
+        query.idSection = user.idSection;
+      }
+    }
+
+    // Si es Estudiante, mostrar solo su proyecto asignado
+    if (user.role === 'Estudiante') {
+      query = {
+        assignedStudents: user._id
+      };
+    }
+
+    // Admin ve todos los proyectos
+    const projects = await projectModel.find(query)
       .populate("idLevel")
       .populate("idSection")
       .populate("selectedSpecialty")
-      .populate("assignedStudents")
-    res.json(projects)
+      .populate("assignedStudents");
+
+    res.json(projects);
+
   } catch (error) {
-    res.status(500).json({message: error.message})
+    console.error("Error al obtener proyectos:", error);
+    res.status(500).json({
+      message: "Error al obtener proyectos",
+      error: error.message
+    });
   }
 };
 
