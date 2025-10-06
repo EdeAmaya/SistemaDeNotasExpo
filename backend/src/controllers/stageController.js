@@ -114,16 +114,20 @@ stageController.insertStage = async (req, res) => {
       });
     }
 
-    // Validar fechas
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // Validar fechas - CORREGIDO: Comparar strings de fecha directamente
+    const startDateOnly = startDate.split('T')[0];
+    const endDateOnly = endDate.split('T')[0];
     
-    if (start >= end) {
+    if (endDateOnly <= startDateOnly) {
       return res.status(400).json({
         error: "INVALID_DATES",
         message: "La fecha de fin debe ser posterior a la fecha de inicio"
       });
     }
+
+    // Para operaciones con la base de datos, usar objetos Date
+    const start = new Date(startDate);
+    const end = new Date(endDate);
 
     // Verificar solapamiento de fechas con otras etapas activas
     const overlappingStage = await stageModel.findOne({
@@ -249,17 +253,23 @@ stageController.updateStage = async (req, res) => {
       }
     }
 
-    // Validar fechas si se proporcionan
+    // Validar fechas si se proporcionan - CORREGIDO
     if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+      // Extraer solo la parte de fecha para comparación sin conversión de zona horaria
+      const startDateOnly = startDate.split('T')[0];
+      const endDateOnly = endDate.split('T')[0];
       
-      if (start >= end) {
+      // Comparar strings de fecha directamente
+      if (endDateOnly <= startDateOnly) {
         return res.status(400).json({
           error: "INVALID_DATES",
           message: "La fecha de fin debe ser posterior a la fecha de inicio"
         });
       }
+
+      // Para la validación de solapamiento, usar las fechas ISO directamente
+      const start = new Date(startDate);
+      const end = new Date(endDate);
 
       // Verificar solapamiento de fechas (excluyendo la etapa actual)
       const overlappingStage = await stageModel.findOne({
