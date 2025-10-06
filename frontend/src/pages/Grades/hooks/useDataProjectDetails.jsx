@@ -1,120 +1,118 @@
-    import { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
-    const API = 'https://stc-instituto-tecnico-ricaldone.onrender.com/api';
+const API = 'https://stc-instituto-tecnico-ricaldone.onrender.com/api';
 
-    const useProjectDetails = () => {
+const useProjectDetails = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [projectDetails, setProjectDetails] = useState(null);
 
     const fetchProjectDetails = useCallback(async (projectId) => {
         if (!projectId) {
-        console.error('projectId es requerido');
-        setError('ID de proyecto no proporcionado');
-        return null;
+            console.error('projectId es requerido');
+            setError('ID de proyecto no proporcionado');
+            return null;
         }
 
         console.log(`Cargando detalles del proyecto ${projectId}...`);
         setLoading(true);
         setError(null);
-        
+
         try {
-        const url = `${API}/evaluations/project/${projectId}`;
-        const response = await fetch(url, { credentials: 'include' });
+            const url = `${API}/evaluations/project/${projectId}`;
+            const response = await fetch(url, { credentials: 'include' });
 
-        if (!response.ok) {
-            throw new Error(`Error HTTP ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('Respuesta recibida:', result);
-        
-        if (!result.success || !result.data || result.data.length === 0) {
-            throw new Error('No se encontraron evaluaciones');
-        }
-
-        // Función para mapear evaluaciones
-        const mapEvaluation = (ev) => ({
-            _id: ev.evaluationId,
-            rubricId: {
-            _id: ev.rubrica.rubricId,
-            rubricName: ev.rubrica.rubricName,
-            rubricType: ev.rubrica.tipoRubrica,
-            stageId: {
-                name: ev.rubrica.stage
+            if (!response.ok) {
+                throw new Error(`Error HTTP ${response.status}`);
             }
-            },
-            criteriosEvaluados: ev.criterios.map(c => ({
-            criterionId: c.criterionId,
-            criterionName: c.criterionName,
-            puntajeObtenido: c.puntajeObtenido,
-            comentario: c.comentario || '',
-            puntajeMaximo: c.puntajeMaximo,
-            peso: c.peso,
-            descripcion: c.criterionDescription || ''
-            })),
-            notaFinal: ev.notaFinal,
-            tipoCalculo: ev.tipoCalculo,
-            fecha: ev.fecha,
-            resumen: ev.resumen
-        });
 
-        // Clasificar evaluaciones
-        const evaluacionesInternas = [];
-        const evaluacionesExternas = [];
+            const result = await response.json();
+            console.log('Respuesta recibida:', result);
 
-        result.data.forEach(ev => {
-            const stageName = (ev.rubrica?.stage || '').toLowerCase();
-            const isExternal = stageName.includes('externa') || stageName === 'evaluación externa';
-            
-            if (isExternal) {
-            evaluacionesExternas.push(mapEvaluation(ev));
+            if (!result.success || !result.data || result.data.length === 0) {
+                throw new Error('No se encontraron evaluaciones');
+            }
+
+            // Función para mapear evaluaciones
+            const mapEvaluation = (ev) => ({
+                _id: ev.evaluationId,
+                rubricId: {
+                    _id: ev.rubrica.rubricId,
+                    rubricName: ev.rubrica.rubricName,
+                    rubricType: ev.rubrica.tipoRubrica,
+                    stageId: {
+                        name: ev.rubrica.stage
+                    }
+                },
+                criteriosEvaluados: ev.criterios.map(c => ({
+                    criterionId: c.criterionId,
+                    criterionName: c.criterionName,
+                    puntajeObtenido: c.puntajeObtenido,
+                    comentario: c.comentario || '',
+                    puntajeMaximo: c.puntajeMaximo,
+                    peso: c.peso,
+                    descripcion: c.criterionDescription || ''
+                })),
+                notaFinal: ev.notaFinal,
+                tipoCalculo: ev.tipoCalculo,
+                fecha: ev.fecha,
+                resumen: ev.resumen
+            });
+
+            // Clasificar evaluaciones
+            const evaluacionesInternas = [];
+            const evaluacionesExternas = [];
+
+            result.data.forEach(ev => {
+                const stageName = (ev.rubrica?.stage || '').toLowerCase();
+                const isExternal = stageName.includes('externa') || stageName === 'evaluación externa';
+
+                if (isExternal) {
+                    evaluacionesExternas.push(mapEvaluation(ev));
+                } else {
+                    evaluacionesInternas.push(mapEvaluation(ev));
+                }
+            });
+
+            // Calcular promedios
+            const calcularPromedio = (evaluaciones) => {
+                if (!evaluaciones.length) return 0;
+                return evaluaciones.reduce((sum, ev) => sum + ev.notaFinal, 0) / evaluaciones.length;
+            };
+
+            const promedioInterno = result.projectScore?.promedioInterno ?? 0;
+            const promedioExterno = result.projectScore?.promedioExterno ?? calcularPromedio(evaluacionesExternas);
+
+            let promedioTotal = 0;
+            if (evaluacionesInternas.length && evaluacionesExternas.length) {
+                promedioTotal = (promedioInterno + promedioExterno) / 2;
             } else {
-            evaluacionesInternas.push(mapEvaluation(ev));
+                promedioTotal = promedioInterno || promedioExterno;
             }
-        });
 
-        console.log(`${evaluacionesInternas.length} internas, ${evaluacionesExternas.length} externas`);
+            const formattedData = {
+                projectId,
+                projectName: result.data[0].projectName,
+                evaluacionesInternas,
+                evaluacionesExternas,
+                promedioInterno,
+                promedioExterno,
+                promedioTotal,
+                totalEvaluaciones: result.data.length
+            };
 
-        // Calcular promedios
-        const calcularPromedio = (evaluaciones) => {
-            if (!evaluaciones.length) return 0;
-            return evaluaciones.reduce((sum, ev) => sum + ev.notaFinal, 0) / evaluaciones.length;
-        };
+            console.log('Datos listos:', formattedData);
 
-        const promedioInterno = calcularPromedio(evaluacionesInternas);
-        const promedioExterno = calcularPromedio(evaluacionesExternas);
-        
-        let promedioTotal = 0;
-        if (evaluacionesInternas.length && evaluacionesExternas.length) {
-            promedioTotal = (promedioInterno + promedioExterno) / 2;
-        } else {
-            promedioTotal = promedioInterno || promedioExterno;
-        }
+            setProjectDetails(formattedData);
+            setLoading(false);
+            return formattedData;
 
-        const formattedData = {
-            projectId,
-            projectName: result.data[0].projectName,
-            evaluacionesInternas,
-            evaluacionesExternas,
-            promedioInterno,
-            promedioExterno,
-            promedioTotal,
-            totalEvaluaciones: result.data.length
-        };
-
-        console.log('Datos listos:', formattedData);
-        
-        setProjectDetails(formattedData);
-        setLoading(false);
-        return formattedData;
-        
         } catch (err) {
-        console.error('Error:', err);
-        setError(err.message);
-        setProjectDetails(null);
-        setLoading(false);
-        return null;
+            console.error('Error:', err);
+            setError(err.message);
+            setProjectDetails(null);
+            setLoading(false);
+            return null;
         }
     }, []);
 
@@ -130,6 +128,6 @@
         fetchProjectDetails,
         clearProjectDetails
     };
-    };
+};
 
-    export default useProjectDetails;
+export default useProjectDetails;

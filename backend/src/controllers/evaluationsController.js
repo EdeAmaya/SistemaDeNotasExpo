@@ -218,12 +218,12 @@ evaluationController.getEvaluationsByProject = async (req, res) => {
         // Formatear la respuesta con todos los detalles
         const formattedEvaluations = evaluations.map(ev => {
             const rubric = ev.rubricId;
-            
+
             // Extraer criterios con sus detalles
             const criteriosDetalle = ev.criteriosEvaluados.map(ce => {
                 // Buscar el criterio en la rúbrica para obtener detalles completos
                 const criterioCompleto = rubric.criteria.id(ce.criterionId);
-                
+
                 return {
                     criterionId: ce.criterionId,
                     criterionName: ce.criterionName,
@@ -264,18 +264,22 @@ evaluationController.getEvaluationsByProject = async (req, res) => {
                     totalPuntajeObtenido,
                     totalPuntajeMaximo,
                     totalPeso,
-                    porcentajeObtenido: totalPuntajeMaximo > 0 
-                        ? ((totalPuntajeObtenido / totalPuntajeMaximo) * 100).toFixed(2) 
+                    porcentajeObtenido: totalPuntajeMaximo > 0
+                        ? ((totalPuntajeObtenido / totalPuntajeMaximo) * 100).toFixed(2)
                         : 0
                 }
             };
         });
 
+        // Buscar ProjectScore
+        const projectScore = await ProjectScore.findOne({ projectId });
+
         res.status(200).json({
             success: true,
             count: formattedEvaluations.length,
             projectId,
-            data: formattedEvaluations
+            data: formattedEvaluations,
+            projectScore
         });
 
     } catch (error) {

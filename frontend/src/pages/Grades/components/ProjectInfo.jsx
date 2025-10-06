@@ -18,7 +18,7 @@ const ProjectInfo = ({ projectId, onBack }) => {
 
     useEffect(() => {
         if (projectDetails?.promedioInterno != null) {
-            setEditablePromedioInterno(projectDetails.promedioInterno.toFixed(2));
+            setEditablePromedioInterno(projectDetails.promedioInterno.toFixed(8));
         }
     }, [projectDetails]);
 
@@ -97,7 +97,7 @@ const ProjectInfo = ({ projectId, onBack }) => {
                     <div className="text-right">
                         <div className="text-sm opacity-90 mb-1">Promedio Total</div>
                         <div className="text-5xl font-black">
-                            {(projectDetails.promedioTotal || 0).toFixed(2)}
+                            {(projectDetails.promedioTotal || 0).toFixed(8)}
                         </div>
                     </div>
                 </div>
@@ -129,17 +129,35 @@ const ProjectInfo = ({ projectId, onBack }) => {
                             </div>
                         </div>
                         <div className="text-right">
-    <input
-        type="number"
-        step="0.01"
-        max={10}
-        min={0}
-        className="w-24 text-3xl font-black bg-transparent text-right border-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-blue-600"
-        value={editablePromedioInterno ?? ''}
-        onChange={(e) => setEditablePromedioInterno(e.target.value)}
-    />
-    <div className="text-xs text-gray-500 font-semibold">Promedio</div>
-</div>
+                            <input
+                                type="number"
+                                step="0.01"
+                                max={10}
+                                min={0}
+                                className="w-60 text-3xl font-black bg-transparent text-right border-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-blue-600"
+                                value={editablePromedioInterno ?? ''}
+                                onChange={(e) => {
+                                    const input = e.target.value;
+
+                                    // Permitir campo vacío temporalmente
+                                    if (input === '') {
+                                        setEditablePromedioInterno('');
+                                        return;
+                                    }
+
+                                    // Validar número
+                                    const value = parseFloat(input);
+                                    if (isNaN(value) || value < 0 || value > 10) return;
+
+                                    // Validar hasta 8 decimales usando RegExp
+                                    const regex = /^\d+(\.\d{0,8})?$/;
+                                    if (!regex.test(input)) return;
+
+                                    setEditablePromedioInterno(input);
+                                }}
+                            />
+                            <div className="text-xs text-gray-500 font-semibold">Promedio</div>
+                        </div>
                     </div>
                     <div className={`h-1 rounded-full transition-all ${activeSection === 'internal' ? 'bg-gradient-to-r from-blue-400 to-blue-600' : 'bg-gray-200 group-hover:bg-blue-300'
                         }`}></div>
@@ -170,7 +188,7 @@ const ProjectInfo = ({ projectId, onBack }) => {
                         </div>
                         <div className="text-right">
                             <div className={`text-3xl font-black ${activeSection === 'external' ? 'text-purple-600' : 'text-gray-700'}`}>
-                                {(projectDetails.promedioExterno || 0).toFixed(2)}
+                                {(projectDetails.promedioExterno || 0).toFixed(8)}
                             </div>
                             <div className="text-xs text-gray-500 font-semibold">Promedio</div>
                         </div>
@@ -246,7 +264,7 @@ const ProjectInfo = ({ projectId, onBack }) => {
                                                     <div className="text-right">
                                                         <div className={`text-2xl font-black ${activeSection === 'internal' ? 'text-blue-600' : 'text-purple-600'
                                                             }`}>
-                                                            {evaluacion.notaFinal?.toFixed(2) || '0.00'}
+                                                            {evaluacion.notaFinal?.toFixed(8) || '0.00'}
                                                         </div>
                                                         <div className="text-xs text-gray-500 font-semibold">Nota Final</div>
                                                     </div>
@@ -378,34 +396,34 @@ const ProjectInfo = ({ projectId, onBack }) => {
                             })}
 
                             {activeSection === 'internal' && (
-    <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
-        <button
-            onClick={() => updatePromedioInterno(projectId, parseFloat(editablePromedioInterno))}
-            disabled={updating || editablePromedioInterno === ''}
-            className={`px-4 py-2 rounded-lg font-semibold text-white transition-all 
+                                <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <button
+                                        onClick={() => updatePromedioInterno(projectId, parseFloat(editablePromedioInterno))}
+                                        disabled={updating || editablePromedioInterno === ''}
+                                        className={`px-4 py-2 rounded-lg font-semibold text-white transition-all 
                 ${updating ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
-        >
-            {updating ? 'Guardando...' : 'Guardar Promedio Interno'}
-        </button>
+                                    >
+                                        {updating ? 'Guardando...' : 'Guardar Promedio Interno'}
+                                    </button>
 
-        {success && (
-            <p className="text-green-600 text-sm font-medium">¡Promedio actualizado con éxito!</p>
-        )}
-        {updateError && (
-            <p className="text-red-600 text-sm font-medium">Error: {updateError}</p>
-        )}
-    </div>
-)}
+                                    {success && (
+                                        <p className="text-green-600 text-sm font-medium">¡Promedio actualizado con éxito!</p>
+                                    )}
+                                    {updateError && (
+                                        <p className="text-red-600 text-sm font-medium">Error: {updateError}</p>
+                                    )}
+                                </div>
+                            )}
 
 
-{(activeSection === 'internal'
-  ? projectDetails.evaluacionesInternas
-  : projectDetails.evaluacionesExternas
-)?.length === 0 && (
-    <div className="text-center py-8 text-gray-500">
-        No hay evaluaciones {activeSection === 'internal' ? 'internas' : 'externas'} registradas
-    </div>
-)}
+                            {(activeSection === 'internal'
+                                ? projectDetails.evaluacionesInternas
+                                : projectDetails.evaluacionesExternas
+                            )?.length === 0 && (
+                                    <div className="text-center py-8 text-gray-500">
+                                        No hay evaluaciones {activeSection === 'internal' ? 'internas' : 'externas'} registradas
+                                    </div>
+                                )}
                         </div>
                     </div>
                 </div>
