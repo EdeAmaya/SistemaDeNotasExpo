@@ -1,6 +1,7 @@
+// frontend/src/navigation/Sidebar.jsx
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, GraduationCap, Triangle, ClipboardList, LogOut, Menu, X, BookOpenCheck } from 'lucide-react';
+import { Home, Users, GraduationCap, Triangle, ClipboardList, LogOut, Menu, X, BookOpenCheck, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import useStages from '../hooks/useStages';
 import toast from 'react-hot-toast';
@@ -66,6 +67,13 @@ const NavBar = () => {
       title: 'Inicio',
       icon: Home,
       route: '/',
+      roles: ['Admin', 'Docente', 'Evaluador', 'Estudiante']
+    },
+    {
+      id: 'calendar',
+      title: 'Calendario',
+      icon: Calendar,
+      route: '/calendar',
       roles: ['Admin', 'Docente', 'Evaluador', 'Estudiante']
     }
   ];
