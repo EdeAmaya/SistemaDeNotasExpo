@@ -11,15 +11,11 @@ eventController.getEvents = async (req, res) => {
     
     let filter = {};
     
-    // Filtrar por rango de fechas si se proporciona
     if (startDate && endDate) {
       filter = {
         $or: [
-          // Eventos que comienzan en el rango
           { startDate: { $gte: new Date(startDate), $lte: new Date(endDate) } },
-          // Eventos que terminan en el rango
           { endDate: { $gte: new Date(startDate), $lte: new Date(endDate) } },
-          // Eventos que abarcan todo el rango
           {
             startDate: { $lte: new Date(startDate) },
             endDate: { $gte: new Date(endDate) }
@@ -27,7 +23,6 @@ eventController.getEvents = async (req, res) => {
         ]
       };
     }
-    // Filtrar por mes y año específico
     else if (month && year) {
       const monthInt = parseInt(month);
       const yearInt = parseInt(year);
@@ -48,8 +43,20 @@ eventController.getEvents = async (req, res) => {
 
     const events = await eventModel
       .find(filter)
-      .populate('createdBy', 'name lastName email')
       .sort({ startDate: 1 });
+    
+    // Poblar manualmente solo los que no son "Admin"
+    for (let event of events) {
+      if (event.createdBy !== 'Admin') {
+        await event.populate('createdBy', 'name lastName email');
+      } else {
+        event._doc.createdBy = {
+          name: 'Sistema',
+          lastName: 'Administrador',
+          email: 'admin@ricaldone.edu.sv'
+        };
+      }
+    }
     
     res.json(events);
   } catch (error) {
@@ -64,12 +71,21 @@ eventController.getEvents = async (req, res) => {
 // Obtener evento por ID
 eventController.getEventById = async (req, res) => {
   try {
-    const event = await eventModel
-      .findById(req.params.id)
-      .populate('createdBy', 'name lastName email');
+    const event = await eventModel.findById(req.params.id);
     
     if (!event) {
       return res.status(404).json({ message: "Evento no encontrado" });
+    }
+    
+    // Poblar manualmente solo si no es "Admin"
+    if (event.createdBy !== 'Admin') {
+      await event.populate('createdBy', 'name lastName email');
+    } else {
+      event._doc.createdBy = {
+        name: 'Sistema',
+        lastName: 'Administrador',
+        email: 'admin@ricaldone.edu.sv'
+      };
     }
     
     res.json(event);
@@ -173,28 +189,47 @@ eventController.updateEvent = async (req, res) => {
       return res.status(404).json({ message: "Evento no encontrado" });
     }
 
-    // Verificar fechas si se proporcionan ambas
-    if (startDate && endDate) {
-      if (new Date(endDate) < new Date(startDate)) {
-        return res.status(400).json({ 
-          message: "La fecha de fin debe ser posterior o igual a la fecha de inicio" 
-        });
-      }
-    }
-
+    // Preparar datos de actualización
     const updateData = {
       title: title?.trim() || currentEvent.title,
-      startDate: startDate ? new Date(startDate) : currentEvent.startDate,
-      endDate: endDate ? new Date(endDate) : currentEvent.endDate,
       description: description !== undefined ? description.trim() : currentEvent.description,
       color: color || currentEvent.color
     };
+
+    // Manejar fechas si se proporcionan
+    if (startDate) {
+      updateData.startDate = new Date(startDate);
+    }
+    if (endDate) {
+      updateData.endDate = new Date(endDate);
+    }
+
+    // Verificar que la fecha de fin no sea anterior a la de inicio
+    const finalStartDate = updateData.startDate || currentEvent.startDate;
+    const finalEndDate = updateData.endDate || currentEvent.endDate;
+    
+    if (new Date(finalEndDate) < new Date(finalStartDate)) {
+      return res.status(400).json({ 
+        message: "La fecha de fin debe ser posterior o igual a la fecha de inicio" 
+      });
+    }
 
     const updatedEvent = await eventModel.findByIdAndUpdate(
       id,
       updateData,
       { new: true, runValidators: true }
-    ).populate('createdBy', 'name lastName email');
+    );
+
+    // Poblar manualmente solo si no es "Admin"
+    if (updatedEvent.createdBy !== 'Admin') {
+      await updatedEvent.populate('createdBy', 'name lastName email');
+    } else {
+      updatedEvent._doc.createdBy = {
+        name: 'Sistema',
+        lastName: 'Administrador',
+        email: 'admin@ricaldone.edu.sv'
+      };
+    }
 
     // Log de actividad
     await ActivityLogger.log(

@@ -20,9 +20,11 @@ const EventModal = ({
     color: '#3b82f6'
   });
 
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [occupiedDates, setOccupiedDates] = useState([]);
-  const [pickerMonth, setPickerMonth] = useState(new Date());
+  const [startPickerMonth, setStartPickerMonth] = useState(new Date());
+  const [endPickerMonth, setEndPickerMonth] = useState(new Date());
   const [errors, setErrors] = useState({});
 
   // Colores predefinidos
@@ -40,16 +42,31 @@ const EventModal = ({
   // Inicializar formulario
   useEffect(() => {
     if (editingEvent) {
+      const startDateObj = new Date(editingEvent.startDate);
+      const endDateObj = new Date(editingEvent.endDate);
+      
+      const startDateStr = new Date(startDateObj.getTime() - startDateObj.getTimezoneOffset() * 60000)
+        .toISOString()
+        .split('T')[0];
+      const endDateStr = new Date(endDateObj.getTime() - endDateObj.getTimezoneOffset() * 60000)
+        .toISOString()
+        .split('T')[0];
+      
       setFormData({
         title: editingEvent.title,
-        startDate: new Date(editingEvent.startDate).toISOString().split('T')[0],
-        endDate: new Date(editingEvent.endDate).toISOString().split('T')[0],
+        startDate: startDateStr,
+        endDate: endDateStr,
         description: editingEvent.description || '',
         color: editingEvent.color || '#3b82f6'
       });
-      setPickerMonth(new Date(editingEvent.startDate));
+      setStartPickerMonth(new Date(editingEvent.startDate));
+      setEndPickerMonth(new Date(editingEvent.startDate));
     } else if (selectedDate) {
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      const dateObj = new Date(selectedDate);
+      const dateStr = new Date(dateObj.getTime() - dateObj.getTimezoneOffset() * 60000)
+        .toISOString()
+        .split('T')[0];
+      
       setFormData({
         title: '',
         startDate: dateStr,
@@ -57,25 +74,37 @@ const EventModal = ({
         description: '',
         color: '#3b82f6'
       });
-      setPickerMonth(selectedDate);
+      setStartPickerMonth(selectedDate);
+      setEndPickerMonth(selectedDate);
     }
   }, [editingEvent, selectedDate]);
 
-  // Cargar fechas ocupadas cuando se abre el picker
+  // Cargar fechas ocupadas cuando se abre cualquier picker
   useEffect(() => {
-    if (showEndDatePicker && formData.startDate) {
-      loadOccupiedDates();
+    if (showStartDatePicker) {
+      loadOccupiedDatesForPicker(startPickerMonth);
     }
-  }, [showEndDatePicker, pickerMonth]);
+  }, [showStartDatePicker, startPickerMonth]);
 
-  const loadOccupiedDates = async () => {
-    const year = pickerMonth.getFullYear();
-    const month = pickerMonth.getMonth();
-    const startOfMonth = new Date(year, month, 1);
-    const endOfMonth = new Date(year, month + 1, 0);
+  useEffect(() => {
+    if (showEndDatePicker) {
+      loadOccupiedDatesForPicker(endPickerMonth);
+    }
+  }, [showEndDatePicker, endPickerMonth]);
 
-    const occupied = await getOccupiedDates(startOfMonth, endOfMonth);
-    setOccupiedDates(occupied);
+  const loadOccupiedDatesForPicker = async (pickerMonth) => {
+    try {
+      const year = pickerMonth.getFullYear();
+      const month = pickerMonth.getMonth();
+      const startOfMonth = new Date(year, month, 1);
+      const endOfMonth = new Date(year, month + 1, 0);
+
+      const occupied = await getOccupiedDates(startOfMonth, endOfMonth);
+      setOccupiedDates(occupied || []);
+    } catch (error) {
+      console.error('Error cargando fechas ocupadas:', error);
+      setOccupiedDates([]);
+    }
   };
 
   // Validar formulario
@@ -112,11 +141,21 @@ const EventModal = ({
       return;
     }
 
-    onSave(formData);
+    // Asegurarse de que las fechas estén en formato ISO correcto
+    const eventData = {
+      title: formData.title.trim(),
+      startDate: new Date(formData.startDate).toISOString(),
+      endDate: new Date(formData.endDate).toISOString(),
+      description: formData.description.trim(),
+      color: formData.color
+    };
+
+    console.log('Enviando datos del evento:', eventData); // Debug
+    onSave(eventData);
   };
 
   // Generar días para el picker
-  const generatePickerDays = () => {
+  const generatePickerDays = (pickerMonth) => {
     const year = pickerMonth.getFullYear();
     const month = pickerMonth.getMonth();
     
@@ -126,7 +165,6 @@ const EventModal = ({
     
     const days = [];
     
-    // Días del mes anterior
     const prevMonthLastDay = new Date(year, month, 0).getDate();
     for (let i = firstDayOfWeek - 1; i >= 0; i--) {
       days.push({
@@ -135,7 +173,6 @@ const EventModal = ({
       });
     }
     
-    // Días del mes actual
     for (let day = 1; day <= lastDay.getDate(); day++) {
       days.push({
         date: new Date(year, month, day),
@@ -143,7 +180,6 @@ const EventModal = ({
       });
     }
     
-    // Días del mes siguiente
     const remainingDays = 42 - days.length;
     for (let day = 1; day <= remainingDays; day++) {
       days.push({
@@ -162,43 +198,72 @@ const EventModal = ({
 
   const isDateSelected = (date) => {
     const dateStr = date.toISOString().split('T')[0];
+    return dateStr === formData.startDate || dateStr === formData.endDate;
+  };
+
+  const isDateInRange = (date) => {
+    if (!formData.startDate || !formData.endDate) return false;
+    
+    const dateStr = date.toISOString().split('T')[0];
     const startDate = new Date(formData.startDate);
     const endDate = new Date(formData.endDate);
     const checkDate = new Date(dateStr);
     
-    return checkDate >= startDate && checkDate <= endDate;
+    return checkDate > startDate && checkDate < endDate;
   };
 
-  const isDateInRange = (date) => {
-    if (!formData.startDate) return false;
-    
+  const handleStartDateSelect = (date) => {
     const dateStr = date.toISOString().split('T')[0];
-    const startDate = new Date(formData.startDate);
-    const checkDate = new Date(dateStr);
+    setFormData(prev => ({ ...prev, startDate: dateStr }));
+    setErrors({ ...errors, startDate: '' });
+    setShowStartDatePicker(false);
     
-    return checkDate > startDate && checkDate < new Date(formData.endDate);
+    // Si la fecha de fin es anterior a la nueva fecha de inicio, actualizarla
+    if (formData.endDate) {
+      const endDate = new Date(formData.endDate + 'T00:00:00');
+      const selectedDate = new Date(dateStr + 'T00:00:00');
+      
+      if (endDate < selectedDate) {
+        setFormData(prev => ({ ...prev, startDate: dateStr, endDate: dateStr }));
+      }
+    }
   };
 
   const handleEndDateSelect = (date) => {
     const dateStr = date.toISOString().split('T')[0];
-    const startDate = new Date(formData.startDate);
     
-    if (date < startDate) {
+    if (!formData.startDate) {
+      setErrors({ ...errors, endDate: 'Primero selecciona una fecha de inicio' });
+      return;
+    }
+    
+    const startDate = new Date(formData.startDate + 'T00:00:00');
+    const selectedDate = new Date(dateStr + 'T00:00:00');
+    
+    if (selectedDate < startDate) {
       setErrors({ ...errors, endDate: 'La fecha de fin debe ser posterior a la de inicio' });
       return;
     }
     
-    setFormData({ ...formData, endDate: dateStr });
+    setFormData(prev => ({ ...prev, endDate: dateStr }));
     setErrors({ ...errors, endDate: '' });
     setShowEndDatePicker(false);
   };
 
-  const goToPreviousMonth = () => {
-    setPickerMonth(new Date(pickerMonth.getFullYear(), pickerMonth.getMonth() - 1, 1));
+  const goToPreviousMonthStart = () => {
+    setStartPickerMonth(new Date(startPickerMonth.getFullYear(), startPickerMonth.getMonth() - 1, 1));
   };
 
-  const goToNextMonth = () => {
-    setPickerMonth(new Date(pickerMonth.getFullYear(), pickerMonth.getMonth() + 1, 1));
+  const goToNextMonthStart = () => {
+    setStartPickerMonth(new Date(startPickerMonth.getFullYear(), startPickerMonth.getMonth() + 1, 1));
+  };
+
+  const goToPreviousMonthEnd = () => {
+    setEndPickerMonth(new Date(endPickerMonth.getFullYear(), endPickerMonth.getMonth() - 1, 1));
+  };
+
+  const goToNextMonthEnd = () => {
+    setEndPickerMonth(new Date(endPickerMonth.getFullYear(), endPickerMonth.getMonth() + 1, 1));
   };
 
   const monthNames = [
@@ -279,22 +344,108 @@ const EventModal = ({
                     <span>Fecha de Inicio *</span>
                   </div>
                 </label>
-                <input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => {
-                    setFormData({ ...formData, startDate: e.target.value });
-                    // Si la fecha de fin es anterior, actualizarla
-                    if (e.target.value > formData.endDate) {
-                      setFormData({ ...formData, startDate: e.target.value, endDate: e.target.value });
-                    }
-                  }}
-                  className={`w-full px-4 py-3 bg-white border-2 rounded-lg focus:ring-4 focus:ring-blue-100 transition-all ${
-                    errors.startDate ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
-                  }`}
-                  disabled={!isAdmin}
-                  required
-                />
+                {isAdmin ? (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.startDate ? new Date(formData.startDate + 'T00:00:00').toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      }) : ''}
+                      onClick={() => setShowStartDatePicker(!showStartDatePicker)}
+                      className={`w-full px-4 py-3 bg-white border-2 rounded-lg cursor-pointer focus:ring-4 focus:ring-blue-100 transition-all ${
+                        errors.startDate ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
+                      }`}
+                      placeholder="Seleccionar fecha"
+                      readOnly
+                      required
+                    />
+                    
+                    {/* Mini Calendario Picker - INICIO */}
+                    {showStartDatePicker && (
+                      <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-2xl border-2 border-gray-200 p-4 z-10 w-80">
+                        <div className="flex items-center justify-between mb-3">
+                          <button
+                            type="button"
+                            onClick={goToPreviousMonthStart}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+                          <div className="font-bold text-gray-900">
+                            {monthNames[startPickerMonth.getMonth()]} {startPickerMonth.getFullYear()}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={goToNextMonthStart}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-1 mb-2">
+                          {weekDays.map((day, idx) => (
+                            <div key={idx} className="text-center text-xs font-bold text-gray-600 p-1">
+                              {day}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-1">
+                          {generatePickerDays(startPickerMonth).map((day, idx) => {
+                            const occupied = isDateOccupied(day.date);
+                            const selected = formData.startDate === day.date.toISOString().split('T')[0];
+
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => day.isCurrentMonth && handleStartDateSelect(day.date)}
+                                disabled={!day.isCurrentMonth}
+                                className={`
+                                  p-2 text-xs font-semibold rounded-lg transition-all
+                                  ${!day.isCurrentMonth ? 'text-gray-300 cursor-not-allowed' : ''}
+                                  ${selected ? 'bg-blue-600 text-white' : ''}
+                                  ${occupied && !selected ? 'bg-red-50 text-red-600' : ''}
+                                  ${day.isCurrentMonth && !selected && !occupied 
+                                    ? 'hover:bg-gray-100 text-gray-900' 
+                                    : ''
+                                  }
+                                `}
+                              >
+                                {day.date.getDate()}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t border-gray-200 space-y-1">
+                          <div className="flex items-center gap-2 text-xs">
+                            <div className="w-4 h-4 bg-blue-600 rounded"></div>
+                            <span className="text-gray-600">Seleccionado</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <div className="w-4 h-4 bg-red-50 border border-red-200 rounded"></div>
+                            <span className="text-gray-600">Ocupado</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    value={formData.startDate ? new Date(formData.startDate + 'T00:00:00').toLocaleDateString('es-ES', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric'
+                    }) : ''}
+                    className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg"
+                    disabled
+                  />
+                )}
                 {errors.startDate && (
                   <p className="mt-1 text-xs text-red-600">{errors.startDate}</p>
                 )}
@@ -312,7 +463,11 @@ const EventModal = ({
                   <div className="relative">
                     <input
                       type="text"
-                      value={formData.endDate ? new Date(formData.endDate).toLocaleDateString('es-ES') : ''}
+                      value={formData.endDate ? new Date(formData.endDate + 'T00:00:00').toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      }) : ''}
                       onClick={() => setShowEndDatePicker(!showEndDatePicker)}
                       className={`w-full px-4 py-3 bg-white border-2 rounded-lg cursor-pointer focus:ring-4 focus:ring-blue-100 transition-all ${
                         errors.endDate ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
@@ -329,17 +484,17 @@ const EventModal = ({
                         <div className="flex items-center justify-between mb-3">
                           <button
                             type="button"
-                            onClick={goToPreviousMonth}
+                            onClick={goToPreviousMonthEnd}
                             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           >
                             <ChevronLeft className="w-5 h-5" />
                           </button>
                           <div className="font-bold text-gray-900">
-                            {monthNames[pickerMonth.getMonth()]} {pickerMonth.getFullYear()}
+                            {monthNames[endPickerMonth.getMonth()]} {endPickerMonth.getFullYear()}
                           </div>
                           <button
                             type="button"
-                            onClick={goToNextMonth}
+                            onClick={goToNextMonthEnd}
                             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           >
                             <ChevronRight className="w-5 h-5" />
@@ -357,7 +512,7 @@ const EventModal = ({
 
                         {/* Grid de días */}
                         <div className="grid grid-cols-7 gap-1">
-                          {generatePickerDays().map((day, idx) => {
+                          {generatePickerDays(endPickerMonth).map((day, idx) => {
                             const occupied = isDateOccupied(day.date);
                             const selected = isDateSelected(day.date);
                             const inRange = isDateInRange(day.date);
@@ -408,8 +563,12 @@ const EventModal = ({
                   </div>
                 ) : (
                   <input
-                    type="date"
-                    value={formData.endDate}
+                    type="text"
+                    value={formData.endDate ? new Date(formData.endDate + 'T00:00:00').toLocaleDateString('es-ES', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric'
+                    }) : ''}
                     className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg"
                     disabled
                   />
