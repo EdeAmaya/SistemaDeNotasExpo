@@ -11,6 +11,11 @@ const useDataUsers = () => {
     const [password, setPassword] = useState("");
     const [role, setRole] = useState("");
     const [isVerified, setIsVerified] = useState(false);
+    
+    // Campos académicos (opcionales - solo para Docentes)
+    const [idLevel, setIdLevel] = useState("");
+    const [idSection, setIdSection] = useState("");
+    const [idSpecialty, setIdSpecialty] = useState("");
 
     const API = "https://stc-instituto-tecnico-ricaldone.onrender.com/api/users";
 
@@ -19,7 +24,7 @@ const useDataUsers = () => {
         setLoading(true);
         try {
             const response = await fetch(API, {
-                credentials: 'include' // ← AGREGADO
+                credentials: 'include'
             });
             if (!response.ok) {
                 throw new Error("Error al obtener los usuarios");
@@ -53,9 +58,16 @@ const useDataUsers = () => {
                 isVerified
             };
 
+            // Agregar campos académicos solo si el rol es Docente y tienen valor
+            if (role === 'Docente') {
+                if (idLevel) newUser.idLevel = idLevel;
+                if (idSection) newUser.idSection = idSection;
+                if (idSpecialty) newUser.idSpecialty = idSpecialty;
+            }
+
             const response = await fetch(API, {
                 method: "POST",
-                credentials: 'include', // ← AGREGADO
+                credentials: 'include',
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -80,7 +92,7 @@ const useDataUsers = () => {
         try {
             const response = await fetch(`${API}/${userId}`, {
                 method: "DELETE",
-                credentials: 'include', // ← AGREGADO
+                credentials: 'include',
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -107,6 +119,11 @@ const useDataUsers = () => {
         setPassword(""); // Por seguridad no cargar la contraseña
         setRole(user.role);
         setIsVerified(user.isVerified);
+        
+        // Cargar campos académicos si existen
+        setIdLevel(user.idLevel || "");
+        setIdSection(user.idSection || "");
+        setIdSpecialty(user.idSpecialty || "");
     };
 
     // Editar usuario existente
@@ -132,9 +149,16 @@ const useDataUsers = () => {
                 editUser.password = password;
             }
 
+            // Agregar campos académicos solo si el rol es Docente
+            if (role === 'Docente') {
+                editUser.idLevel = idLevel || null;
+                editUser.idSection = idSection || null;
+                editUser.idSpecialty = idSpecialty || null;
+            }
+
             const response = await fetch(`${API}/${id}`, {
                 method: "PUT",
-                credentials: 'include', // ← AGREGADO
+                credentials: 'include',
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -163,6 +187,9 @@ const useDataUsers = () => {
         setPassword("");
         setRole("");
         setIsVerified(false);
+        setIdLevel("");
+        setIdSection("");
+        setIdSpecialty("");
     };
 
     // Cargar usuarios al montar el componente
@@ -181,6 +208,9 @@ const useDataUsers = () => {
         password,
         role,
         isVerified,
+        idLevel,
+        idSection,
+        idSpecialty,
         
         // Setters
         setName,
@@ -189,6 +219,9 @@ const useDataUsers = () => {
         setPassword,
         setRole,
         setIsVerified,
+        setIdLevel,
+        setIdSection,
+        setIdSpecialty,
         
         // Funciones
         fetchUsers,

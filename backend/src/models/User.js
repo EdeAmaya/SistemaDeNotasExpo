@@ -44,6 +44,22 @@ const userSchema = new Schema({
         default: false
     },
 
+    // Para los maestros
+    idLevel: {
+        type: String,
+        required: false
+    },
+
+    idSection: {
+        type: String,
+        required: false
+    },
+
+    idSpecialty: {
+        type: String,
+        required: false
+    },
+
     // Campos adicionales para seguridad
     loginAttempts: {
         type: Number,
@@ -60,7 +76,6 @@ const userSchema = new Schema({
 });
 
 // Índices para mejorar rendimiento (sin email que ya tiene unique: true)
-// userSchema.index({ email: 1 }); // ❌ ELIMINAR ESTA LÍNEA - duplicada
 userSchema.index({ role: 1 });
 userSchema.index({ isVerified: 1 });
 

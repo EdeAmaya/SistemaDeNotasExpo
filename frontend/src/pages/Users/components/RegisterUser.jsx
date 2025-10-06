@@ -8,6 +8,9 @@ const RegisterUser = ({
   password, setPassword,
   role, setRole,
   isVerified, setIsVerified,
+  idLevel, setIdLevel,
+  idSection, setIdSection,
+  idSpecialty, setIdSpecialty,
   saveUser,
   id,
   handleEdit,
@@ -33,24 +36,20 @@ const RegisterUser = ({
     const allChars = uppercase + lowercase + numbers + symbols;
     let password = '';
     
-    // Asegurar al menos un carácter de cada tipo
     password += uppercase[Math.floor(Math.random() * uppercase.length)];
     password += lowercase[Math.floor(Math.random() * lowercase.length)];
     password += numbers[Math.floor(Math.random() * numbers.length)];
     password += symbols[Math.floor(Math.random() * symbols.length)];
     
-    // Completar hasta 12 caracteres
     for (let i = password.length; i < 12; i++) {
       password += allChars[Math.floor(Math.random() * allChars.length)];
     }
     
-    // Mezclar la contraseña
     password = password.split('').sort(() => Math.random() - 0.5).join('');
     
     setPassword(password);
   };
 
-  // Opciones de rol con iconos y descripciones
   const roles = [
     { 
       value: 'Admin', 
@@ -78,33 +77,33 @@ const RegisterUser = ({
       label: 'Estudiante', 
       icon: User, 
       gradient: 'from-orange-500 to-orange-700',
-      description: 'Acceso a proyectos'
+      description: 'Acceso a cursos'
     }
   ];
 
   return (
     <div className="max-w-4xl mx-auto">
       
-      {/* Header - Responsive */}
+      {/* Header */}
       <div className="mb-6 sm:mb-8">
-  <div className="flex flex-col sm:flex-row items-center gap-3 mb-3">
-    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${id ? 'bg-orange-500' : 'bg-orange-500'} flex items-center justify-center shadow-lg flex-shrink-0`}>
-      {id ? <Edit2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
-    </div>
-    <div className="flex-1 flex flex-col justify-center">
-      <h2 className="text-xl sm:text-2xl font-black text-gray-900">
-        {id ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
-      </h2>
-      <p className="text-xs sm:text-sm text-gray-500">
-        {id ? 'Actualiza la información del usuario' : 'Completa los datos para registrar un nuevo usuario'}
-      </p>
-    </div>
-  </div>
-</div>
+        <div className="flex flex-col sm:flex-row items-center gap-3 mb-3">
+          <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg flex-shrink-0`}>
+            {id ? <Edit2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
+          </div>
+          <div className="flex-1 flex flex-col justify-center">
+            <h2 className="text-xl sm:text-2xl font-black text-gray-900">
+              {id ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500">
+              {id ? 'Actualiza la información del usuario' : 'Completa los datos para registrar un nuevo usuario'}
+            </p>
+          </div>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         
-        {/* Información Personal - Responsive */}
+        {/* Información Personal */}
         <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border-2 border-gray-200">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
             <User className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -142,7 +141,7 @@ const RegisterUser = ({
           </div>
         </div>
 
-        {/* Credenciales - Responsive */}
+        {/* Credenciales */}
         <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border-2 border-gray-200">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
             <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -201,14 +200,14 @@ const RegisterUser = ({
           </div>
         </div>
 
-        {/* Rol del Usuario - Responsive */}
+        {/* Rol del Usuario */}
         <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border-2 border-gray-200">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
             <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Rol del Usuario *</span>
           </h3>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {roles.map((roleOption) => {
               const IconComponent = roleOption.icon;
               return (
@@ -258,7 +257,63 @@ const RegisterUser = ({
           </div>
         </div>
 
-        {/* Verificación - Responsive */}
+        {/* Información Académica - SOLO PARA DOCENTES */}
+        {role === 'Docente' && (
+          <div className="bg-blue-50 rounded-xl p-4 sm:p-6 border-2 border-blue-200">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+              <span>Información Académica (Opcional)</span>
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">
+                  Nivel
+                </label>
+                <input
+                  type="text"
+                  value={idLevel || ''}
+                  onChange={(e) => setIdLevel(e.target.value)}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
+                  placeholder="Ej: 1° Año, 2° Año"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">
+                  Sección
+                </label>
+                <input
+                  type="text"
+                  value={idSection || ''}
+                  onChange={(e) => setIdSection(e.target.value)}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
+                  placeholder="Ej: A, B, C"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">
+                  Especialidad
+                </label>
+                <input
+                  type="text"
+                  value={idSpecialty || ''}
+                  onChange={(e) => setIdSpecialty(e.target.value)}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
+                  placeholder="Ej: Informática, Electrónica"
+                />
+              </div>
+            </div>
+            
+            <p className="mt-3 text-xs text-blue-600 flex items-center gap-1">
+              <Info className="w-3 h-3" />
+              Estos campos son opcionales para docentes
+            </p>
+          </div>
+        )}
+
+        {/* Verificación */}
         <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border-2 border-gray-200">
           <label className="flex items-center gap-3 sm:gap-4 cursor-pointer group">
             <div className="relative">
@@ -288,15 +343,11 @@ const RegisterUser = ({
           </label>
         </div>
 
-        {/* Botones de Acción - Responsive */}
+        {/* Botones de Acción */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
           <button
             type="submit"
-            className={`cursor-pointer flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
-              id
-                ? 'bg-orange-500 hover:bg-orange-600'
-                : 'bg-orange-500 hover:bg-orange-600'
-            }`}
+            className={`cursor-pointer flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base bg-orange-500 hover:bg-orange-600`}
           >
             {id ? <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />}
             <span>{id ? 'Actualizar Usuario' : 'Registrar Usuario'}</span>
@@ -315,7 +366,7 @@ const RegisterUser = ({
         </div>
       </form>
 
-      {/* Info adicional - Responsive */}
+      {/* Info adicional */}
       <div className="mt-4 sm:mt-6 bg-orange-50 border-l-4 border-orange-500 p-3 sm:p-4 rounded-r-lg">
         <div className="flex gap-2 sm:gap-3">
           <Info className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 flex-shrink-0" />

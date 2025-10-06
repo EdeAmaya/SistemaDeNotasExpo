@@ -1,6 +1,6 @@
 import userModel from "../models/User.js";
 import bcryptjs from "bcryptjs";
-import ActivityLogger from "../utils/activityLogger.js"; // ← NUEVO IMPORT
+import ActivityLogger from "../utils/activityLogger.js";
 
 const userController = {};
 
@@ -32,7 +32,7 @@ userController.getUserById = async (req, res) => {
 // Insert - Create new user (mejorado)
 userController.insertUser = async (req, res) => {
   try {
-    const { name, lastName, email, password, role, isVerified } = req.body;
+    const { name, lastName, email, password, role, isVerified, idLevel, idSection, idSpecialty } = req.body;
 
     if (!name || !lastName || !email || !password || !role) {
       return res.status(400).json({ message: "Todos los campos son requeridos" });
@@ -54,9 +54,14 @@ userController.insertUser = async (req, res) => {
       isVerified: isVerified || false
     });
 
+    // Agregar campos académicos solo si tienen valor (opcionales para Docentes)
+    if (idLevel) newUser.idLevel = idLevel.trim();
+    if (idSection) newUser.idSection = idSection.trim();
+    if (idSpecialty) newUser.idSpecialty = idSpecialty.trim();
+
     const savedUser = await newUser.save();
 
-    // ← NUEVO: LOG DE ACTIVIDAD
+    // LOG DE ACTIVIDAD
     await ActivityLogger.log(
       req.user._id,
       'CREATE_USER',
@@ -101,7 +106,7 @@ userController.deleteUser = async (req, res) => {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    // ← NUEVO: LOG DE ACTIVIDAD
+    // LOG DE ACTIVIDAD
     await ActivityLogger.log(
       req.user._id,
       'DELETE_USER',
@@ -123,7 +128,7 @@ userController.deleteUser = async (req, res) => {
 userController.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    let { name, lastName, email, password, role, isVerified } = req.body;
+    let { name, lastName, email, password, role, isVerified, idLevel, idSection, idSpecialty } = req.body;
 
     const currentUser = await userModel.findById(id);
     if (!currentUser) {
@@ -136,6 +141,17 @@ userController.updateUser = async (req, res) => {
       role: role || currentUser.role,
       isVerified: isVerified !== undefined ? isVerified : currentUser.isVerified
     };
+
+    // Actualizar campos académicos (opcionales)
+    if (idLevel !== undefined) {
+      updateData.idLevel = idLevel ? idLevel.trim() : null;
+    }
+    if (idSection !== undefined) {
+      updateData.idSection = idSection ? idSection.trim() : null;
+    }
+    if (idSpecialty !== undefined) {
+      updateData.idSpecialty = idSpecialty ? idSpecialty.trim() : null;
+    }
 
     if (email && email !== currentUser.email) {
       const existsEmail = await userModel.findOne({ 
@@ -158,7 +174,7 @@ userController.updateUser = async (req, res) => {
       { new: true, select: '-password' }
     );
 
-    // ← NUEVO: LOG DE ACTIVIDAD
+    // LOG DE ACTIVIDAD
     await ActivityLogger.log(
       req.user._id,
       'UPDATE_USER',

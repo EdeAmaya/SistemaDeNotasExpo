@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users as UsersIcon, UserPlus, Crown, GraduationCap, Briefcase, CheckCircle, Info, User } from 'lucide-react';
+import { Users as UsersIcon, UserPlus, Crown, GraduationCap, Briefcase, User, CheckCircle, Info } from 'lucide-react';
 import ListUsers from './components/ListUsers';
 import RegisterUser from './components/RegisterUser';
 import useDataUsers from './hooks/useDataUsers';
@@ -21,12 +21,18 @@ const Users = () => {
     password,
     role,
     isVerified,
+    idLevel,
+    idSection,
+    idSpecialty,
     setName,
     setLastName,
     setEmail,
     setPassword,
     setRole,
     setIsVerified,
+    setIdLevel,
+    setIdSection,
+    setIdSpecialty,
     saveUser,
     deleteUser,
     updateUser,
@@ -48,7 +54,6 @@ const Users = () => {
 
   const stats = {
     total: users.length,
-    admins: users.filter(u => u.role === 'Admin').length,
     docentes: users.filter(u => u.role === 'Docente').length,
     evaluadores: users.filter(u => u.role === 'Evaluador').length,
     estudiantes: users.filter(u => u.role === 'Estudiante').length,
@@ -58,7 +63,7 @@ const Users = () => {
   return (
     <div className="min-h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
 
-      {/* Header Superior - Responsive */}
+      {/* Header Superior */}
       <div className="bg-white border-b-2 border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pt-20 lg:pt-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -77,15 +82,8 @@ const Users = () => {
               </div>
             </div>
 
-            {/* Stats - Responsive */}
-            <div className="grid grid-cols-3 lg:flex lg:items-center gap-2 sm:gap-3 lg:gap-4">
-              <div className="bg-orange-500 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
-                <div className="flex items-center justify-center mb-1">
-                  <Crown className="w-4 h-4 sm:w-5 sm:h-5" />
-                </div>
-                <div className="text-lg sm:text-2xl font-black text-center">{stats.admins}</div>
-                <div className="text-[10px] sm:text-xs font-semibold opacity-90 text-center">Admins</div>
-              </div>
+            {/* Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-3">
               <div className="bg-orange-500 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
                 <div className="flex items-center justify-center mb-1">
                   <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -100,12 +98,19 @@ const Users = () => {
                 <div className="text-lg sm:text-2xl font-black text-center">{stats.evaluadores}</div>
                 <div className="text-[10px] sm:text-xs font-semibold opacity-90 text-center">Evaluadores</div>
               </div>
+              <div className="bg-orange-500 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
+                <div className="flex items-center justify-center mb-1">
+                  <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <div className="text-lg sm:text-2xl font-black text-center">{stats.estudiantes}</div>
+                <div className="text-[10px] sm:text-xs font-semibold opacity-90 text-center">Estudiantes</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs - Responsive */}
+      {/* Tabs */}
       <div className="bg-white border-b border-gray-200 sticky top-0 lg:static z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-1 overflow-x-auto scrollbar-hide">
@@ -145,7 +150,7 @@ const Users = () => {
         </div>
       </div>
 
-      {/* Content - Responsive */}
+      {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
 
         {/* Contenido */}
@@ -175,6 +180,12 @@ const Users = () => {
                 setRole={setRole}
                 isVerified={isVerified}
                 setIsVerified={setIsVerified}
+                idLevel={idLevel}
+                setIdLevel={setIdLevel}
+                idSection={idSection}
+                setIdSection={setIdSection}
+                idSpecialty={idSpecialty}
+                setIdSpecialty={setIdSpecialty}
                 saveUser={saveUser}
                 id={id}
                 handleEdit={handleEdit}
@@ -184,7 +195,7 @@ const Users = () => {
           )}
         </div>
 
-        {/* Footer - Responsive */}
+        {/* Footer */}
         <div className="mt-4 sm:mt-6 bg-orange-50 border-l-4 border-orange-500 p-4 sm:p-5 rounded-r-xl">
           <div className="flex flex-col sm:flex-row items-start gap-3">
             <Info className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 flex-shrink-0" />
@@ -202,6 +213,10 @@ const Users = () => {
                 <div className="flex items-center gap-2">
                   <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />
                   <span><span className="font-semibold text-gray-800">Evaluador:</span> Evaluación de proyectos</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />
+                  <span><span className="font-semibold text-gray-800">Estudiante:</span> Acceso a cursos</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />
