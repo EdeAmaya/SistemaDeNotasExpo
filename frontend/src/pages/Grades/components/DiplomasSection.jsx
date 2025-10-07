@@ -16,13 +16,35 @@ const isBachilleratoLevel = (levelName) => {
     normalized.includes('contaduría');
 };
 
-const getSectionsForLevel = (level, allSections) => {
-  if (level._id) {
-    return allSections.filter(section => 
-      section.levelId === level._id || section.level === level._id
-    );
+// Función auxiliar para obtener el prefijo del projectId según el nivel
+const getProjectIdPrefixForLevel = (levelName) => {
+  const normalized = levelName.toLowerCase();
+
+  // Tercer Ciclo
+  if (normalized.includes('séptimo') || normalized.includes('7')) {
+    return 'A'; // AA, AB, AC, AD, AE, AF
+  }
+  if (normalized.includes('octavo') || normalized.includes('8')) {
+    return 'B'; // BA, BB, BC, BD, BE, BF
+  }
+  if (normalized.includes('noveno') || normalized.includes('9')) {
+    return 'C'; // CA, CB, CC, CD, CE, CF
   }
 
+  // Bachillerato (primer año)
+  if (normalized.includes('primer año') || normalized.includes('1er año')) {
+    return 'D'; // D1A, D1B, D2A, D2B según especialidad
+  }
+
+  // Bachillerato (segundo año)
+  if (normalized.includes('segundo año') || normalized.includes('2do año')) {
+    return 'E'; // E1A, E1B, E2A, E2B según especialidad
+  }
+
+  return null;
+};
+
+const getSectionsForLevel = (level, allSections) => {
   const levelName = level.levelName || level;
   const normalizedLevel = levelName.toLowerCase();
 
@@ -35,16 +57,14 @@ const getSectionsForLevel = (level, allSections) => {
     normalizedLevel.includes('8') ||
     normalizedLevel.includes('9')) {
     return allSections.filter(section =>
-      /^[A-F]$/i.test(section.sectionName) &&
-      (section.levelId === level._id || section.level === level._id)
+      /^[A-F]$/i.test(section.sectionName)
     );
   }
 
   if (isBachilleratoLevel(levelName)) {
     return allSections.filter(section => {
       const name = section.sectionName;
-      const isCorrectFormat = name === '1A' || name === '1B' || name === '2A' || name === '2B';
-      return isCorrectFormat && (section.levelId === level._id || section.level === level._id);
+      return name === '1A' || name === '1B' || name === '2A' || name === '2B';
     });
   }
 
@@ -74,7 +94,20 @@ const ProjectsListView = ({ section, level, onBack }) => {
         }
 
         const data = await response.json();
-        setProjects(data.data || []);
+
+        const expectedPrefix = getProjectIdPrefixForLevel(level.levelName);
+
+        const sectionLetter = section.sectionName;
+
+        const filteredProjects = (data.data || []).filter(project => {
+          if (!project.projectId || !expectedPrefix) return false;
+
+          const expectedPattern = `${expectedPrefix}${sectionLetter}`;
+          return project.projectId.toUpperCase().startsWith(expectedPattern);
+        });
+
+        setProjects(filteredProjects);
+
         setError(null);
       } catch (err) {
         setError(err.message || 'Error al cargar los proyectos');
@@ -85,7 +118,7 @@ const ProjectsListView = ({ section, level, onBack }) => {
     };
 
     fetchProjects();
-  }, [section._id]);
+  }, [section._id, section.sectionName, level.levelName]);
 
   const getScoreColor = (score) => {
     if (score >= 9) return 'text-green-600';
