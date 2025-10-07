@@ -18,7 +18,7 @@ const isBachilleratoLevel = (levelName) => {
 
 const getSectionsForLevel = (level, allSections) => {
   if (level._id) {
-    return allSections.filter(section =>
+    return allSections.filter(section => 
       section.levelId === level._id || section.level === level._id
     );
   }
