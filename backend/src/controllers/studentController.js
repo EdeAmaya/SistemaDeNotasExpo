@@ -140,39 +140,6 @@ studentController.insertStudent = async (req, res) => {
   }
 };
 
-//Delete
-studentController.deleteStudent = async (req, res) => {
-  try {
-    const deletedStudent = await studentModel.findByIdAndDelete(req.params.id);
-
-    if (!deletedStudent) {
-      return res.status(404).json({
-        message: "Estudiante no encontrado"
-      });
-    }
-
-    await ActivityLogger.log(
-      req.user._id,
-      'DELETE_STUDENT',
-      `Eliminó al estudiante "${deletedStudent.name} ${deletedStudent.lastName}"`,
-      'Student',
-      deletedStudent._id,
-      { studentCode: deletedStudent.studentCode },
-      req
-    );
-
-    res.json({
-      message: "Estudiante eliminado exitosamente",
-      student: deletedStudent
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error al eliminar estudiante",
-      error: error.message
-    });
-  }
-};
-
 //Update
 studentController.updateStudent = async (req, res) => {
   try {
@@ -193,6 +160,17 @@ studentController.updateStudent = async (req, res) => {
       }
     }
 
+    // Obtener el estudiante antes de actualizar para saber el proyecto anterior
+    const previousStudent = await studentModel.findById(studentId);
+    if (!previousStudent) {
+      return res.status(404).json({
+        message: "Estudiante no encontrado"
+      });
+    }
+
+    const previousProjectId = previousStudent.projectId?.toString() || null;
+    const newProjectId = projectId || null;
+
     const updateData = {
       studentCode: parseInt(studentCode),
       name: name.trim(),
@@ -200,7 +178,7 @@ studentController.updateStudent = async (req, res) => {
       idLevel,
       idSection,
       idSpecialty: idSpecialty || null,
-      projectId: projectId || null
+      projectId: newProjectId
     };
 
     const updatedStudent = await studentModel.findByIdAndUpdate(
@@ -209,10 +187,23 @@ studentController.updateStudent = async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    if (!updatedStudent) {
-      return res.status(404).json({
-        message: "Estudiante no encontrado"
-      });
+    // Manejar cambios en el proyecto
+    if (previousProjectId !== newProjectId) {
+      // Si tenía un proyecto anterior, removerlo del array assignedStudents
+      if (previousProjectId) {
+        await projectModel.findByIdAndUpdate(
+          previousProjectId,
+          { $pull: { assignedStudents: studentId } }
+        );
+      }
+
+      // Si tiene un nuevo proyecto, agregarlo al array assignedStudents
+      if (newProjectId) {
+        await projectModel.findByIdAndUpdate(
+          newProjectId,
+          { $addToSet: { assignedStudents: studentId } }
+        );
+      }
     }
 
     await ActivityLogger.log(
@@ -247,6 +238,47 @@ studentController.updateStudent = async (req, res) => {
         error: error.message
       });
     }
+  }
+};
+
+//Delete
+studentController.deleteStudent = async (req, res) => {
+  try {
+    const deletedStudent = await studentModel.findByIdAndDelete(req.params.id);
+
+    if (!deletedStudent) {
+      return res.status(404).json({
+        message: "Estudiante no encontrado"
+      });
+    }
+
+    // Si el estudiante tenía un proyecto asignado, removerlo del array assignedStudents
+    if (deletedStudent.projectId) {
+      await projectModel.findByIdAndUpdate(
+        deletedStudent.projectId,
+        { $pull: { assignedStudents: req.params.id } }
+      );
+    }
+
+    await ActivityLogger.log(
+      req.user._id,
+      'DELETE_STUDENT',
+      `Eliminó al estudiante "${deletedStudent.name} ${deletedStudent.lastName}"`,
+      'Student',
+      deletedStudent._id,
+      { studentCode: deletedStudent.studentCode },
+      req
+    );
+
+    res.json({
+      message: "Estudiante eliminado exitosamente",
+      student: deletedStudent
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error al eliminar estudiante",
+      error: error.message
+    });
   }
 };
 
@@ -299,6 +331,14 @@ studentController.bulkInsertStudents = async (req, res) => {
         });
 
         const savedStudent = await newStudent.save();
+
+        // Si se asignó un proyecto, agregar el estudiante al array assignedStudents del proyecto
+        if (studentData.projectId) {
+          await projectModel.findByIdAndUpdate(
+            studentData.projectId,
+            { $addToSet: { assignedStudents: savedStudent._id } }
+          );
+        }
 
         await ActivityLogger.log(
           req.user._id,
@@ -364,6 +404,30 @@ studentController.deleteAllStudents = async (req, res) => {
       });
     }
 
+    // Obtener todos los estudiantes con sus proyectos antes de eliminarlos
+    const studentsToDelete = await studentModel.find({});
+    
+    // Agrupar estudiantes por proyecto
+    const projectUpdates = {};
+    studentsToDelete.forEach(student => {
+      if (student.projectId) {
+        const projectIdStr = student.projectId.toString();
+        if (!projectUpdates[projectIdStr]) {
+          projectUpdates[projectIdStr] = [];
+        }
+        projectUpdates[projectIdStr].push(student._id);
+      }
+    });
+
+    // Remover todos los estudiantes de los proyectos
+    for (const [projectId, studentIds] of Object.entries(projectUpdates)) {
+      await projectModel.findByIdAndUpdate(
+        projectId,
+        { $pull: { assignedStudents: { $in: studentIds } } }
+      );
+    }
+
+    // Eliminar todos los estudiantes
     const result = await studentModel.deleteMany({});
 
     await ActivityLogger.log(

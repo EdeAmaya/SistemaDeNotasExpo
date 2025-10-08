@@ -21,6 +21,7 @@ const RegisterUser = ({
   const [sections, setSections] = useState([]);
   const [specialties, setSpecialties] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
   const [errors, setErrors] = useState({});
   const [selectedLevelName, setSelectedLevelName] = useState('');
 
@@ -280,12 +281,26 @@ const RegisterUser = ({
                   {!id && ' *'}
                 </span>
               </label>
+
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={password || ''}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPassword(value);
+
+                    // Validaciones manuales
+                    if (!id && value.length < 8) {
+                      setPasswordError("Debe tener al menos 8 caracteres");
+                    } else if (!/[A-Za-z]/.test(value) || !/\d/.test(value)) {
+                      setPasswordError("Debe incluir letras y números");
+                    } else {
+                      setPasswordError("");
+                    }
+                  }}
+                  className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 rounded-lg focus:ring-4 focus:ring-orange-100 transition-all text-gray-900 font-medium text-xs sm:text-base ${passwordError ? "border-red-400 focus:border-red-500" : "border-gray-200 focus:border-orange-500"
+                    }`}
                   placeholder={id ? "Nueva contraseña (opcional)" : "Contraseña segura"}
                   required={!id}
                 />
@@ -298,10 +313,12 @@ const RegisterUser = ({
                   <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
-              {!id && (
-                <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+
+              {/* Mensaje de error */}
+              {passwordError && (
+                <p className="mt-2 text-xs text-red-500 flex items-center gap-1">
                   <Info className="w-3 h-3" />
-                  Usa al menos 8 caracteres con números y letras
+                  {passwordError}
                 </p>
               )}
             </div>

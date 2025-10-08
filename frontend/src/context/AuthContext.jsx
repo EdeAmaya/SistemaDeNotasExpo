@@ -21,11 +21,11 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      console.log('🔍 Verificando estado de autenticación...');
+      console.log('Verificando estado de autenticación...');
       
       const response = await fetchWithCookies(`${API}/auth/verify`);
 
-      console.log('📡 Respuesta de verificación:', response.status);
+      console.log('Respuesta de verificación:', response.status);
 
       if (response.ok) {
         const data = await response.json();

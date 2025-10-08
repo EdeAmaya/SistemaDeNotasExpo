@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Lightbulb, Hash, FileText, BookOpen, Users, Award, CheckCircle, XCircle, Edit2, Plus, Info, Loader2, Globe, Search, X, UserCheck } from 'lucide-react';
 
 // ===== COMPONENTE MODAL PARA SELECCIONAR ESTUDIANTES =====
-const StudentSelector = ({ 
-  idLevel, 
-  idSection, 
-  selectedSpecialty, 
-  levels, 
-  students, 
-  assignedStudents, 
+const StudentSelector = ({
+  idLevel,
+  idSection,
+  selectedSpecialty,
+  levels,
+  students,
+  assignedStudents,
   setAssignedStudents,
   isBachillerato,
-  isBasica 
+  isBasica
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,7 +23,7 @@ const StudentSelector = ({
     if (!selectedLevel) return [];
 
     const levelName = selectedLevel.levelName || selectedLevel.name || '';
-    
+
     if (isBasica(levelName)) {
       if (!idSection) return [];
 
@@ -34,7 +34,7 @@ const StudentSelector = ({
         return studentLevel === idLevel && studentSection === idSection;
       });
     }
-    
+
     if (isBachillerato(levelName)) {
       if (!selectedSpecialty) return [];
 
@@ -83,19 +83,18 @@ const StudentSelector = ({
         type="button"
         onClick={() => canOpen && setIsOpen(true)}
         disabled={!canOpen}
-        className={`cursor-pointer w-full px-3 sm:px-4 py-3 sm:py-4 border-2 rounded-lg font-medium transition-all text-left flex items-center justify-between ${
-          canOpen
+        className={`cursor-pointer w-full px-3 sm:px-4 py-3 sm:py-4 border-2 rounded-lg font-medium transition-all text-left flex items-center justify-between ${canOpen
             ? 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
             : 'bg-gray-100 border-gray-200 cursor-not-allowed'
-        }`}
+          }`}
       >
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
           <span className="text-xs sm:text-sm text-gray-600">
             {!idLevel ? 'Selecciona un nivel primero' :
-             !idSection && !selectedSpecialty ? 'Selecciona sección/especialidad primero' :
-             assignedStudents.length > 0 ? `${assignedStudents.length} estudiante(s) seleccionado(s)` :
-             'Clic para seleccionar estudiantes'}
+              !idSection && !selectedSpecialty ? 'Selecciona sección/especialidad primero' :
+                assignedStudents.length > 0 ? `${assignedStudents.length} estudiante(s) seleccionado(s)` :
+                  'Clic para seleccionar estudiantes'}
           </span>
         </div>
         {canOpen && (
@@ -116,7 +115,7 @@ const StudentSelector = ({
               <button
                 type="button"
                 onClick={() => toggleStudent(student._id)}
-                className="ml-1 hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                className="cursor-pointer ml-1 hover:bg-blue-200 rounded-full p-0.5 transition-colors"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -150,7 +149,7 @@ const StudentSelector = ({
                     setIsOpen(false);
                     setSearchTerm('');
                   }}
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
+                  className="cursor-pointer w-8 h-8 sm:w-10 sm:h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
@@ -201,20 +200,18 @@ const StudentSelector = ({
                         key={student._id}
                         type="button"
                         onClick={() => toggleStudent(student._id)}
-                        className={`p-3 sm:p-4 rounded-xl border-2 transition-all text-left animate-fadeIn ${
-                          isSelected
+                        className={`cursor-pointer p-3 sm:p-4 rounded-xl border-2 transition-all text-left animate-fadeIn ${isSelected
                             ? 'bg-blue-50 border-blue-500 shadow-md'
                             : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                        }`}
+                          }`}
                         style={{ animationDelay: `${index * 0.03}s` }}
                       >
                         <div className="flex items-center gap-3">
                           {/* Checkbox visual */}
-                          <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                            isSelected
+                          <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${isSelected
                               ? 'bg-blue-500 border-blue-500'
                               : 'bg-white border-gray-300'
-                          }`}>
+                            }`}>
                             {isSelected && (
                               <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             )}
@@ -222,14 +219,12 @@ const StudentSelector = ({
 
                           {/* Info del estudiante */}
                           <div className="flex-1 min-w-0">
-                            <p className={`font-bold text-sm sm:text-base truncate ${
-                              isSelected ? 'text-blue-900' : 'text-gray-900'
-                            }`}>
+                            <p className={`font-bold text-sm sm:text-base truncate ${isSelected ? 'text-blue-900' : 'text-gray-900'
+                              }`}>
                               {student.name || ''} {student.lastName || ''}
                             </p>
-                            <p className={`text-xs sm:text-sm ${
-                              isSelected ? 'text-blue-600' : 'text-gray-500'
-                            }`}>
+                            <p className={`text-xs sm:text-sm ${isSelected ? 'text-blue-600' : 'text-gray-500'
+                              }`}>
                               Código: {student.studentCode || 'Sin código'}
                             </p>
                           </div>
@@ -255,11 +250,10 @@ const StudentSelector = ({
                   type="button"
                   onClick={() => setAssignedStudents([])}
                   disabled={assignedStudents.length === 0}
-                  className={`cursor-pointer flex-1 px-4 py-2.5 sm:py-3 rounded-xl font-bold transition-colors text-sm sm:text-base flex items-center justify-center gap-2 ${
-                    assignedStudents.length === 0
+                  className={`cursor-pointer flex-1 px-4 py-2.5 sm:py-3 rounded-xl font-bold transition-colors text-sm sm:text-base flex items-center justify-center gap-2 ${assignedStudents.length === 0
                       ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   <X className="w-4 h-4" />
                   Limpiar Selección
@@ -328,7 +322,7 @@ const RegisterProject = ({
   onCancel,
   projects
 }) => {
-  
+
   const [levels, setLevels] = useState([]);
   const [sections, setSections] = useState([]);
   const [specialties, setSpecialties] = useState([]);
@@ -354,11 +348,11 @@ const RegisterProject = ({
       existingProjects = projects.filter(project => {
         const projectLevel = project.idLevel?._id || project.idLevel;
         const projectSection = project.idSection?._id || project.idSection;
-        
+
         if (id && project._id === id) {
           return false;
         }
-        
+
         return projectLevel === idLevel && projectSection === idSection;
       });
     }
@@ -366,11 +360,11 @@ const RegisterProject = ({
       existingProjects = projects.filter(project => {
         const projectLevel = project.idLevel?._id || project.idLevel;
         const projectSpecialty = project.selectedSpecialty?._id || project.selectedSpecialty;
-        
+
         if (id && project._id === id) {
           return false;
         }
-        
+
         return projectLevel === idLevel && projectSpecialty === selectedSpecialty;
       });
     }
@@ -396,50 +390,50 @@ const RegisterProject = ({
     if (!idLevel || !autoTeamNumber) {
       return '';
     }
-    
+
     const selectedLevel = levels.find(level => level._id === idLevel);
     if (!selectedLevel) {
       return '';
     }
-    
+
     const levelName = selectedLevel.levelName || selectedLevel.name || '';
     const currentYear = new Date().getFullYear().toString().slice(-2);
     let code = '';
-    
+
     if (isBasica(levelName)) {
       if (!idSection) {
         return '';
       }
-      
+
       const selectedSection = sections.find(section => section._id === idSection);
       if (!selectedSection) {
         return '';
       }
-      
+
       const sectionName = selectedSection.sectionName || selectedSection.name || '';
       const levelLetter = selectedLevel.letterLevel || 'A';
       const sectionLetter = sectionName.toUpperCase().charAt(0);
       const teamNumberFormatted = autoTeamNumber.toString().padStart(2, '0');
-      
+
       code = `${levelLetter}${sectionLetter}${teamNumberFormatted}-${currentYear}`;
     }
     else if (isBachillerato(levelName)) {
       if (!selectedSpecialty) {
         return '';
       }
-      
+
       const specialty = specialties.find(spec => spec._id === selectedSpecialty);
       if (!specialty) {
         return '';
       }
-      
+
       const specialtyLetter = specialty.letterSpecialty || 'A';
       const levelLetter = selectedLevel.letterLevel || '1';
       const teamNumberFormatted = autoTeamNumber.toString().padStart(2, '0');
-      
+
       code = `${specialtyLetter}${levelLetter}${teamNumberFormatted}-${currentYear}`;
     }
-    
+
     return code;
   };
 
@@ -447,44 +441,44 @@ const RegisterProject = ({
     if (!levelName) return false;
     const levelLower = levelName.toLowerCase();
     return levelLower.includes('1°') || levelLower.includes('2°') || levelLower.includes('3°') ||
-           levelLower.includes('primer') || levelLower.includes('segundo') || levelLower.includes('tercer') ||
-           levelLower.includes('bachillerato') || levelLower.includes('1') || levelLower.includes('2') || levelLower.includes('3');
+      levelLower.includes('primer') || levelLower.includes('segundo') || levelLower.includes('tercer') ||
+      levelLower.includes('bachillerato') || levelLower.includes('1') || levelLower.includes('2') || levelLower.includes('3');
   };
 
   const isBasica = (levelName) => {
     if (!levelName) return false;
     const levelLower = levelName.toLowerCase();
     return levelLower.includes('7°') || levelLower.includes('8°') || levelLower.includes('9°') ||
-           levelLower.includes('séptimo') || levelLower.includes('octavo') || levelLower.includes('noveno') ||
-           levelLower.includes('7') || levelLower.includes('8') || levelLower.includes('9');
+      levelLower.includes('séptimo') || levelLower.includes('octavo') || levelLower.includes('noveno') ||
+      levelLower.includes('7') || levelLower.includes('8') || levelLower.includes('9');
   };
 
   const getFilteredSections = () => {
     if (!idLevel) return sections;
-    
+
     const selectedLevel = levels.find(level => level._id === idLevel);
     if (!selectedLevel) return sections;
-    
+
     const levelName = selectedLevel.name || selectedLevel.levelName || '';
-    
+
     if (isBachillerato(levelName)) {
       return sections.filter(section => {
         const sectionName = (section.name || section.sectionName || '').toLowerCase();
-        return /[123][ab]/.test(sectionName) || 
-               sectionName.includes('1a') || sectionName.includes('1b') ||
-               sectionName.includes('2a') || sectionName.includes('2b') ||
-               sectionName.includes('3a') || sectionName.includes('3b');
+        return /[123][ab]/.test(sectionName) ||
+          sectionName.includes('1a') || sectionName.includes('1b') ||
+          sectionName.includes('2a') || sectionName.includes('2b') ||
+          sectionName.includes('3a') || sectionName.includes('3b');
       });
     } else if (isBasica(levelName)) {
       return sections.filter(section => {
         const sectionName = (section.name || section.sectionName || '').toLowerCase().trim();
-        return /^[abcdef]$/.test(sectionName) && 
-               !sectionName.includes('1') && 
-               !sectionName.includes('2') && 
-               !sectionName.includes('3');
+        return /^[abcdef]$/.test(sectionName) &&
+          !sectionName.includes('1') &&
+          !sectionName.includes('2') &&
+          !sectionName.includes('3');
       });
     }
-    
+
     return sections;
   };
 
@@ -493,7 +487,7 @@ const RegisterProject = ({
       const selectedLevel = levels.find(level => level._id === idLevel);
       if (selectedLevel) {
         const levelName = selectedLevel.levelName || selectedLevel.name || '';
-        
+
         if (isBasica(levelName) && idSection) {
           const nextTeam = calculateNextTeamNumber();
           setAutoTeamNumber(nextTeam);
@@ -520,7 +514,7 @@ const RegisterProject = ({
       const selectedLevel = levels.find(level => level._id === idLevel);
       if (selectedLevel) {
         const levelName = selectedLevel.levelName || selectedLevel.name || '';
-        
+
         if (isBasica(levelName) && idSection) {
           const autoId = generateProjectId();
           if (autoId) {
@@ -528,7 +522,7 @@ const RegisterProject = ({
             const googleSitesUrl = `https://sites.google.com/ricaldone.edu.sv/${autoId}`;
             setGoogleSitesLink(googleSitesUrl);
           }
-        } 
+        }
         else if (isBachillerato(levelName) && selectedSpecialty) {
           const autoId = generateProjectId();
           if (autoId) {
@@ -553,7 +547,7 @@ const RegisterProject = ({
       const selectedLevel = levels.find(level => level._id === idLevel);
       if (selectedLevel) {
         const levelName = selectedLevel.levelName || selectedLevel.name || '';
-        
+
         if (isBasica(levelName)) {
           setSelectedSpecialty('');
           const currentSectionValid = getFilteredSections().some(section => section._id === idSection);
@@ -571,7 +565,7 @@ const RegisterProject = ({
     const fetchCatalogData = async () => {
       setLoadingData(true);
       setErrors({});
-      
+
       try {
         const [levelsResponse, sectionsResponse, specialtiesResponse, studentsResponse] = await Promise.all([
           fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/levels', { credentials: 'include' }),
@@ -618,10 +612,10 @@ const RegisterProject = ({
 
     fetchCatalogData();
   }, []);
-  
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!projectName || !idLevel || !autoTeamNumber) {
       alert('Por favor completa todos los campos obligatorios');
       return;
@@ -646,7 +640,7 @@ const RegisterProject = ({
     }
 
     setTeamNumber(autoTeamNumber);
-    
+
     if (id) {
       handleEdit(e);
     } else {
@@ -656,7 +650,7 @@ const RegisterProject = ({
 
   return (
     <div className="max-w-4xl mx-auto">
-      
+
       {/* Header - Responsive */}
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-row xs:flex-row items-start xs:items-center gap-3 mb-3">
@@ -685,14 +679,14 @@ const RegisterProject = ({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-        
+
         {/* Información del Proyecto */}
         <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border-2 border-gray-200">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
             <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Información del Proyecto</span>
           </h3>
-          
+
           <div>
             <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
               <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -715,7 +709,7 @@ const RegisterProject = ({
             <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Asignación Académica</span>
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {/* Nivel */}
             <div>
@@ -795,7 +789,7 @@ const RegisterProject = ({
                     </>
                   );
                 }
-                
+
                 if (isBasica(levelName)) {
                   return (
                     <>
@@ -847,7 +841,7 @@ const RegisterProject = ({
             <Hash className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
             <span>Identificación Automática</span>
           </h3>
-          
+
           <div className="space-y-3 sm:space-y-4">
             {/* Número de Equipo */}
             <div>
@@ -859,11 +853,10 @@ const RegisterProject = ({
                 <input
                   type="text"
                   value={autoTeamNumber ? `Equipo #${autoTeamNumber}` : 'Selecciona nivel y sección/especialidad...'}
-                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-bold text-base sm:text-lg transition-all ${
-                    autoTeamNumber 
-                      ? 'border-blue-300 bg-blue-50 text-blue-800' 
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-bold text-base sm:text-lg transition-all ${autoTeamNumber
+                      ? 'border-blue-300 bg-blue-50 text-blue-800'
                       : 'border-gray-200 bg-gray-50 text-gray-500'
-                  }`}
+                    }`}
                   readOnly
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center">
@@ -874,12 +867,11 @@ const RegisterProject = ({
                   )}
                 </div>
               </div>
-              <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${
-                autoTeamNumber ? 'text-blue-600' : 'text-gray-500'
-              }`}>
+              <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${autoTeamNumber ? 'text-blue-600' : 'text-gray-500'
+                }`}>
                 <Info className="w-3 h-3" />
-                {autoTeamNumber 
-                  ? 'Número asignado automáticamente' 
+                {autoTeamNumber
+                  ? 'Número asignado automáticamente'
                   : 'Completa los campos para asignar número'}
               </p>
             </div>
@@ -894,11 +886,10 @@ const RegisterProject = ({
                 <input
                   type="text"
                   value={projectId || 'El ID se generará automáticamente...'}
-                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-bold text-base sm:text-lg transition-all ${
-                    projectId 
-                      ? 'border-blue-300 bg-blue-50 text-blue-800' 
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-bold text-base sm:text-lg transition-all ${projectId
+                      ? 'border-blue-300 bg-blue-50 text-blue-800'
                       : 'border-gray-200 bg-gray-50 text-gray-500'
-                  }`}
+                    }`}
                   readOnly
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center">
@@ -909,12 +900,11 @@ const RegisterProject = ({
                   )}
                 </div>
               </div>
-              <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${
-                projectId ? 'text-blue-600' : 'text-gray-500'
-              }`}>
+              <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${projectId ? 'text-blue-600' : 'text-gray-500'
+                }`}>
                 <Info className="w-3 h-3" />
-                {projectId 
-                  ? 'ID generado según nivel y equipo' 
+                {projectId
+                  ? 'ID generado según nivel y equipo'
                   : 'El ID se genera al completar los campos'}
               </p>
             </div>
@@ -929,11 +919,10 @@ const RegisterProject = ({
                 <input
                   type="text"
                   value={googleSitesLink || 'El enlace se generará con el ID...'}
-                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-medium transition-all text-xs sm:text-sm ${
-                    googleSitesLink 
-                      ? 'border-purple-300 bg-purple-50 text-purple-800' 
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-medium transition-all text-xs sm:text-sm ${googleSitesLink
+                      ? 'border-purple-300 bg-purple-50 text-purple-800'
                       : 'border-gray-200 bg-gray-50 text-gray-500'
-                  }`}
+                    }`}
                   readOnly
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center">
@@ -944,12 +933,11 @@ const RegisterProject = ({
                   )}
                 </div>
               </div>
-              <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${
-                googleSitesLink ? 'text-purple-600' : 'text-gray-500'
-              }`}>
+              <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${googleSitesLink ? 'text-purple-600' : 'text-gray-500'
+                }`}>
                 <Info className="w-3 h-3" />
-                {googleSitesLink 
-                  ? 'Formato: sites.google.com/ricaldone.edu.sv/[ID]' 
+                {googleSitesLink
+                  ? 'Formato: sites.google.com/ricaldone.edu.sv/[ID]'
                   : 'El enlace se genera automáticamente'}
               </p>
             </div>
@@ -962,7 +950,7 @@ const RegisterProject = ({
             <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Configuración Adicional</span>
           </h3>
-          
+
           <div className="space-y-3 sm:space-y-4">
             {/* Estado */}
             <div>
@@ -970,15 +958,26 @@ const RegisterProject = ({
                 <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Estado del Proyecto *</span>
               </label>
-              <select
-                value={status || 'Activo'}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all text-gray-900 font-medium text-xs sm:text-base"
-                required
+
+              <div
+                onClick={() => setStatus(status === "Activo" ? "Inactivo" : "Activo")}
+                className="relative w-14 sm:w-16 h-7 sm:h-8 bg-gray-200 rounded-full cursor-pointer transition-all duration-300 flex items-center"
               >
-                <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo</option>
-              </select>
+                <div
+                  className={`absolute top-1 left-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full shadow-md transform transition-all duration-300 ${status === "Activo"
+                      ? "translate-x-7 sm:translate-x-8 bg-blue-500"
+                      : "bg-gray-400"
+                    }`}
+                ></div>
+              </div>
+
+              <p className="mt-2 text-xs sm:text-sm font-medium text-gray-600 flex items-center gap-1">
+                <span
+                  className={`inline-block w-2 h-2 rounded-full ${status === "Activo" ? "bg-blue-500" : "bg-gray-400"
+                    }`}
+                ></span>
+                {status === "Activo" ? "Proyecto activo" : "Proyecto inactivo"}
+              </p>
             </div>
 
             {/* Estudiantes Asignados */}
@@ -1013,13 +1012,12 @@ const RegisterProject = ({
           <button
             type="submit"
             disabled={loadingData}
-            className={`cursor-pointer flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
-              loadingData
+            className={`cursor-pointer flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${loadingData
                 ? 'bg-gray-400 cursor-not-allowed'
                 : id
-                ? 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
-                : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
-            }`}
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
+                  : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
+              }`}
           >
             {id ? <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <Plus className="w-4 h-4 sm:w-5 sm:h-5" />}
             <span>{id ? 'Actualizar Proyecto' : 'Registrar Proyecto'}</span>

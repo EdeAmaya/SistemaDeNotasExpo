@@ -78,6 +78,75 @@ const RegisterStudent = ({
     return isBachillerato(levelName);
   };
 
+  const getFilteredProjects = () => {
+    // Si no hay nivel, no mostrar proyectos
+    if (!idLevel) return [];
+    
+    // Si no hay sección, no mostrar proyectos
+    if (!idSection) return [];
+    
+    // Si requiere especialidad pero no está seleccionada, no mostrar proyectos
+    if (requiresSpecialty() && !idSpecialty) return [];
+
+    return projects.filter(project => {
+      // Verificar que el proyecto tenga nivel y sección
+      const projectLevelId = project.idLevel?._id || project.idLevel;
+      const projectSectionId = project.idSection?._id || project.idSection;
+      
+      // Debe coincidir nivel y sección
+      const matchesLevel = projectLevelId === idLevel;
+      const matchesSection = projectSectionId === idSection;
+
+      // Si no es bachillerato (es básica), solo verificar nivel y sección
+      if (!requiresSpecialty()) {
+        return matchesLevel && matchesSection;
+      }
+
+      // Si es bachillerato, debe tener especialidad seleccionada
+      if (requiresSpecialty() && idSpecialty) {
+        const projectSpecialtyId = project.selectedSpecialty?._id || project.selectedSpecialty;
+        return matchesLevel && matchesSection && projectSpecialtyId === idSpecialty;
+      }
+
+      return false;
+    });
+  };
+
+  // Función para determinar el mensaje del select de proyectos
+  const getProjectSelectMessage = () => {
+    if (!idLevel) {
+      return 'Primero selecciona un nivel...';
+    }
+    
+    if (!idSection) {
+      return 'Primero selecciona una sección...';
+    }
+    
+    if (requiresSpecialty() && !idSpecialty) {
+      return 'Primero selecciona una especialidad...';
+    }
+    
+    if (loadingData) {
+      return 'Cargando proyectos...';
+    }
+    
+    const filteredProjects = getFilteredProjects();
+    if (filteredProjects.length === 0) {
+      return 'No hay proyectos disponibles para esta combinación...';
+    }
+    
+    return 'Selecciona un proyecto (opcional)...';
+  };
+
+  // Función para determinar si el select debe estar deshabilitado
+  const isProjectSelectDisabled = () => {
+    if (loadingData) return true;
+    if (!idLevel) return true;
+    if (!idSection) return true;
+    if (requiresSpecialty() && !idSpecialty) return true;
+    return false;
+  };
+
   useEffect(() => {
     if (idLevel) {
       const selectedLevel = levels.find(level => level._id === idLevel);
@@ -94,7 +163,16 @@ const RegisterStudent = ({
         }
       }
     }
-  }, [idLevel, levels, sections]);
+
+    // Limpiar proyecto si ya no coincide con los filtros
+    if (projectId) {
+      const filteredProjects = getFilteredProjects();
+      const projectStillValid = filteredProjects.some(project => project._id === projectId);
+      if (!projectStillValid) {
+        setProjectId("");
+      }
+    }
+  }, [idLevel, idSection, idSpecialty, levels, sections, projects]);
 
   const checkStudentCodeUnique = async (code) => {
     if (!code || code.trim() === '') {
@@ -459,18 +537,58 @@ const RegisterStudent = ({
               <select
                 value={projectId || ''}
                 onChange={(e) => setProjectId(e.target.value)}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium"
-                disabled={loadingData}
+                className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-4 transition-all text-gray-900 font-medium ${
+                  isProjectSelectDisabled()
+                    ? 'bg-gray-100 border-gray-200 cursor-not-allowed'
+                    : 'bg-white border-gray-200 focus:border-blue-500 focus:ring-blue-100'
+                }`}
+                disabled={isProjectSelectDisabled()}
               >
                 <option value="">
-                  {loadingData ? 'Cargando proyectos...' : 'Sin proyecto asignado...'}
+                  {getProjectSelectMessage()}
                 </option>
-                {projects.map((project) => (
+                {getFilteredProjects().map((project) => (
                   <option key={project._id} value={project._id}>
                     {project.projectName || project.title || project.name || `Proyecto ${project.projectId || project._id}`}
                   </option>
                 ))}
               </select>
+              
+              {/* Mensajes informativos dinámicos */}
+              {!idLevel && (
+                <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
+                  <Info className="w-3 h-3" />
+                  Selecciona un nivel para ver proyectos
+                </p>
+              )}
+              
+              {idLevel && !idSection && (
+                <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
+                  <Info className="w-3 h-3" />
+                  Selecciona una sección para ver proyectos
+                </p>
+              )}
+              
+              {idLevel && idSection && requiresSpecialty() && !idSpecialty && (
+                <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
+                  <Info className="w-3 h-3" />
+                  Selecciona una especialidad para ver proyectos
+                </p>
+              )}
+              
+              {idLevel && idSection && (!requiresSpecialty() || (requiresSpecialty() && idSpecialty)) && getFilteredProjects().length === 0 && !loadingData && (
+                <p className="text-amber-600 text-xs mt-1 flex items-center gap-1">
+                  <Info className="w-3 h-3" />
+                  No hay proyectos disponibles para esta combinación
+                </p>
+              )}
+              
+              {idLevel && idSection && (!requiresSpecialty() || (requiresSpecialty() && idSpecialty)) && getFilteredProjects().length > 0 && (
+                <p className="text-blue-600 text-xs mt-1 flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  {getFilteredProjects().length} proyecto{getFilteredProjects().length !== 1 ? 's' : ''} disponible{getFilteredProjects().length !== 1 ? 's' : ''}
+                </p>
+              )}
             </div>
           </div>
         </div>
