@@ -14,7 +14,7 @@ const useLevels = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${API}/levels`, {credentials: 'include'});
+        const response = await fetch(`${API}/levels`, { credentials: 'include' });
         if (!response.ok) throw new Error('Error al obtener los niveles');
         const data = await response.json();
         setLevels(data);
@@ -41,7 +41,7 @@ const useSpecialties = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${API}/specialties`, {credentials: 'include'});
+        const response = await fetch(`${API}/specialties`, { credentials: 'include' });
         if (!response.ok) throw new Error('Error al obtener las especialidades');
         const data = await response.json();
         setSpecialties(data);
@@ -66,7 +66,7 @@ const useSections = () => {
     const getSections = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${API}/sections`, {credentials: 'include'});
+        const response = await fetch(`${API}/sections`, { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           setSections(data);
@@ -87,7 +87,7 @@ const useSections = () => {
 const parseProjectId = (projectId) => {
   const match = projectId.match(/^([A-Z])(\d)(\d{2})-(\d{2})$/);
   if (!match) return null;
-  
+
   return {
     specialtyLetter: match[1],
     levelNumber: parseInt(match[2]),
@@ -105,6 +105,34 @@ const isBachilleratoLevel = (levelName) => {
     normalized.includes('electr') ||
     normalized.includes('mecánica') ||
     normalized.includes('contaduría');
+};
+
+// Función auxiliar para obtener el prefijo del projectId según el nivel
+const getProjectIdPrefixForLevel = (levelName) => {
+  const normalized = levelName.toLowerCase();
+
+  // Tercer Ciclo
+  if (normalized.includes('séptimo') || normalized.includes('7')) {
+    return 'A'; // AA, AB, AC, AD, AE, AF
+  }
+  if (normalized.includes('octavo') || normalized.includes('8')) {
+    return 'B'; // BA, BB, BC, BD, BE, BF
+  }
+  if (normalized.includes('noveno') || normalized.includes('9')) {
+    return 'C'; // CA, CB, CC, CD, CE, CF
+  }
+
+  // Bachillerato (primer año)
+  if (normalized.includes('primer año') || normalized.includes('1er año')) {
+    return 'D'; // D1A, D1B, D2A, D2B según especialidad
+  }
+
+  // Bachillerato (segundo año)
+  if (normalized.includes('segundo año') || normalized.includes('2do año')) {
+    return 'E'; // E1A, E1B, E2A, E2B según especialidad
+  }
+
+  return null;
 };
 
 // Vista de proyectos para Tercer Ciclo (mantiene la funcionalidad original)
@@ -127,7 +155,17 @@ const TercerCicloProjectsView = ({ section, level, onBack }) => {
         if (!response.ok) throw new Error('Error al cargar los proyectos');
 
         const data = await response.json();
-        setProjects(data.data || []);
+
+        const expectedPrefix = getProjectIdPrefixForLevel(level.levelName);
+        const sectionLetter = section.sectionName;
+
+        const filteredProjects = (data.data || []).filter(project => {
+          if (!project.projectId || !expectedPrefix) return false;
+          const expectedPattern = `${expectedPrefix}${sectionLetter}`;
+          return project.projectId.toUpperCase().startsWith(expectedPattern);
+        });
+
+        setProjects(filteredProjects);
       } catch (err) {
         console.error(err);
         setProjects([]);
@@ -137,7 +175,7 @@ const TercerCicloProjectsView = ({ section, level, onBack }) => {
     };
 
     fetchProjects();
-  }, [section._id]);
+  }, [section._id, section.sectionName, level.levelName]);
 
   const handleDownloadDiplomas = async () => {
     if (downloading || projects.length === 0) return;
@@ -292,22 +330,22 @@ const BachilleratoProjectsView = ({ level, specialty, onBack }) => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        
+
         // Obtener todos los proyectos con población de datos
         const response = await fetch(`${API}/projects`, { credentials: 'include' });
-        
+
         if (!response.ok) throw new Error('Error al cargar los proyectos');
 
         const allProjects = await response.json();
-        
+
         // Filtrar proyectos por nivel y especialidad usando el projectId
         const filteredProjects = allProjects.filter(project => {
           // Comparar IDs de nivel (pueden ser objetos o strings)
           const projectLevelId = typeof project.idLevel === 'object' ? project.idLevel._id : project.idLevel;
           const selectedLevelId = typeof level._id === 'object' ? level._id._id : level._id;
-          
+
           if (projectLevelId !== selectedLevelId) return false;
-          
+
           const parsed = parseProjectId(project.projectId);
           return parsed && parsed.specialtyLetter === specialty.letterSpecialty;
         });
@@ -317,7 +355,7 @@ const BachilleratoProjectsView = ({ level, specialty, onBack }) => {
         // Obtener todos los project scores de una vez
         const scoresResponse = await fetch(`${API}/project-scores`, { credentials: 'include' });
         let allScores = [];
-        
+
         if (scoresResponse.ok) {
           const scoresData = await scoresResponse.json();
           allScores = scoresData.data || scoresData || [];
@@ -332,16 +370,16 @@ const BachilleratoProjectsView = ({ level, specialty, onBack }) => {
           });
 
           let promedioTotal = 0;
-          
+
           if (projectScore) {
             // Calcular promedio total
             const internas = projectScore.evaluacionesInternas || [];
             const externas = projectScore.evaluacionesExternas || [];
-            
+
             const notasInternas = internas.map(ev => ev.notaFinal || 0);
             const notasExternas = externas.map(ev => ev.notaFinal || 0);
             const totalNotas = [...notasInternas, ...notasExternas];
-            
+
             promedioTotal = totalNotas.length > 0
               ? totalNotas.reduce((a, b) => a + b, 0) / totalNotas.length
               : 0;
@@ -360,9 +398,9 @@ const BachilleratoProjectsView = ({ level, specialty, onBack }) => {
 
         // Ordenar por promedio total
         projectsWithScores.sort((a, b) => b.scores.promedioTotal - a.scores.promedioTotal);
-        
+
         console.log('Proyectos con scores ordenados:', projectsWithScores);
-        
+
         setProjects(projectsWithScores);
       } catch (err) {
         console.error('Error al cargar proyectos:', err);
@@ -380,7 +418,7 @@ const BachilleratoProjectsView = ({ level, specialty, onBack }) => {
 
     try {
       setDownloading(prev => ({ ...prev, [place]: true }));
-      
+
       const response = await fetch(
         `${API}/diplomas/bachillerato/${level._id}/${specialty._id}/${place}`,
         { method: 'GET', credentials: 'include' }
@@ -412,7 +450,7 @@ const BachilleratoProjectsView = ({ level, specialty, onBack }) => {
 
     try {
       setDownloading(prev => ({ ...prev, all: true }));
-      
+
       const response = await fetch(
         `${API}/diplomas/bachillerato/${level._id}/${specialty._id}`,
         { method: 'GET', credentials: 'include' }
@@ -756,7 +794,7 @@ const DiplomasSection = () => {
 
   if (selectedLevel) {
     const isBachillerato = isBachilleratoLevel(selectedLevel.levelName);
-    
+
     if (isBachillerato) {
       return (
         <BachilleratoView
@@ -813,7 +851,7 @@ const DiplomasSection = () => {
               </div>
               <div className="p-6">
                 <p className="text-sm text-gray-600">
-                  {isBachilleratoLevel(level.levelName) ? 
+                  {isBachilleratoLevel(level.levelName) ?
                     `${specialties.length} especialidades disponibles` :
                     `${sections.filter(s => /^[A-F]$/i.test(s.sectionName)).length} secciones disponibles`
                   }
