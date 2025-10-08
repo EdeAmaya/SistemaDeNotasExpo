@@ -84,8 +84,8 @@ const StudentSelector = ({
         onClick={() => canOpen && setIsOpen(true)}
         disabled={!canOpen}
         className={`cursor-pointer w-full px-3 sm:px-4 py-3 sm:py-4 border-2 rounded-lg font-medium transition-all text-left flex items-center justify-between ${canOpen
-            ? 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
-            : 'bg-gray-100 border-gray-200 cursor-not-allowed'
+          ? 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
+          : 'bg-gray-100 border-gray-200 cursor-not-allowed'
           }`}
       >
         <div className="flex items-center gap-2">
@@ -201,16 +201,16 @@ const StudentSelector = ({
                         type="button"
                         onClick={() => toggleStudent(student._id)}
                         className={`cursor-pointer p-3 sm:p-4 rounded-xl border-2 transition-all text-left animate-fadeIn ${isSelected
-                            ? 'bg-blue-50 border-blue-500 shadow-md'
-                            : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                          ? 'bg-blue-50 border-blue-500 shadow-md'
+                          : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
                           }`}
                         style={{ animationDelay: `${index * 0.03}s` }}
                       >
                         <div className="flex items-center gap-3">
                           {/* Checkbox visual */}
                           <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${isSelected
-                              ? 'bg-blue-500 border-blue-500'
-                              : 'bg-white border-gray-300'
+                            ? 'bg-blue-500 border-blue-500'
+                            : 'bg-white border-gray-300'
                             }`}>
                             {isSelected && (
                               <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
@@ -251,8 +251,8 @@ const StudentSelector = ({
                   onClick={() => setAssignedStudents([])}
                   disabled={assignedStudents.length === 0}
                   className={`cursor-pointer flex-1 px-4 py-2.5 sm:py-3 rounded-xl font-bold transition-colors text-sm sm:text-base flex items-center justify-center gap-2 ${assignedStudents.length === 0
-                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                 >
                   <X className="w-4 h-4" />
@@ -613,6 +613,26 @@ const RegisterProject = ({
     fetchCatalogData();
   }, []);
 
+  // Efecto para cargar estudiantes asignados al editar
+  useEffect(() => {
+    if (id && students.length > 0 && projects && projects.length > 0) {
+      const currentProject = projects.find(project => project._id === id);
+      if (currentProject && currentProject.assignedStudents) {
+        // Extraer solo los IDs de los estudiantes
+        const studentIds = currentProject.assignedStudents.map(student => {
+          // Si el estudiante es un objeto con _id, extraerlo
+          if (typeof student === 'object' && student._id) {
+            return student._id;
+          }
+          // Si ya es un string (ID directo), devolverlo
+          return student;
+        }).filter(Boolean); // Filtrar valores undefined o null
+
+        setAssignedStudents(studentIds);
+      }
+    }
+  }, [id, students, projects, setAssignedStudents]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -854,8 +874,8 @@ const RegisterProject = ({
                   type="text"
                   value={autoTeamNumber ? `Equipo #${autoTeamNumber}` : 'Selecciona nivel y sección/especialidad...'}
                   className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-bold text-base sm:text-lg transition-all ${autoTeamNumber
-                      ? 'border-blue-300 bg-blue-50 text-blue-800'
-                      : 'border-gray-200 bg-gray-50 text-gray-500'
+                    ? 'border-blue-300 bg-blue-50 text-blue-800'
+                    : 'border-gray-200 bg-gray-50 text-gray-500'
                     }`}
                   readOnly
                 />
@@ -887,8 +907,8 @@ const RegisterProject = ({
                   type="text"
                   value={projectId || 'El ID se generará automáticamente...'}
                   className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-bold text-base sm:text-lg transition-all ${projectId
-                      ? 'border-blue-300 bg-blue-50 text-blue-800'
-                      : 'border-gray-200 bg-gray-50 text-gray-500'
+                    ? 'border-blue-300 bg-blue-50 text-blue-800'
+                    : 'border-gray-200 bg-gray-50 text-gray-500'
                     }`}
                   readOnly
                 />
@@ -920,8 +940,8 @@ const RegisterProject = ({
                   type="text"
                   value={googleSitesLink || 'El enlace se generará con el ID...'}
                   className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-medium transition-all text-xs sm:text-sm ${googleSitesLink
-                      ? 'border-purple-300 bg-purple-50 text-purple-800'
-                      : 'border-gray-200 bg-gray-50 text-gray-500'
+                    ? 'border-purple-300 bg-purple-50 text-purple-800'
+                    : 'border-gray-200 bg-gray-50 text-gray-500'
                     }`}
                   readOnly
                 />
@@ -965,8 +985,8 @@ const RegisterProject = ({
               >
                 <div
                   className={`absolute top-1 left-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full shadow-md transform transition-all duration-300 ${status === "Activo"
-                      ? "translate-x-7 sm:translate-x-8 bg-blue-500"
-                      : "bg-gray-400"
+                    ? "translate-x-7 sm:translate-x-8 bg-blue-500"
+                    : "bg-gray-400"
                     }`}
                 ></div>
               </div>
@@ -1013,10 +1033,10 @@ const RegisterProject = ({
             type="submit"
             disabled={loadingData}
             className={`cursor-pointer flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${loadingData
-                ? 'bg-gray-400 cursor-not-allowed'
-                : id
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
-                  : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
+              ? 'bg-gray-400 cursor-not-allowed'
+              : id
+                ? 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
+                : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
               }`}
           >
             {id ? <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <Plus className="w-4 h-4 sm:w-5 sm:h-5" />}
