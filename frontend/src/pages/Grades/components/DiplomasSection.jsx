@@ -292,7 +292,8 @@ const BachilleratoProjectsView = ({ level, specialty, onBack }) => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        // Obtener todos los proyectos del nivel
+        
+        // Obtener todos los proyectos con población de datos
         const response = await fetch(`${API}/projects`, { credentials: 'include' });
         
         if (!response.ok) throw new Error('Error al cargar los proyectos');
@@ -301,40 +302,70 @@ const BachilleratoProjectsView = ({ level, specialty, onBack }) => {
         
         // Filtrar proyectos por nivel y especialidad usando el projectId
         const filteredProjects = allProjects.filter(project => {
-          if (project.idLevel !== level._id) return false;
+          // Comparar IDs de nivel (pueden ser objetos o strings)
+          const projectLevelId = typeof project.idLevel === 'object' ? project.idLevel._id : project.idLevel;
+          const selectedLevelId = typeof level._id === 'object' ? level._id._id : level._id;
+          
+          if (projectLevelId !== selectedLevelId) return false;
           
           const parsed = parseProjectId(project.projectId);
           return parsed && parsed.specialtyLetter === specialty.letterSpecialty;
         });
 
-        // Obtener scores para cada proyecto
-        const projectsWithScores = await Promise.all(
-          filteredProjects.map(async (project) => {
-            try {
-              const scoreResponse = await fetch(`${API}/project-scores/project/${project._id}`, { 
-                credentials: 'include' 
-              });
-              
-              if (scoreResponse.ok) {
-                const scoreData = await scoreResponse.json();
-                return {
-                  ...project,
-                  scores: scoreData.data?.scores || { promedioTotal: 0 }
-                };
-              }
-              return { ...project, scores: { promedioTotal: 0 } };
-            } catch {
-              return { ...project, scores: { promedioTotal: 0 } };
+        console.log('Proyectos filtrados:', filteredProjects);
+
+        // Obtener todos los project scores de una vez
+        const scoresResponse = await fetch(`${API}/project-scores`, { credentials: 'include' });
+        let allScores = [];
+        
+        if (scoresResponse.ok) {
+          const scoresData = await scoresResponse.json();
+          allScores = scoresData.data || scoresData || [];
+        }
+
+        // Mapear proyectos con sus scores
+        const projectsWithScores = filteredProjects.map(project => {
+          const projectScore = allScores.find(score => {
+            const scoreProjectId = typeof score.projectId === 'object' ? score.projectId._id : score.projectId;
+            const currentProjectId = typeof project._id === 'object' ? project._id._id : project._id;
+            return scoreProjectId === currentProjectId;
+          });
+
+          let promedioTotal = 0;
+          
+          if (projectScore) {
+            // Calcular promedio total
+            const internas = projectScore.evaluacionesInternas || [];
+            const externas = projectScore.evaluacionesExternas || [];
+            
+            const notasInternas = internas.map(ev => ev.notaFinal || 0);
+            const notasExternas = externas.map(ev => ev.notaFinal || 0);
+            const totalNotas = [...notasInternas, ...notasExternas];
+            
+            promedioTotal = totalNotas.length > 0
+              ? totalNotas.reduce((a, b) => a + b, 0) / totalNotas.length
+              : 0;
+          }
+
+          return {
+            ...project,
+            scores: {
+              promedioTotal: parseFloat(promedioTotal.toFixed(2)),
+              promedioInterno: projectScore?.promedioInterno || 0,
+              promedioExterno: projectScore?.promedioExterno || 0,
+              totalEvaluaciones: (projectScore?.evaluacionesInternas?.length || 0) + (projectScore?.evaluacionesExternas?.length || 0)
             }
-          })
-        );
+          };
+        });
 
         // Ordenar por promedio total
         projectsWithScores.sort((a, b) => b.scores.promedioTotal - a.scores.promedioTotal);
         
+        console.log('Proyectos con scores ordenados:', projectsWithScores);
+        
         setProjects(projectsWithScores);
       } catch (err) {
-        console.error(err);
+        console.error('Error al cargar proyectos:', err);
         setProjects([]);
       } finally {
         setLoading(false);
