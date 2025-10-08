@@ -18,17 +18,19 @@ rubricController.createRubrics = async (req, res) => {
             year,
             stageId,
             rubricType,
+            scaleType,
             criteria
         } = req.body;
 
         const newRubric = new Rubric({
             rubricName,
             level,
-            levelId: levelId || null, // Nueva referencia a Levels
+            levelId: levelId || null,
             specialtyId: specialtyId || null,
             year,
             stageId,
             rubricType,
+            scaleType: rubricType === 1 ? scaleType : null,
             criteria
         });
 
@@ -40,6 +42,56 @@ rubricController.createRubrics = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             message: "Error creating rubric",
+            error: error.message
+        });
+    }
+};
+
+// Actualizar una rúbrica
+rubricController.updateRubric = async (req, res) => {
+    try {
+        const {
+            rubricName,
+            level,
+            levelId,
+            specialtyId,
+            year,
+            stageId,
+            rubricType,
+            scaleType,
+            criteria
+        } = req.body;
+
+        const updatedRubric = await Rubric.findByIdAndUpdate(
+            req.params.id,
+            {
+                rubricName,
+                level,
+                levelId: levelId || null,
+                specialtyId: specialtyId || null,
+                year,
+                stageId,
+                rubricType,
+                scaleType: rubricType === 1 ? scaleType : null,
+                criteria
+            },
+            { new: true, runValidators: true }
+        )
+            .populate("specialtyId", "specialtyName")
+            .populate("stageId", "name")
+            .populate("levelId", "levelName");
+
+        if (!updatedRubric) {
+            return res.status(404).json({ message: "Rubric not found" });
+        }
+
+        res.status(200).json({
+            message: "Rubric updated successfully",
+            rubric: updatedRubric
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Error updating rubric",
             error: error.message
         });
     }
@@ -100,54 +152,6 @@ rubricController.getRubricById = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             message: "Error fetching rubric",
-            error: error.message
-        });
-    }
-};
-
-// Actualizar una rúbrica
-rubricController.updateRubric = async (req, res) => {
-    try {
-        const {
-            rubricName,
-            level,
-            levelId,
-            specialtyId,
-            year,
-            stageId,
-            rubricType,
-            criteria
-        } = req.body;
-
-        const updatedRubric = await Rubric.findByIdAndUpdate(
-            req.params.id,
-            {
-                rubricName,
-                level,
-                levelId: levelId || null,
-                specialtyId: specialtyId || null,
-                year,
-                stageId,
-                rubricType,
-                criteria
-            },
-            { new: true, runValidators: true }
-        )
-            .populate("specialtyId", "specialtyName")
-            .populate("stageId", "name")
-            .populate("levelId", "levelName");
-
-        if (!updatedRubric) {
-            return res.status(404).json({ message: "Rubric not found" });
-        }
-
-        res.status(200).json({
-            message: "Rubric updated successfully",
-            rubric: updatedRubric
-        });
-    } catch (error) {
-        res.status(500).json({
-            message: "Error updating rubric",
             error: error.message
         });
     }
