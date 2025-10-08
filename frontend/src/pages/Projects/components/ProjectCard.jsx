@@ -37,8 +37,8 @@ const ProjectCard = ({ project, deleteProject, updateProject, viewMode = 'list' 
         {/* Barra lateral colorida */}
         <div className={`absolute left-0 top-0 bottom-0 w-1 sm:w-1.5 ${
           project.status === 'Activo'
-            ? 'bg-gradient-to-b from-green-500 via-green-600 to-green-700'
-            : 'bg-gradient-to-b from-red-500 via-red-600 to-red-700'
+            ? 'bg-gradient-to-b from-blue-500 via-blue-600 to-blue-700'
+            : 'bg-gradient-to-b from-blue-500 via-blue-600 to-blue-700'
         }`}></div>
         
         <div className="pl-3 sm:pl-4 pr-3 sm:pr-5 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
@@ -46,14 +46,14 @@ const ProjectCard = ({ project, deleteProject, updateProject, viewMode = 'list' 
           {/* Avatar con icono */}
           <div className={`relative flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-xl ${
             project.status === 'Activo'
-              ? 'bg-gradient-to-br from-green-500 via-green-600 to-green-700'
-              : 'bg-gradient-to-br from-red-500 via-red-600 to-red-700'
+              ? 'bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700'
+              : 'bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700'
           } flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300 self-start sm:self-auto`}>
             <Lightbulb className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             
             {/* Indicador de estado */}
             {project.status === 'Activo' ? (
-              <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+              <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center">
                 <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
               </div>
             ) : (
@@ -115,7 +115,7 @@ const ProjectCard = ({ project, deleteProject, updateProject, viewMode = 'list' 
             {project.googleSitesLink && (
               <button
                 onClick={openGoogleSite}
-                className="px-2 sm:px-4 py-1.5 sm:py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold text-[10px] sm:text-sm shadow-sm hover:shadow-md transition-all duration-200"
+                className="cursor-pointer px-2 sm:px-4 py-1.5 sm:py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold text-[10px] sm:text-sm shadow-sm hover:shadow-md transition-all duration-200"
                 title="Ver sitio web"
               >
                 <span className="flex items-center gap-1 sm:gap-1.5">
@@ -127,7 +127,7 @@ const ProjectCard = ({ project, deleteProject, updateProject, viewMode = 'list' 
             
             <button
               onClick={handleEdit}
-              className="px-2 sm:px-4 py-1.5 sm:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-[10px] sm:text-sm shadow-sm hover:shadow-md transition-all duration-200"
+              className="cursor-pointer px-2 sm:px-4 py-1.5 sm:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-[10px] sm:text-sm shadow-sm hover:shadow-md transition-all duration-200"
               title="Editar proyecto"
             >
               <span className="flex items-center gap-1 sm:gap-1.5">
@@ -138,7 +138,7 @@ const ProjectCard = ({ project, deleteProject, updateProject, viewMode = 'list' 
             
             <button
               onClick={handleDelete}
-              className="px-2 sm:px-4 py-1.5 sm:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-[10px] sm:text-sm shadow-sm hover:shadow-md transition-all duration-200"
+              className="cursor-pointer px-2 sm:px-4 py-1.5 sm:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-[10px] sm:text-sm shadow-sm hover:shadow-md transition-all duration-200"
               title="Eliminar proyecto"
             >
               <span className="flex items-center gap-1 sm:gap-1.5">
@@ -152,8 +152,8 @@ const ProjectCard = ({ project, deleteProject, updateProject, viewMode = 'list' 
         {/* Barra de progreso inferior en hover */}
         <div className={`h-0.5 ${
           project.status === 'Activo'
-            ? 'bg-gradient-to-r from-green-500 via-green-600 to-green-700'
-            : 'bg-gradient-to-r from-red-500 via-red-600 to-red-700'
+            ? 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700'
+            : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700'
         } transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500`}></div>
       </div>
     );
@@ -166,8 +166,8 @@ const ProjectCard = ({ project, deleteProject, updateProject, viewMode = 'list' 
       {/* Header con gradiente */}
       <div className={`relative ${
         project.status === 'Activo'
-          ? 'bg-gradient-to-r from-green-500 via-green-600 to-green-700'
-          : 'bg-gradient-to-r from-red-500 via-red-600 to-red-700'
+          ? 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700'
+          : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700'
       } p-4 sm:p-6 text-white`}>
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
@@ -267,7 +267,7 @@ const ProjectCard = ({ project, deleteProject, updateProject, viewMode = 'list' 
           {project.googleSitesLink && (
             <button
               onClick={openGoogleSite}
-              className="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+              className="cursor-pointer w-full bg-purple-500 hover:bg-purple-600 text-white py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
             >
               <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Ver Sitio Web</span>
@@ -277,7 +277,7 @@ const ProjectCard = ({ project, deleteProject, updateProject, viewMode = 'list' 
           <div className="flex gap-2 sm:gap-3">
             <button
               onClick={handleEdit}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2"
+              className="cursor-pointer flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2"
             >
               <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Editar</span>
@@ -285,7 +285,7 @@ const ProjectCard = ({ project, deleteProject, updateProject, viewMode = 'list' 
             
             <button
               onClick={handleDelete}
-              className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2"
+              className="cursor-pointer flex-1 bg-red-500 hover:bg-red-600 text-white py-2 sm:py-2.5 rounded-lg font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2"
             >
               <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Eliminar</span>
@@ -297,7 +297,7 @@ const ProjectCard = ({ project, deleteProject, updateProject, viewMode = 'list' 
       {/* Footer decorativo */}
       <div className={`h-2 ${
         project.status === 'Activo'
-          ? 'bg-gradient-to-r from-green-500 via-green-600 to-green-700'
+          ? 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700'
           : 'bg-gradient-to-r from-red-500 via-red-600 to-red-700'
       }`}></div>
     </div>

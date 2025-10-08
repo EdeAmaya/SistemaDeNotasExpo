@@ -223,7 +223,7 @@ const BulkStudentUpload = ({ onUploadComplete, levels, sections, specialties, pr
         <div className="max-w-4xl mx-auto p-8">
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center shadow-lg">
                         <Upload className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -233,9 +233,9 @@ const BulkStudentUpload = ({ onUploadComplete, levels, sections, specialties, pr
                 </div>
             </div>
 
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-6">
+            <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg mb-6">
                 <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <AlertCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-gray-700">
                         <p className="font-bold text-gray-900 mb-2">Instrucciones:</p>
                         <ol className="list-decimal list-inside space-y-1">

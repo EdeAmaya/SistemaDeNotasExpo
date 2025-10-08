@@ -18,9 +18,9 @@ const ActivityLogger = {
             });
             
             await logEntry.save();
-            console.log(`📝 Log registrado: ${description} - Usuario: ${userId}`);
+            console.log(`Log registrado: ${description} - Usuario: ${userId}`);
         } catch (error) {
-            console.error('❌ Error registrando actividad:', error);
+            console.error('Error registrando actividad:', error);
         }
     },
 
@@ -53,7 +53,7 @@ const ActivityLogger = {
                 await logEntry.save();
             }
         } catch (error) {
-            console.error('❌ Error registrando heartbeat:', error);
+            console.error('Error registrando heartbeat:', error);
         }
     },
 
@@ -123,7 +123,7 @@ const ActivityLogger = {
                 {
                     $match: {
                         'user.isVerified': true,
-                        'user.role': { $in: ['Docente', 'Evaluador'] }
+                        'user.role': { $in: ['Docente', 'Evaluador', 'Estudiante'] }
                     }
                 },
                 {

@@ -95,7 +95,7 @@ const Projects = () => {
                 <span className="text-blue-600 font-semibold">Gestión de Proyectos</span>
               </div>
               <div className="flex items-center gap-2 sm:gap-3">
-                <Lightbulb className="w-6 h-6 sm:w-8 sm:h-8 text-gray-900 flex-shrink-0" />
+                <Lightbulb className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-900">
                   Proyectos Técnicos Científicos
                 </h1>
@@ -136,7 +136,7 @@ const Projects = () => {
           <div className="flex gap-1 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => handleTabChange('list')}
-              className={`relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${activeTab === 'list' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+              className={`cursor-pointer relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${activeTab === 'list' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
                 }`}
             >
               <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ const Projects = () => {
 
             <button
               onClick={() => handleTabChange('register')}
-              className={`relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${activeTab === 'register' ? 'text-green-600' : 'text-gray-500 hover:text-gray-700'
+              className={`cursor-pointer relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${activeTab === 'register' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
                 }`}
             >
               <div className="flex items-center gap-2">
@@ -163,7 +163,7 @@ const Projects = () => {
                 <span className="sm:hidden">{id ? 'Editar' : 'Nuevo'}</span>
               </div>
               {activeTab === 'register' && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-green-600 rounded-t-full"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-full"></div>
               )}
             </button>
           </div>
@@ -231,11 +231,11 @@ const Projects = () => {
                   <span><span className="font-semibold text-gray-800">ID Automático:</span> Generación inteligente</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-purple-600 flex-shrink-0" />
+                  <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
                   <span><span className="font-semibold text-gray-800">Google Sites:</span> Documentación en línea</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
+                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
                   <span><span className="font-semibold text-gray-800">Estado:</span> Control activo/inactivo</span>
                 </div>
                 <div className="flex items-center gap-2">

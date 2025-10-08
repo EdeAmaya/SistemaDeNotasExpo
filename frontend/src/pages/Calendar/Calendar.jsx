@@ -1,5 +1,4 @@
-// frontend/src/pages/Calendar/Calendar.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, List, Grid3x3 } from 'lucide-react';
 import CalendarGrid from './components/CalendarGrid';
 import EventsList from './components/EventsList';
@@ -8,6 +7,10 @@ import useEvents from './hooks/useEvents';
 import { useAuth } from '../../context/AuthContext';
 
 const Calendar = () => {
+  useEffect(() => {
+    document.title = "Calendario | STC";
+  }, []);
+
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
 
@@ -106,43 +109,23 @@ const Calendar = () => {
 
   return (
     <div className="min-h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      
+
       {/* Header */}
       <div className="bg-white border-b-2 border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pt-20 lg:pt-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            
+
             <div className="flex-1">
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-2">
                 <span>Sistema</span>
                 <span>›</span>
-                <span className="text-blue-600 font-semibold">Calendario de Eventos</span>
+                <span className="text-pink-600 font-semibold">Calendario de Eventos</span>
               </div>
               <div className="flex items-center gap-2 sm:gap-3">
-                <CalendarIcon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-900 flex-shrink-0" />
+                <CalendarIcon className="w-6 h-6 sm:w-8 sm:h-8 text-pink-500 flex-shrink-0" />
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-900">
                   Calendario de Eventos
                 </h1>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 sm:gap-3">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
-                <div className="text-lg sm:text-2xl font-black text-center">{stats.total}</div>
-                <div className="text-[10px] sm:text-xs font-semibold opacity-90 text-center">Total</div>
-              </div>
-              <div className="bg-gradient-to-br from-green-500 to-green-600 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
-                <div className="text-lg sm:text-2xl font-black text-center">{stats.active}</div>
-                <div className="text-[10px] sm:text-xs font-semibold opacity-90 text-center">Activos</div>
-              </div>
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
-                <div className="text-lg sm:text-2xl font-black text-center">{stats.upcoming}</div>
-                <div className="text-[10px] sm:text-xs font-semibold opacity-90 text-center">Próximos</div>
-              </div>
-              <div className="bg-gradient-to-br from-gray-500 to-gray-600 text-white px-3 py-2 sm:px-4 sm:py-3 rounded-xl shadow-lg">
-                <div className="text-lg sm:text-2xl font-black text-center">{stats.past}</div>
-                <div className="text-[10px] sm:text-xs font-semibold opacity-90 text-center">Pasados</div>
               </div>
             </div>
           </div>
@@ -153,7 +136,7 @@ const Calendar = () => {
       <div className="bg-white border-b border-gray-200 sticky top-0 lg:static z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            
+
             {/* Navegación de mes */}
             <div className="flex items-center gap-2 sm:gap-3">
               <button
@@ -162,23 +145,23 @@ const Calendar = () => {
               >
                 <ChevronLeft className="w-5 h-5 text-gray-700" />
               </button>
-              
+
               <div className="flex-1 sm:flex-none text-center">
                 <h2 className="text-lg sm:text-xl font-black text-gray-900">
                   {currentMonth} {currentYear}
                 </h2>
               </div>
-              
+
               <button
                 onClick={goToNextMonth}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <ChevronRight className="w-5 h-5 text-gray-700" />
               </button>
-              
+
               <button
                 onClick={goToToday}
-                className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-xs sm:text-sm transition-colors"
+                className="px-3 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-semibold text-xs sm:text-sm transition-colors"
               >
                 Hoy
               </button>
@@ -190,22 +173,20 @@ const Calendar = () => {
               <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
                 <button
                   onClick={() => setViewMode('calendar')}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md font-semibold text-xs sm:text-sm transition-all ${
-                    viewMode === 'calendar'
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md font-semibold text-xs sm:text-sm transition-all ${viewMode === 'calendar'
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   <Grid3x3 className="w-4 h-4" />
                   <span className="hidden sm:inline">Calendario</span>
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md font-semibold text-xs sm:text-sm transition-all ${
-                    viewMode === 'list'
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md font-semibold text-xs sm:text-sm transition-all ${viewMode === 'list'
                       ? 'bg-white text-gray-900 shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   <List className="w-4 h-4" />
                   <span className="hidden sm:inline">Lista</span>

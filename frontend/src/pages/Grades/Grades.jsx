@@ -12,7 +12,7 @@ const Grades = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    document.title = "Asignación de Notas | STC";
+    document.title = "Notas | STC";
   }, []);
 
   const [selectedProjectId, setSelectedProjectId] = useState(null);

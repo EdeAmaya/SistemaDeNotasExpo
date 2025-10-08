@@ -183,7 +183,7 @@ const Login = () => {
 
         {/* Footer - Responsive */}
         <div className="text-center mt-4 sm:mt-6 text-gray-600 text-xs sm:text-sm">
-          © 2024 Instituto Técnico Ricaldone
+          © 2025 Instituto Técnico Ricaldone | Comité Técnico Científico
         </div>
       </div>
     </div>

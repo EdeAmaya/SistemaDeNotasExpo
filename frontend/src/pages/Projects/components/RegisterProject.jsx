@@ -83,7 +83,7 @@ const StudentSelector = ({
         type="button"
         onClick={() => canOpen && setIsOpen(true)}
         disabled={!canOpen}
-        className={`w-full px-3 sm:px-4 py-3 sm:py-4 border-2 rounded-lg font-medium transition-all text-left flex items-center justify-between ${
+        className={`cursor-pointer w-full px-3 sm:px-4 py-3 sm:py-4 border-2 rounded-lg font-medium transition-all text-left flex items-center justify-between ${
           canOpen
             ? 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
             : 'bg-gray-100 border-gray-200 cursor-not-allowed'
@@ -255,7 +255,7 @@ const StudentSelector = ({
                   type="button"
                   onClick={() => setAssignedStudents([])}
                   disabled={assignedStudents.length === 0}
-                  className={`flex-1 px-4 py-2.5 sm:py-3 rounded-xl font-bold transition-colors text-sm sm:text-base flex items-center justify-center gap-2 ${
+                  className={`cursor-pointer flex-1 px-4 py-2.5 sm:py-3 rounded-xl font-bold transition-colors text-sm sm:text-base flex items-center justify-center gap-2 ${
                     assignedStudents.length === 0
                       ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -270,7 +270,7 @@ const StudentSelector = ({
                     setIsOpen(false);
                     setSearchTerm('');
                   }}
-                  className="flex-1 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-xl font-bold hover:from-blue-600 hover:to-blue-800 transition-all shadow-lg text-sm sm:text-base flex items-center justify-center gap-2"
+                  className="cursor-pointer flex-1 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-xl font-bold hover:from-blue-600 hover:to-blue-800 transition-all shadow-lg text-sm sm:text-base flex items-center justify-center gap-2"
                 >
                   <CheckCircle className="w-4 h-4" />
                   Confirmar ({assignedStudents.length})
@@ -659,8 +659,8 @@ const RegisterProject = ({
       
       {/* Header - Responsive */}
       <div className="mb-6 sm:mb-8">
-        <div className="flex flex-col xs:flex-row items-start xs:items-center gap-3 mb-3">
-          <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${id ? 'bg-gradient-to-br from-blue-500 to-blue-700' : 'bg-gradient-to-br from-green-500 to-green-700'} flex items-center justify-center shadow-lg flex-shrink-0`}>
+        <div className="flex flex-row xs:flex-row items-start xs:items-center gap-3 mb-3">
+          <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${id ? 'bg-gradient-to-br from-blue-500 to-blue-700' : 'bg-gradient-to-br from-blue-500 to-blue-700'} flex items-center justify-center shadow-lg flex-shrink-0`}>
             {id ? <Edit2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
           </div>
           <div className="flex-1">
@@ -861,21 +861,21 @@ const RegisterProject = ({
                   value={autoTeamNumber ? `Equipo #${autoTeamNumber}` : 'Selecciona nivel y sección/especialidad...'}
                   className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-bold text-base sm:text-lg transition-all ${
                     autoTeamNumber 
-                      ? 'border-green-300 bg-green-50 text-green-800' 
+                      ? 'border-blue-300 bg-blue-50 text-blue-800' 
                       : 'border-gray-200 bg-gray-50 text-gray-500'
                   }`}
                   readOnly
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center">
                   {autoTeamNumber ? (
-                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                   ) : (
                     <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   )}
                 </div>
               </div>
               <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${
-                autoTeamNumber ? 'text-green-600' : 'text-gray-500'
+                autoTeamNumber ? 'text-blue-600' : 'text-gray-500'
               }`}>
                 <Info className="w-3 h-3" />
                 {autoTeamNumber 
@@ -896,21 +896,21 @@ const RegisterProject = ({
                   value={projectId || 'El ID se generará automáticamente...'}
                   className={`w-full px-3 sm:px-4 py-2 sm:py-3 border-2 rounded-lg font-bold text-base sm:text-lg transition-all ${
                     projectId 
-                      ? 'border-green-300 bg-green-50 text-green-800' 
+                      ? 'border-blue-300 bg-blue-50 text-blue-800' 
                       : 'border-gray-200 bg-gray-50 text-gray-500'
                   }`}
                   readOnly
                 />
                 <div className="absolute inset-y-0 right-3 flex items-center">
                   {projectId ? (
-                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                   ) : (
                     <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   )}
                 </div>
               </div>
               <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${
-                projectId ? 'text-green-600' : 'text-gray-500'
+                projectId ? 'text-blue-600' : 'text-gray-500'
               }`}>
                 <Info className="w-3 h-3" />
                 {projectId 
@@ -981,7 +981,7 @@ const RegisterProject = ({
               </select>
             </div>
 
-            {/* Estudiantes Asignados - Nuevo Componente */}
+            {/* Estudiantes Asignados */}
             <StudentSelector
               idLevel={idLevel}
               idSection={idSection}
@@ -1013,12 +1013,12 @@ const RegisterProject = ({
           <button
             type="submit"
             disabled={loadingData}
-            className={`flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
+            className={`cursor-pointer flex-1 py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
               loadingData
                 ? 'bg-gray-400 cursor-not-allowed'
                 : id
                 ? 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
-                : 'bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800'
+                : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800'
             }`}
           >
             {id ? <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <Plus className="w-4 h-4 sm:w-5 sm:h-5" />}
@@ -1029,7 +1029,7 @@ const RegisterProject = ({
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base"
+              className="cursor-pointer px-4 sm:px-6 py-3 sm:py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base"
             >
               <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Cancelar</span>

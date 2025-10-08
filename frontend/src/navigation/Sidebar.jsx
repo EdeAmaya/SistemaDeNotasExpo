@@ -33,7 +33,7 @@ const NavBar = () => {
   const adminMenuItems = [
     { id: 'users', title: 'Usuarios', icon: Users, route: '/users', roles: ['Admin'] },
     { id: 'students', title: 'Estudiantes', icon: GraduationCap, route: '/students', roles: ['Admin', 'Docente'] },
-    { id: 'projects', title: 'Proyectos', icon: Triangle, route: '/projects', roles: ['Admin', 'Docente', 'Estudiante'] },
+    { id: 'projects', title: 'Proyectos', icon: Triangle, route: '/projects', roles: ['Admin', 'Estudiante'] },
     { id: 'evaluations', title: 'Evaluaciones', icon: ClipboardList, route: '/evaluations', roles: ['Admin', 'Estudiante'] },
     { id: 'grades', title: 'Notas', icon: BookOpenCheck, route: '/grades', roles: ['Admin', 'Docente', 'Evaluador', 'Estudiante'] }
   ];
@@ -81,7 +81,7 @@ const NavBar = () => {
       {/* Header con Logo */}
       <div className="pt-4 pb-3 px-3 flex-shrink-0">
         <button onClick={() => handleNavigation('/')} className="w-full flex flex-col items-center mb-3 bg-transparent border-none cursor-pointer">
-          <img src={logoImg} alt="Logo Salesianos Ricaldone" className="w-24 h-24 mb-2 object-contain" />
+          <img src={logoImg} alt="Logo Salesianos Ricaldone" className="w-32 h-32 mb-2 object-contain" />
           <div className="text-white text-center">
             <div className="font-medium text-sm">Salesianos</div>
             <div className="font-bold text-sm">Ricaldone</div>

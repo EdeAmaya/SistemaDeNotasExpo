@@ -1,34 +1,71 @@
-import React, { useState } from 'react';
-import { Settings, X, Calendar, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, X, Calendar, Save, CalendarDays, User, Clock, TrendingUp, FileText, Users, FolderOpen } from 'lucide-react';
 import useStages from '../../hooks/useStages';
 import useConnectedUsers from '../../hooks/useConnectedUsers';
 import useRecentActivities from '../../hooks/useRecentActivities';
 import usePresence from '../../hooks/usePresence';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const currentUser = "Eduardo";
-  
+  useEffect(() => {
+    document.title = "Inicio | STC";
+  }, []);
+
+  const navigate = useNavigate();
+
+  const { user, fetchWithCookies, API } = useAuth();
+  const currentUser = user.name;
   const { stages, calculateProgress, fetchStages, loading: stagesLoading } = useStages();
-  const { fetchWithCookies, API } = useAuth();
   const currentProgress = calculateProgress();
-  
-  const { 
-    connectedUsers, 
-    loading: usersLoading, 
+
+  const {
+    connectedUsers,
+    loading: usersLoading,
     formatTimeAgo,
     getPresenceInfo
   } = useConnectedUsers();
-  
+
   const { recentActivities, loading: activitiesLoading, formatTimeAgo: formatActivityTime } = useRecentActivities();
-  
+
   usePresence();
-  
+
   const [showStageModal, setShowStageModal] = useState(false);
   const [selectedStage, setSelectedStage] = useState(null);
   const [editingStage, setEditingStage] = useState(null);
-  
+  const [stats, setStats] = useState({ projects: 0, students: 0 });
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  // Hook para obtener estadísticas
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoadingStats(true);
+        
+        const [projectsRes, studentsRes] = await Promise.all([
+          fetchWithCookies(`${API}/projects`),
+          fetchWithCookies(`${API}/students`)
+        ]);
+
+        const projects = await projectsRes.json();
+        const students = await studentsRes.json();
+
+        setStats({
+          projects: Array.isArray(projects) ? projects.length : 0,
+          students: Array.isArray(students) ? students.length : 0
+        });
+      } catch (error) {
+        console.error('Error al obtener estadísticas:', error);
+        setStats({ projects: 0, students: 0 });
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, [API, fetchWithCookies]);
+
   const getCurrentGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Buenos días";
@@ -37,11 +74,11 @@ const Dashboard = () => {
   };
 
   const getCurrentDate = () => {
-    const options = { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const options = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     };
     return new Date().toLocaleDateString('es-ES', options);
   };
@@ -54,7 +91,7 @@ const Dashboard = () => {
   };
 
   const getRoleIcon = (role) => {
-    switch(role) {
+    switch (role) {
       case 'Docente': return '●';
       case 'Evaluador': return '●';
       case 'Admin': return '●';
@@ -63,7 +100,7 @@ const Dashboard = () => {
   };
 
   const getRoleColor = (role) => {
-    switch(role) {
+    switch (role) {
       case 'Docente': return 'text-emerald-600';
       case 'Evaluador': return 'text-blue-600';
       case 'Admin': return 'text-purple-600';
@@ -88,46 +125,42 @@ const Dashboard = () => {
 
   const handleSaveStage = async () => {
     try {
-      // Validar que tengamos valores válidos
       if (!editingStage.startDate || !editingStage.endDate) {
         toast.error('Por favor selecciona ambas fechas.');
         return;
       }
 
-      // Extraer solo las fechas sin hora para comparación
-      // Si ya es formato YYYY-MM-DD, usarlo directamente; si tiene hora, extraerla
-      const startDateOnly = editingStage.startDate.includes('T') 
-        ? editingStage.startDate.split('T')[0] 
+      const startDateOnly = editingStage.startDate.includes('T')
+        ? editingStage.startDate.split('T')[0]
         : editingStage.startDate;
-      const endDateOnly = editingStage.endDate.includes('T') 
-        ? editingStage.endDate.split('T')[0] 
+      const endDateOnly = editingStage.endDate.includes('T')
+        ? editingStage.endDate.split('T')[0]
         : editingStage.endDate;
-      
+
       const start = new Date(startDateOnly + 'T00:00:00');
       const end = new Date(endDateOnly + 'T00:00:00');
-      
+
       if (end <= start) {
         toast.error('La fecha de fin debe ser posterior a la fecha de inicio.');
         return;
       }
 
       const otherStages = stages.filter(s => s._id !== editingStage._id);
-      
+
       for (const otherStage of otherStages) {
         const otherStartOnly = otherStage.startDate.split('T')[0];
         const otherEndOnly = otherStage.endDate.split('T')[0];
         const otherStart = new Date(otherStartOnly + 'T00:00:00');
         const otherEnd = new Date(otherEndOnly + 'T00:00:00');
-        
-        // Verificar si hay cualquier tipo de solapamiento
+
         const hasOverlap = (
-          (start >= otherStart && start <= otherEnd) || 
+          (start >= otherStart && start <= otherEnd) ||
           (end >= otherStart && end <= otherEnd) ||
           (start <= otherStart && end >= otherEnd) ||
           (start.getTime() === otherStart.getTime()) ||
           (end.getTime() === otherEnd.getTime())
         );
-        
+
         if (hasOverlap) {
           toast.error(
             `Las fechas se solapan con la etapa "${otherStage.name}". ` +
@@ -139,17 +172,8 @@ const Dashboard = () => {
 
       toast.loading('Actualizando etapa...', { id: 'saving-stage' });
 
-      // Enviar fechas en formato ISO simple (YYYY-MM-DD)
-      // Agregamos 'T00:00:00.000Z' para inicio y 'T23:59:59.999Z' para fin
       const startDateISO = `${editingStage.startDate}T00:00:00.000Z`;
       const endDateISO = `${editingStage.endDate}T23:59:59.999Z`;
-
-      console.log('📅 Fechas a enviar:', {
-        startDateInput: editingStage.startDate,
-        endDateInput: editingStage.endDate,
-        startDateISO,
-        endDateISO
-      });
 
       const response = await fetchWithCookies(`${API}/stages/${editingStage._id}`, {
         method: 'PUT',
@@ -168,7 +192,7 @@ const Dashboard = () => {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error al actualizar etapa');
       }
-      
+
       await fetchStages();
       setShowStageModal(false);
       setSelectedStage(null);
@@ -182,15 +206,14 @@ const Dashboard = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { 
-      day: '2-digit', 
-      month: 'short', 
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: 'short',
       year: 'numeric'
     });
   };
 
   const getDateValue = (dateString) => {
-    // Extraer solo la fecha sin conversión de zona horaria
     const dateOnly = dateString.split('T')[0];
     return dateOnly;
   };
@@ -200,230 +223,137 @@ const Dashboard = () => {
       id: 1,
       title: "Ver Proyectos",
       description: "Consulta todos los proyectos",
-      icon: (
-        <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
-      action: () => console.log("Navegar a /proyectos")
+      icon: <FolderOpen className="w-6 h-6 sm:w-8 sm:h-8" />,
+      action: () => navigate('/projects')
     },
     {
       id: 2,
       title: "Crear Evaluación",
       description: "Nueva evaluación académica",
-      icon: (
-        <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-        </svg>
-      ),
-      action: () => console.log("Navegar a /evaluaciones")
+      icon: <FileText className="w-6 h-6 sm:w-8 sm:h-8" />,
+      action: () => navigate('/evaluations')
     },
     {
       id: 3,
       title: "Generar Reporte",
       description: "Informes y estadísticas",
-      icon: (
-        <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
-      action: () => console.log("Generar reporte")
+      icon: <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8" />,
+      action: () => navigate('/grades')
     }
   ];
 
   return (
     <div className="h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-y-auto">
       <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl mx-auto">
-        
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">
-                {getCurrentGreeting()}, {currentUser}
+
+        <div className="mb-8 bg-gradient-to-br from-slate-50 to-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-slate-100 text-slate-700">
+              <User className="w-7 h-7" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-semibold text-slate-800">
+                {getCurrentGreeting()},{" "}
+                <span className="font-bold text-blue-600">{currentUser}</span>
               </h1>
-              <p className="text-sm sm:text-base text-slate-600 capitalize">
-                {getCurrentDate()}
-              </p>
-            </div>
-
-            <div className="text-left sm:text-right">
-              <div className="text-3xl sm:text-4xl font-light text-slate-700">
-                {getCurrentTime()}
+              <div className="flex items-center gap-2 text-slate-500 mt-1">
+                <CalendarDays className="w-4 h-4" />
+                <p className="text-sm sm:text-base capitalize">{getCurrentDate()}</p>
               </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2">
+            <Clock className="w-5 h-5 text-blue-600" />
+            <div className="text-2xl sm:text-3xl font-semibold text-blue-700 tracking-tight">
+              {getCurrentTime()}
             </div>
           </div>
         </div>
 
-        <div className="mb-6 sm:mb-8 bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 relative">
-          <button
-            onClick={handleOpenModal}
-            className="absolute top-4 right-4 p-2 rounded-lg hover:bg-slate-100 transition-colors group"
-            title="Configurar fechas de etapas"
-          >
-            <Settings 
-              size={20} 
-              className="text-slate-400 group-hover:text-blue-600 group-hover:rotate-90 transition-all duration-300"
-            />
-          </button>
-
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div className="flex-1">
-              <p className="text-xs sm:text-sm font-semibold text-slate-600 mb-2">
-                Progreso del Proyecto Técnico Científico
-              </p>
-              <div className="flex items-center space-x-4">
-                <span className={`text-4xl sm:text-5xl font-bold ${
-                  currentProgress <= 20 ? 'text-red-600' :
-                  currentProgress <= 40 ? 'text-amber-600' :
-                  currentProgress <= 60 ? 'text-yellow-600' :
-                  currentProgress <= 80 ? 'text-blue-600' :
-                  'text-emerald-600'
-                }`}>
-                  {stagesLoading ? '--' : `${currentProgress}%`}
-                </span>
-              </div>
-            </div>
-            
-            <div className="flex justify-center lg:justify-end">
-              <div className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48">
-                <svg className="transform -rotate-90" width="100%" height="100%" viewBox="0 0 192 192">
-                  <circle
-                    cx="96"
-                    cy="96"
-                    r="88"
-                    fill="none"
-                    stroke="#e2e8f0"
-                    strokeWidth="12"
-                  />
-                  <circle
-                    cx="96"
-                    cy="96"
-                    r="88"
-                    fill="none"
-                    stroke={
-                      currentProgress <= 20 ? '#dc2626' :
-                      currentProgress <= 40 ? '#d97706' :
-                      currentProgress <= 60 ? '#ca8a04' :
-                      currentProgress <= 80 ? '#2563eb' :
-                      '#059669'
-                    }
-                    strokeWidth="12"
-                    strokeDasharray={`${(currentProgress / 100) * 552.92} 552.92`}
-                    strokeLinecap="round"
-                    className="transition-all duration-1000"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          
-          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
+        <div className="mb-8 bg-white rounded-2xl shadow-md border border-slate-200 p-6 relative overflow-hidden flex flex-col lg:flex-row gap-32">
+          <div className="flex-1 flex flex-col justify-center">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-3">
               Acerca del Proyecto
             </h2>
-            <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-4">
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
               El <span className="font-semibold text-slate-800">Proyecto Técnico Científico</span> es un proceso de aprendizaje significativo que integra las competencias adquiridas durante el año lectivo para ser aplicadas en la propuesta de solución a una necesidad del entorno social, industrial, económico o cultural.
             </p>
-            <button className="text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
-              Leer más →
-            </button>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
-            <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
-              Usuarios Activos
-            </h2>
-            
-            {usersLoading ? (
-              <div className="space-y-3">
-                {[1, 2].map((i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-200 rounded-full"></div>
-                      <div className="flex-1">
-                        <div className="h-3 bg-slate-200 rounded w-20 mb-2"></div>
-                        <div className="h-2 bg-slate-200 rounded w-16"></div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : connectedUsers.length > 0 ? (
-              <div className="space-y-3">
-                {connectedUsers.slice(0, 4).map((userActivity) => {
-                  const presenceInfo = getPresenceInfo(userActivity.presenceStatus);
-                  return (
-                    <div key={userActivity._id} className="flex items-center space-x-3">
-                      <div className="relative flex-shrink-0">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-100 rounded-full flex items-center justify-center">
-                          <span className={`text-xs sm:text-sm font-semibold ${getRoleColor(userActivity.role)}`}>
-                            {userActivity.name.charAt(0)}{userActivity.lastName.charAt(0)}
-                          </span>
-                        </div>
-                        <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white ${presenceInfo.color} ${
-                          userActivity.presenceStatus === 'online' ? 'animate-pulse' : ''
-                        }`}></div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-slate-800 truncate">
-                          {userActivity.name} {userActivity.lastName}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {userActivity.role} • {formatTimeAgo(userActivity.lastHeartbeat)}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-xs sm:text-sm text-slate-500">No hay usuarios conectados</p>
-              </div>
-            )}
-            
-            {!usersLoading && connectedUsers.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-slate-200">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <div className="flex items-center space-x-1">
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                      <span className="text-slate-600">
-                        {connectedUsers.filter(u => u.presenceStatus === 'online').length}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                      <span className="text-slate-600">
-                        {connectedUsers.filter(u => u.presenceStatus === 'away').length}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <div className="w-2 h-2 rounded-full bg-gray-500"></div>
-                      <span className="text-slate-600">
-                        {connectedUsers.filter(u => u.presenceStatus === 'offline').length}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-slate-500 font-medium">
-                    Total: {connectedUsers.length}
-                  </span>
-                </div>
-              </div>
-            )}
+          <div className="relative w-44 h-44 sm:w-52 sm:h-52 lg:w-60 lg:h-60 flex-shrink-0">
+            <button
+              onClick={handleOpenModal}
+              className="cursor-pointer absolute top-2 right-2 p-4 rounded-full bg-white shadow-lg hover:bg-blue-50 active:scale-95 transition-all z-10 flex items-center justify-center"
+              title="Configurar fechas de etapas"
+            >
+              <Settings
+                size={28}
+                className="text-slate-500 hover:text-blue-600 transition-colors"
+              />
+            </button>
+
+            <svg
+              className="transform -rotate-90 w-full h-full"
+              viewBox="0 0 192 192"
+            >
+              <circle
+                cx="96"
+                cy="96"
+                r="88"
+                fill="none"
+                stroke="#e2e8f0"
+                strokeWidth="12"
+              />
+              <circle
+                cx="96"
+                cy="96"
+                r="88"
+                fill="none"
+                stroke={
+                  currentProgress <= 20
+                    ? "#dc2626"
+                    : currentProgress <= 40
+                      ? "#d97706"
+                      : currentProgress <= 60
+                        ? "#ca8a04"
+                        : currentProgress <= 80
+                          ? "#2563eb"
+                          : "#059669"
+                }
+                strokeWidth="12"
+                strokeDasharray={`${(currentProgress / 100) * 552.92} 552.92`}
+                strokeLinecap="round"
+                className="transition-all duration-1000 ease-in-out"
+              />
+            </svg>
+
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span
+                className={`text-3xl sm:text-4xl font-extrabold ${currentProgress <= 20
+                  ? "text-red-600"
+                  : currentProgress <= 40
+                    ? "text-amber-600"
+                    : currentProgress <= 60
+                      ? "text-yellow-600"
+                      : currentProgress <= 80
+                        ? "text-blue-600"
+                        : "text-emerald-600"
+                  }`}
+              >
+                {stagesLoading ? "--" : `${currentProgress}%`}
+              </span>
+            </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          
+
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
               Actividad Reciente
             </h2>
-            
+
             {activitiesLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
@@ -470,24 +400,149 @@ const Dashboard = () => {
           </div>
 
           <div className="space-y-3 sm:space-y-4">
-            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-sm p-4 sm:p-6 text-white">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs sm:text-sm font-medium opacity-90">Proyectos Activos</span>
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <p className="text-2xl sm:text-3xl font-bold">24</p>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
+              <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
+                Usuarios Activos
+              </h2>
+
+              {usersLoading ? (
+                <div className="space-y-3">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-200 rounded-full"></div>
+                        <div className="flex-1">
+                          <div className="h-3 bg-slate-200 rounded w-20 mb-2"></div>
+                          <div className="h-2 bg-slate-200 rounded w-16"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : connectedUsers.length > 0 ? (
+                <div className="space-y-3">
+                  {connectedUsers.slice(0, 4).map((userActivity) => {
+                    const presenceInfo = getPresenceInfo(userActivity.presenceStatus);
+                    return (
+                      <div key={userActivity._id} className="flex items-center space-x-3">
+                        <div className="relative flex-shrink-0">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-100 rounded-full flex items-center justify-center">
+                            <span className={`text-xs sm:text-sm font-semibold ${getRoleColor(userActivity.role)}`}>
+                              {userActivity.name.charAt(0)}{userActivity.lastName.charAt(0)}
+                            </span>
+                          </div>
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white ${presenceInfo.color} ${userActivity.presenceStatus === 'online' ? 'animate-pulse' : ''
+                            }`}></div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs sm:text-sm font-medium text-slate-800 truncate">
+                            {userActivity.name} {userActivity.lastName}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {userActivity.role} • {formatTimeAgo(userActivity.lastHeartbeat)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-xs sm:text-sm text-slate-500">No hay usuarios conectados</p>
+                </div>
+              )}
+
+              {!usersLoading && connectedUsers.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        <span className="text-slate-600">
+                          {connectedUsers.filter(u => u.presenceStatus === 'online').length}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                        <span className="text-slate-600">
+                          {connectedUsers.filter(u => u.presenceStatus === 'away').length}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 rounded-full bg-gray-500"></div>
+                        <span className="text-slate-600">
+                          {connectedUsers.filter(u => u.presenceStatus === 'offline').length}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-slate-500 font-medium">
+                      Total: {connectedUsers.length}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-sm p-4 sm:p-6 text-white">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs sm:text-sm font-medium opacity-90">Evaluaciones</span>
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+            {/* Card de Proyectos Activos - Mejorada */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl shadow-lg p-6 text-white group hover:shadow-xl transition-all duration-300">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-500"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full -ml-12 -mb-12 group-hover:scale-110 transition-transform duration-500"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium opacity-90">Proyectos Activos</span>
+                  <div className="p-2 bg-white bg-opacity-20 rounded-lg backdrop-blur-sm">
+                    <FolderOpen className="w-5 h-5" />
+                  </div>
+                </div>
+                
+                {loadingStats ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-12 h-8 bg-white bg-opacity-20 rounded animate-pulse"></div>
+                  </div>
+                ) : (
+                  <div className="flex items-baseline space-x-2">
+                    <p className="text-4xl font-black">{stats.projects}</p>
+                    <span className="text-sm opacity-75">proyectos</span>
+                  </div>
+                )}
+                
+                <div className="mt-3 flex items-center text-xs opacity-90">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  <span>En desarrollo</span>
+                </div>
               </div>
-              <p className="text-2xl sm:text-3xl font-bold">12</p>
+            </div>
+
+            {/* Card de Estudiantes - Mejorada */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-600 rounded-xl shadow-lg p-6 text-white group hover:shadow-xl transition-all duration-300">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-500"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full -ml-12 -mb-12 group-hover:scale-110 transition-transform duration-500"></div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium opacity-90">Estudiantes</span>
+                  <div className="p-2 bg-white bg-opacity-20 rounded-lg backdrop-blur-sm">
+                    <Users className="w-5 h-5" />
+                  </div>
+                </div>
+                
+                {loadingStats ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-12 h-8 bg-white bg-opacity-20 rounded animate-pulse"></div>
+                  </div>
+                ) : (
+                  <div className="flex items-baseline space-x-2">
+                    <p className="text-4xl font-black">{stats.students}</p>
+                    <span className="text-sm opacity-75">registrados</span>
+                  </div>
+                )}
+                
+                <div className="mt-3 flex items-center text-xs opacity-90">
+                  <Users className="w-3 h-3 mr-1" />
+                  <span>Total activos</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -571,8 +626,14 @@ const Dashboard = () => {
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm text-slate-600">
-                        <span>📅 Inicio: {formatDate(stage.startDate)}</span>
-                        <span>📅 Fin: {formatDate(stage.endDate)}</span>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          <span>Inicio: {formatDate(stage.startDate)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          <span>Fin: {formatDate(stage.endDate)}</span>
+                        </div>
                       </div>
                     </button>
                   ))}
@@ -584,8 +645,7 @@ const Dashboard = () => {
                       setSelectedStage(null);
                       setEditingStage(null);
                     }}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium mb-4"
-                  >
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium mb-4">
                     ← Volver a selección de etapas
                   </button>
 
@@ -637,8 +697,9 @@ const Dashboard = () => {
                     </div>
 
                     {new Date(editingStage.endDate.split('T')[0]) <= new Date(editingStage.startDate.split('T')[0]) && (
-                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                        ⚠️ La fecha de fin debe ser posterior (al menos un día después) a la fecha de inicio
+                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
+                        <X className="w-4 h-4" />
+                        <span>La fecha de fin debe ser posterior (al menos un día después) a la fecha de inicio</span>
                       </div>
                     )}
 
