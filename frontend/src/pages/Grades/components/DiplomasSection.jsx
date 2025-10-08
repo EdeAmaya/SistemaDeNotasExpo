@@ -1,11 +1,102 @@
 import React, { useState, useEffect } from 'react';
 import { Award, Download, GraduationCap, Users, BookOpen, ArrowLeft, FileText, Trophy, Star, BarChart3 } from 'lucide-react';
-import useLevels from '../hooks/useLevels';
-import useSections from '../hooks/useSections';
-import useSpecialties from '../hooks/useSpecialties';
 
 const API = "https://stc-instituto-tecnico-ricaldone.onrender.com/api";
 
+// Hook personalizado para niveles
+const useLevels = () => {
+  const [levels, setLevels] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const getLevels = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`${API}/levels`, {credentials: 'include'});
+        if (!response.ok) throw new Error('Error al obtener los niveles');
+        const data = await response.json();
+        setLevels(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getLevels();
+  }, []);
+
+  return { levels, loading, error };
+};
+
+// Hook personalizado para especialidades
+const useSpecialties = () => {
+  const [specialties, setSpecialties] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const getSpecialties = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`${API}/specialties`, {credentials: 'include'});
+        if (!response.ok) throw new Error('Error al obtener las especialidades');
+        const data = await response.json();
+        setSpecialties(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getSpecialties();
+  }, []);
+
+  return { specialties, loading, error };
+};
+
+// Hook personalizado para secciones
+const useSections = () => {
+  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const getSections = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API}/sections`, {credentials: 'include'});
+        if (response.ok) {
+          const data = await response.json();
+          setSections(data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getSections();
+  }, []);
+
+  return { sections, loading };
+};
+
+// Función para parsear el projectId
+const parseProjectId = (projectId) => {
+  const match = projectId.match(/^([A-Z])(\d)(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  
+  return {
+    specialtyLetter: match[1],
+    levelNumber: parseInt(match[2]),
+    teamNumber: parseInt(match[3]),
+    year: match[4]
+  };
+};
+
+// Determinar si un nivel es de bachillerato
 const isBachilleratoLevel = (levelName) => {
   const normalized = levelName.toLowerCase();
   return normalized.includes('bachillerato') ||
@@ -16,65 +107,10 @@ const isBachilleratoLevel = (levelName) => {
     normalized.includes('contaduría');
 };
 
-// Función auxiliar para obtener el prefijo del projectId según el nivel
-const getProjectIdPrefixForLevel = (levelName) => {
-  const normalized = levelName.toLowerCase();
-
-  // Tercer Ciclo
-  if (normalized.includes('séptimo') || normalized.includes('7')) {
-    return 'A'; // AA, AB, AC, AD, AE, AF
-  }
-  if (normalized.includes('octavo') || normalized.includes('8')) {
-    return 'B'; // BA, BB, BC, BD, BE, BF
-  }
-  if (normalized.includes('noveno') || normalized.includes('9')) {
-    return 'C'; // CA, CB, CC, CD, CE, CF
-  }
-
-  // Bachillerato (primer año)
-  if (normalized.includes('primer año') || normalized.includes('1er año')) {
-    return 'D'; // D1A, D1B, D2A, D2B según especialidad
-  }
-
-  // Bachillerato (segundo año)
-  if (normalized.includes('segundo año') || normalized.includes('2do año')) {
-    return 'E'; // E1A, E1B, E2A, E2B según especialidad
-  }
-
-  return null;
-};
-
-const getSectionsForLevel = (level, allSections) => {
-  const levelName = level.levelName || level;
-  const normalizedLevel = levelName.toLowerCase();
-
-  if (normalizedLevel.includes('tercer ciclo') ||
-    normalizedLevel.includes('3er ciclo') ||
-    normalizedLevel.includes('octavo') ||
-    normalizedLevel.includes('noveno') ||
-    normalizedLevel.includes('séptimo') ||
-    normalizedLevel.includes('7') ||
-    normalizedLevel.includes('8') ||
-    normalizedLevel.includes('9')) {
-    return allSections.filter(section =>
-      /^[A-F]$/i.test(section.sectionName)
-    );
-  }
-
-  if (isBachilleratoLevel(levelName)) {
-    return allSections.filter(section => {
-      const name = section.sectionName;
-      return name === '1A' || name === '1B' || name === '2A' || name === '2B';
-    });
-  }
-
-  return [];
-};
-
-const ProjectsListView = ({ section, level, onBack }) => {
+// Vista de proyectos para Tercer Ciclo (mantiene la funcionalidad original)
+const TercerCicloProjectsView = ({ section, level, onBack }) => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
@@ -85,32 +121,15 @@ const ProjectsListView = ({ section, level, onBack }) => {
 
         if (response.status === 404) {
           setProjects([]);
-          setError(null);
           return;
         }
 
-        if (!response.ok) {
-          throw new Error('Error al cargar los proyectos');
-        }
+        if (!response.ok) throw new Error('Error al cargar los proyectos');
 
         const data = await response.json();
-
-        const expectedPrefix = getProjectIdPrefixForLevel(level.levelName);
-
-        const sectionLetter = section.sectionName;
-
-        const filteredProjects = (data.data || []).filter(project => {
-          if (!project.projectId || !expectedPrefix) return false;
-
-          const expectedPattern = `${expectedPrefix}${sectionLetter}`;
-          return project.projectId.toUpperCase().startsWith(expectedPattern);
-        });
-
-        setProjects(filteredProjects);
-
-        setError(null);
+        setProjects(data.data || []);
       } catch (err) {
-        setError(err.message || 'Error al cargar los proyectos');
+        console.error(err);
         setProjects([]);
       } finally {
         setLoading(false);
@@ -118,7 +137,37 @@ const ProjectsListView = ({ section, level, onBack }) => {
     };
 
     fetchProjects();
-  }, [section._id, section.sectionName, level.levelName]);
+  }, [section._id]);
+
+  const handleDownloadDiplomas = async () => {
+    if (downloading || projects.length === 0) return;
+
+    try {
+      setDownloading(true);
+      const response = await fetch(`${API}/diplomas/section/${section._id}`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (!response.ok) throw new Error('Error al generar los diplomas');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Diplomas_${level.levelName.replace(/\s+/g, '_')}_${section.sectionName}_Top3.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      alert('¡Diplomas descargados exitosamente!');
+    } catch (error) {
+      alert('Error al descargar los diplomas. Por favor intenta nuevamente.');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const getScoreColor = (score) => {
     if (score >= 9) return 'text-green-600';
@@ -134,80 +183,15 @@ const ProjectsListView = ({ section, level, onBack }) => {
     return 'bg-red-50 border-red-200';
   };
 
-  const handleDownloadDiplomas = async () => {
-    if (downloading || projects.length === 0) return;
-
-    try {
-      setDownloading(true);
-
-      const response = await fetch(`${API}/diplomas/section/${section._id}`, {
-        method: 'GET',
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al generar los diplomas');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Diplomas_${level.levelName.replace(/\s+/g, '_')}_${section.sectionName}_Top3.zip`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      alert('¡Diplomas descargados exitosamente!');
-    } catch (error) {
-      console.error('Error downloading diplomas:', error);
-      alert('Error al descargar los diplomas. Por favor intenta nuevamente.');
-    } finally {
-      setDownloading(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="p-8">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-4 transition-colors"
-        >
+        <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-4">
           <ArrowLeft className="w-5 h-5" />
-          Volver a secciones
+          Volver
         </button>
-        <div className="flex flex-col items-center justify-center py-12">
+        <div className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-yellow-500 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600 font-semibold">Cargando proyectos...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-8">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Volver a secciones
-        </button>
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0">
-              <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-red-800">Error al cargar proyectos</h3>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -215,113 +199,302 @@ const ProjectsListView = ({ section, level, onBack }) => {
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Volver a secciones
-        </button>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-4 rounded-xl shadow-lg">
-              <FileText className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-black text-gray-800">
-                {level.levelName} - Sección {section.sectionName}
-              </h2>
-              <p className="text-gray-600">{projects.length} proyectos encontrados</p>
-            </div>
+      <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-6">
+        <ArrowLeft className="w-5 h-5" />
+        Volver a secciones
+      </button>
+
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-4 rounded-xl shadow-lg">
+            <FileText className="w-8 h-8 text-white" />
           </div>
-          <button
-            onClick={handleDownloadDiplomas}
-            disabled={downloading || projects.length === 0}
-            className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-lg font-bold hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {downloading ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                Generando...
-              </>
-            ) : (
-              <>
-                <Download className="w-5 h-5" />
-                Descargar Diplomas
-              </>
-            )}
-          </button>
+          <div>
+            <h2 className="text-2xl font-black text-gray-800">
+              {level.levelName} - Sección {section.sectionName}
+            </h2>
+            <p className="text-gray-600">{projects.length} proyectos encontrados</p>
+          </div>
         </div>
+        <button
+          onClick={handleDownloadDiplomas}
+          disabled={downloading || projects.length === 0}
+          className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-lg font-bold hover:from-yellow-600 hover:to-yellow-700 shadow-lg disabled:opacity-50"
+        >
+          {downloading ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+              Generando...
+            </>
+          ) : (
+            <>
+              <Download className="w-5 h-5" />
+              Descargar Top 3
+            </>
+          )}
+        </button>
       </div>
 
       {projects.length > 0 ? (
         <div className="space-y-4">
-          {projects.map((project, index) => (
-            <div
-              key={project._id}
-              className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:border-yellow-400 hover:shadow-xl transition-all duration-300 overflow-hidden"
-            >
+          {projects.slice(0, 3).map((project, index) => (
+            <div key={project._id} className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:border-yellow-400 transition-all">
               <div className="p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
-                      {index < 3 && (
-                        <Trophy className={`w-6 h-6 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : 'text-amber-600'}`} />
-                      )}
+                      <Trophy className={`w-6 h-6 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : 'text-amber-600'}`} />
                       <div>
                         <h3 className="text-xl font-black text-gray-800">{project.projectName}</h3>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-sm font-semibold text-gray-600">
-                            Equipo #{project.teamNumber}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            ID: {project.projectId}
-                          </span>
-                        </div>
+                        <span className="text-sm text-gray-500">ID: {project.projectId}</span>
                       </div>
                     </div>
+                  </div>
+                  <div className={`border-2 rounded-xl p-4 text-center min-w-[140px] ${getScoreBgColor(project.scores.promedioTotal)}`}>
+                    <div className="text-xs font-bold text-gray-600 mb-1 flex items-center justify-center gap-1">
+                      <Star className="w-3 h-3" />
+                      TOTAL
+                    </div>
+                    <div className={`text-4xl font-black ${getScoreColor(project.scores.promedioTotal)}`}>
+                      {project.scores.promedioTotal.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className={`px-6 py-2 ${index === 0 ? 'bg-yellow-400' : index === 1 ? 'bg-gray-300' : 'bg-amber-500'}`}>
+                <div className="flex items-center justify-center gap-2">
+                  <Trophy className="w-4 h-4 text-white" />
+                  <span className="text-sm font-black text-white">
+                    {index === 0 ? '1ER LUGAR' : index === 1 ? '2DO LUGAR' : '3ER LUGAR'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
+          <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-gray-600 mb-2">No hay proyectos</h3>
+        </div>
+      )}
+    </div>
+  );
+};
 
-                    {project.students && project.students.length > 0 && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                        <Users className="w-4 h-4" />
-                        <span>{project.students.length} estudiantes</span>
+// Nueva vista de proyectos para Bachillerato
+const BachilleratoProjectsView = ({ level, specialty, onBack }) => {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState({ all: false, 1: false, 2: false, 3: false });
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        // Obtener todos los proyectos del nivel
+        const response = await fetch(`${API}/projects`, { credentials: 'include' });
+        
+        if (!response.ok) throw new Error('Error al cargar los proyectos');
+
+        const allProjects = await response.json();
+        
+        // Filtrar proyectos por nivel y especialidad usando el projectId
+        const filteredProjects = allProjects.filter(project => {
+          if (project.idLevel !== level._id) return false;
+          
+          const parsed = parseProjectId(project.projectId);
+          return parsed && parsed.specialtyLetter === specialty.letterSpecialty;
+        });
+
+        // Obtener scores para cada proyecto
+        const projectsWithScores = await Promise.all(
+          filteredProjects.map(async (project) => {
+            try {
+              const scoreResponse = await fetch(`${API}/project-scores/project/${project._id}`, { 
+                credentials: 'include' 
+              });
+              
+              if (scoreResponse.ok) {
+                const scoreData = await scoreResponse.json();
+                return {
+                  ...project,
+                  scores: scoreData.data?.scores || { promedioTotal: 0 }
+                };
+              }
+              return { ...project, scores: { promedioTotal: 0 } };
+            } catch {
+              return { ...project, scores: { promedioTotal: 0 } };
+            }
+          })
+        );
+
+        // Ordenar por promedio total
+        projectsWithScores.sort((a, b) => b.scores.promedioTotal - a.scores.promedioTotal);
+        
+        setProjects(projectsWithScores);
+      } catch (err) {
+        console.error(err);
+        setProjects([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, [level._id, specialty.letterSpecialty]);
+
+  const handleDownloadPlace = async (place) => {
+    if (downloading[place] || projects.length < place) return;
+
+    try {
+      setDownloading(prev => ({ ...prev, [place]: true }));
+      
+      const response = await fetch(
+        `${API}/diplomas/bachillerato/${level._id}/${specialty._id}/${place}`,
+        { method: 'GET', credentials: 'include' }
+      );
+
+      if (!response.ok) throw new Error('Error al generar el diploma');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const placeText = place === 1 ? '1er' : place === 2 ? '2do' : '3er';
+      a.download = `Diploma_${placeText}_Lugar_${specialty.specialtyName.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      alert('¡Diploma descargado exitosamente!');
+    } catch (error) {
+      alert('Error al descargar el diploma. Por favor intenta nuevamente.');
+    } finally {
+      setDownloading(prev => ({ ...prev, [place]: false }));
+    }
+  };
+
+  const handleDownloadAll = async () => {
+    if (downloading.all || projects.length === 0) return;
+
+    try {
+      setDownloading(prev => ({ ...prev, all: true }));
+      
+      const response = await fetch(
+        `${API}/diplomas/bachillerato/${level._id}/${specialty._id}`,
+        { method: 'GET', credentials: 'include' }
+      );
+
+      if (!response.ok) throw new Error('Error al generar los diplomas');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Diplomas_${level.levelName.replace(/\s+/g, '_')}_${specialty.specialtyName.replace(/\s+/g, '_')}_Top3.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      alert('¡Diplomas descargados exitosamente!');
+    } catch (error) {
+      alert('Error al descargar los diplomas. Por favor intenta nuevamente.');
+    } finally {
+      setDownloading(prev => ({ ...prev, all: false }));
+    }
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 9) return 'text-green-600';
+    if (score >= 7) return 'text-blue-600';
+    if (score >= 5) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getScoreBgColor = (score) => {
+    if (score >= 9) return 'bg-green-50 border-green-200';
+    if (score >= 7) return 'bg-blue-50 border-blue-200';
+    if (score >= 5) return 'bg-yellow-50 border-yellow-200';
+    return 'bg-red-50 border-red-200';
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-4">
+          <ArrowLeft className="w-5 h-5" />
+          Volver
+        </button>
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-yellow-500 border-t-transparent"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8">
+      <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-6">
+        <ArrowLeft className="w-5 h-5" />
+        Volver a especialidades
+      </button>
+
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 rounded-xl shadow-lg">
+            <BookOpen className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black text-gray-800">
+              {level.levelName} - {specialty.specialtyName}
+            </h2>
+            <p className="text-gray-600">{projects.length} proyectos encontrados</p>
+          </div>
+        </div>
+        <button
+          onClick={handleDownloadAll}
+          disabled={downloading.all || projects.length === 0}
+          className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-lg font-bold hover:from-yellow-600 hover:to-yellow-700 shadow-lg disabled:opacity-50"
+        >
+          {downloading.all ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+              Generando...
+            </>
+          ) : (
+            <>
+              <Download className="w-5 h-5" />
+              Descargar Top 3
+            </>
+          )}
+        </button>
+      </div>
+
+      {projects.length > 0 ? (
+        <div className="space-y-4">
+          {projects.slice(0, 3).map((project, index) => (
+            <div key={project._id} className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:border-blue-400 transition-all">
+              <div className="p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Trophy className={`w-6 h-6 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : 'text-amber-600'}`} />
+                      <div>
+                        <h3 className="text-xl font-black text-gray-800">{project.projectName}</h3>
+                        <span className="text-sm text-gray-500">ID: {project.projectId}</span>
                       </div>
-                    )}
-
-                    {project.googleSitesLink && (
-                      <a
-                        href={project.googleSitesLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
-                      >
-                        Ver proyecto →
-                      </a>
+                    </div>
+                    {project.assignedStudents && project.assignedStudents.length > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Users className="w-4 h-4" />
+                        <span>{project.assignedStudents.length} estudiantes</span>
+                      </div>
                     )}
                   </div>
-
-                  <div className="flex gap-3">
-                    <div className={`border-2 rounded-xl p-4 text-center min-w-[120px] ${getScoreBgColor(project.scores.promedioInterno)}`}>
-                      <div className="text-xs font-bold text-gray-600 mb-1">Interno</div>
-                      <div className={`text-3xl font-black ${getScoreColor(project.scores.promedioInterno)}`}>
-                        {project.scores.promedioInterno.toFixed(2)}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {project.scores.evaluacionesInternas} eval
-                      </div>
-                    </div>
-
-                    <div className={`border-2 rounded-xl p-4 text-center min-w-[120px] ${getScoreBgColor(project.scores.promedioExterno)}`}>
-                      <div className="text-xs font-bold text-gray-600 mb-1">Externo</div>
-                      <div className={`text-3xl font-black ${getScoreColor(project.scores.promedioExterno)}`}>
-                        {project.scores.promedioExterno.toFixed(2)}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {project.scores.evaluacionesExternas} eval
-                      </div>
-                    </div>
-
+                  <div className="flex gap-3 items-center">
                     <div className={`border-2 rounded-xl p-4 text-center min-w-[140px] ${getScoreBgColor(project.scores.promedioTotal)}`}>
                       <div className="text-xs font-bold text-gray-600 mb-1 flex items-center justify-center gap-1">
                         <Star className="w-3 h-3" />
@@ -330,24 +503,32 @@ const ProjectsListView = ({ section, level, onBack }) => {
                       <div className={`text-4xl font-black ${getScoreColor(project.scores.promedioTotal)}`}>
                         {project.scores.promedioTotal.toFixed(2)}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {project.scores.totalEvaluaciones} evaluaciones
-                      </div>
                     </div>
+                    <button
+                      onClick={() => handleDownloadPlace(index + 1)}
+                      disabled={downloading[index + 1]}
+                      className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-lg font-bold hover:from-green-600 hover:to-green-700 shadow-lg disabled:opacity-50 transition-all"
+                    >
+                      {downloading[index + 1] ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                      ) : (
+                        <>
+                          <Download className="w-5 h-5" />
+                          Descargar
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
-
-              {index < 3 && (
-                <div className={`px-6 py-2 ${index === 0 ? 'bg-yellow-400' : index === 1 ? 'bg-gray-300' : 'bg-amber-500'}`}>
-                  <div className="flex items-center justify-center gap-2">
-                    <Trophy className="w-4 h-4 text-white" />
-                    <span className="text-sm font-black text-white">
-                      {index === 0 ? '1ER LUGAR' : index === 1 ? '2DO LUGAR' : '3ER LUGAR'}
-                    </span>
-                  </div>
+              <div className={`px-6 py-2 ${index === 0 ? 'bg-yellow-400' : index === 1 ? 'bg-gray-300' : 'bg-amber-500'}`}>
+                <div className="flex items-center justify-center gap-2">
+                  <Trophy className="w-4 h-4 text-white" />
+                  <span className="text-sm font-black text-white">
+                    {index === 0 ? '1ER LUGAR' : index === 1 ? '2DO LUGAR' : '3ER LUGAR'}
+                  </span>
                 </div>
-              )}
+              </div>
             </div>
           ))}
         </div>
@@ -356,7 +537,7 @@ const ProjectsListView = ({ section, level, onBack }) => {
           <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-gray-600 mb-2">No hay proyectos</h3>
           <p className="text-gray-500">
-            No se encontraron proyectos para esta sección.
+            No se encontraron proyectos para esta especialidad.
           </p>
         </div>
       )}
@@ -365,11 +546,11 @@ const ProjectsListView = ({ section, level, onBack }) => {
         <div className="mt-8 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-4">
             <BarChart3 className="w-6 h-6 text-blue-600" />
-            <h3 className="text-lg font-black text-gray-800">Estadísticas de la Sección</h3>
+            <h3 className="text-lg font-black text-gray-800">Estadísticas</h3>
           </div>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
-              <div className="text-sm text-gray-600 mb-1">Promedio General</div>
+              <div className="text-sm text-gray-600 mb-1">Promedio</div>
               <div className="text-2xl font-black text-blue-600">
                 {(projects.reduce((acc, p) => acc + p.scores.promedioTotal, 0) / projects.length).toFixed(2)}
               </div>
@@ -386,12 +567,6 @@ const ProjectsListView = ({ section, level, onBack }) => {
                 {Math.min(...projects.map(p => p.scores.promedioTotal)).toFixed(2)}
               </div>
             </div>
-            <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
-              <div className="text-sm text-gray-600 mb-1">Total Evaluaciones</div>
-              <div className="text-2xl font-black text-purple-600">
-                {projects.reduce((acc, p) => acc + p.scores.totalEvaluaciones, 0)}
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -399,95 +574,38 @@ const ProjectsListView = ({ section, level, onBack }) => {
   );
 };
 
-const LevelCard = ({ level, sections, specialties, onSelectLevel }) => {
-  const levelSections = getSectionsForLevel(level.levelName, sections);
-  const isBachillerato = isBachilleratoLevel(level.levelName);
-
-  return (
-    <div
-      onClick={() => onSelectLevel(level)}
-      className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:shadow-xl hover:border-yellow-400 transition-all duration-300 overflow-hidden cursor-pointer transform hover:scale-105"
-    >
-      <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-6">
-        <div className="flex items-center gap-3">
-          <div className="bg-white p-3 rounded-lg shadow-md">
-            <GraduationCap className="w-8 h-8 text-yellow-600" />
-          </div>
-          <div>
-            <h3 className="text-xl font-black text-white">{level.levelName}</h3>
-            {level.letterLevel && (
-              <span className="text-sm font-semibold text-yellow-100">
-                Código: {level.letterLevel}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="p-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-2 text-gray-600">
-            <Users className="w-5 h-5 text-yellow-500" />
-            <span className="text-sm">
-              <span className="font-bold text-gray-800">{levelSections.length}</span> Secciones
-            </span>
-          </div>
-          {isBachillerato && (
-            <div className="flex items-center gap-2 text-gray-600">
-              <BookOpen className="w-5 h-5 text-yellow-500" />
-              <span className="text-sm">
-                <span className="font-bold text-gray-800">{specialties.length}</span> Especialidades
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const TercerCicloDetail = ({ level, sections, onBack }) => {
-  const levelSections = getSectionsForLevel(level.levelName, sections);
+// Vista de selección de sección para Tercer Ciclo
+const TercerCicloView = ({ level, sections, onBack }) => {
   const [selectedSection, setSelectedSection] = useState(null);
 
-  const handleSelectSection = (section) => {
-    setSelectedSection(section);
-  };
-
-  const handleBackToSections = () => {
-    setSelectedSection(null);
-  };
+  const levelSections = sections.filter(section =>
+    /^[A-F]$/i.test(section.sectionName)
+  );
 
   if (selectedSection) {
     return (
-      <ProjectsListView
+      <TercerCicloProjectsView
         section={selectedSection}
         level={level}
-        onBack={handleBackToSections}
+        onBack={() => setSelectedSection(null)}
       />
     );
   }
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Volver a niveles
-        </button>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-4 rounded-xl shadow-lg">
-              <GraduationCap className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-black text-gray-800">{level.levelName}</h2>
-              <p className="text-gray-600">Selecciona una sección para ver proyectos y descargar diplomas</p>
-            </div>
-          </div>
+      <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-6">
+        <ArrowLeft className="w-5 h-5" />
+        Volver a niveles
+      </button>
+
+      <div className="flex items-center gap-3 mb-8">
+        <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-4 rounded-xl shadow-lg">
+          <GraduationCap className="w-8 h-8 text-white" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black text-gray-800">{level.levelName}</h2>
+          <p className="text-gray-600">Selecciona una sección</p>
         </div>
       </div>
 
@@ -495,22 +613,16 @@ const TercerCicloDetail = ({ level, sections, onBack }) => {
         {levelSections.map((section) => (
           <div
             key={section._id}
-            className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:border-yellow-400 hover:shadow-xl transition-all duration-300 overflow-hidden"
+            onClick={() => setSelectedSection(section)}
+            className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:border-yellow-400 hover:shadow-xl transition-all cursor-pointer transform hover:scale-105"
           >
             <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 p-6 text-center">
-              <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-lg">
                 <span className="text-3xl font-black text-yellow-600">{section.sectionName}</span>
               </div>
-              <h3 className="text-lg font-black text-white">Sección {section.sectionName}</h3>
             </div>
-            <div className="p-4 space-y-2">
-              <button
-                onClick={() => handleSelectSection(section)}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg font-bold hover:from-blue-600 hover:to-blue-700 transition-all text-sm"
-              >
-                <FileText className="w-4 h-4" />
-                Ver Proyectos
-              </button>
+            <div className="p-4 text-center">
+              <h3 className="text-lg font-black text-gray-800">Sección {section.sectionName}</h3>
             </div>
           </div>
         ))}
@@ -519,126 +631,59 @@ const TercerCicloDetail = ({ level, sections, onBack }) => {
   );
 };
 
-const BachilleratoDetail = ({ level, sections, specialties, onBack }) => {
-  const levelSections = getSectionsForLevel(level.levelName, sections);
+// Vista de selección de especialidad para Bachillerato
+const BachilleratoView = ({ level, specialties, onBack }) => {
+  const [selectedSpecialty, setSelectedSpecialty] = useState(null);
 
-  const grupo1Sections = levelSections.filter(s => s.sectionName.startsWith('1'));
-  const grupo2Sections = levelSections.filter(s => s.sectionName.startsWith('2'));
-
-  const handleDownloadSpecialtyGroup = (specialty, groupNumber, groupSections) => {
-    console.log(`Descargando diplomas para ${level.levelName} - ${specialty.specialtyName} - Grupo ${groupNumber}`);
-    alert(`Generando diplomas para:\n\nNivel: ${level.levelName}\nEspecialidad: ${specialty.specialtyName}\nGrupo: ${groupNumber}\nSecciones: ${groupSections.map(s => s.sectionName).join(', ')}\n\n¡La descarga comenzará en breve!`);
-  };
-
-  const handleDownloadSpecialty = (specialty) => {
-    console.log(`Descargando todos los diplomas para ${level.levelName} - ${specialty.specialtyName}`);
-    alert(`Generando todos los diplomas para:\n\nNivel: ${level.levelName}\nEspecialidad: ${specialty.specialtyName}\nTodos los grupos\n\n¡La descarga comenzará en breve!`);
-  };
-
-  const handleDownloadAll = () => {
-    console.log(`Descargando todos los diplomas para ${level.levelName}`);
-    alert(`Generando todos los diplomas para:\n\nNivel: ${level.levelName}\nTodas las especialidades\nTodos los grupos\n\n¡La descarga comenzará en breve!`);
-  };
+  if (selectedSpecialty) {
+    return (
+      <BachilleratoProjectsView
+        level={level}
+        specialty={selectedSpecialty}
+        onBack={() => setSelectedSpecialty(null)}
+      />
+    );
+  }
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Volver a niveles
-        </button>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-4 rounded-xl shadow-lg">
-              <GraduationCap className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-black text-gray-800">{level.levelName}</h2>
-              <p className="text-gray-600">Selecciona especialidad y grupo para descargar diplomas</p>
-            </div>
-          </div>
-          <button
-            onClick={handleDownloadAll}
-            className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-lg font-bold hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all"
-          >
-            <Download className="w-5 h-5" />
-            Descargar Todas
-          </button>
+      <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-yellow-600 font-semibold mb-6">
+        <ArrowLeft className="w-5 h-5" />
+        Volver a niveles
+      </button>
+
+      <div className="flex items-center gap-3 mb-8">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 rounded-xl shadow-lg">
+          <GraduationCap className="w-8 h-8 text-white" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black text-gray-800">{level.levelName}</h2>
+          <p className="text-gray-600">Selecciona una especialidad</p>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {specialties.map((specialty) => (
           <div
             key={specialty._id}
-            className="bg-white rounded-xl shadow-lg border-2 border-gray-200 overflow-hidden"
+            onClick={() => setSelectedSpecialty(specialty)}
+            className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all cursor-pointer transform hover:scale-105"
           >
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6">
               <div className="flex items-center gap-3">
                 <div className="bg-white p-3 rounded-lg shadow-md">
                   <BookOpen className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-white">{specialty.specialtyName}</h3>
-                  {specialty.letterSpecialty && (
-                    <span className="text-sm font-semibold text-blue-100">
-                      Código: {specialty.letterSpecialty}
-                    </span>
-                  )}
+                  <h3 className="text-lg font-black text-white">{specialty.specialtyName}</h3>
+                  <span className="text-sm font-semibold text-blue-100">
+                    Código: {specialty.letterSpecialty}
+                  </span>
                 </div>
               </div>
             </div>
-
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {grupo1Sections.length > 0 && (
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200 hover:border-blue-400 hover:shadow-xl transition-all duration-300 overflow-hidden">
-                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-center">
-                      <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
-                        <span className="text-4xl font-black text-blue-600">1</span>
-                      </div>
-                      <h4 className="text-2xl font-black text-white mb-1">Grupo 1</h4>
-                      <p className="text-blue-100 text-sm font-semibold">
-                        Secciones: {grupo1Sections.map(s => s.sectionName).join(', ')}
-                      </p>
-                    </div>
-                    <div className="p-6">
-                      <button
-                        onClick={() => handleDownloadSpecialtyGroup(specialty, 1, grupo1Sections)}
-                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-xl font-black text-lg hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
-                      >
-                        <Download className="w-6 h-6" />
-                        Descargar Grupo 1
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {grupo2Sections.length > 0 && (
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border-2 border-purple-200 hover:border-purple-400 hover:shadow-xl transition-all duration-300 overflow-hidden">
-                    <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 text-center">
-                      <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
-                        <span className="text-4xl font-black text-purple-600">2</span>
-                      </div>
-                      <h4 className="text-2xl font-black text-white mb-1">Grupo 2</h4>
-                      <p className="text-purple-100 text-sm font-semibold">
-                        Secciones: {grupo2Sections.map(s => s.sectionName).join(', ')}
-                      </p>
-                    </div>
-                    <div className="p-6">
-                      <button
-                        onClick={() => handleDownloadSpecialtyGroup(specialty, 2, grupo2Sections)}
-                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-xl font-black text-lg hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
-                      >
-                        <Download className="w-6 h-6" />
-                        Descargar Grupo 2
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <p className="text-sm text-gray-600">Click para ver proyectos y descargar diplomas</p>
             </div>
           </div>
         ))}
@@ -647,29 +692,21 @@ const BachilleratoDetail = ({ level, sections, specialties, onBack }) => {
   );
 };
 
+// Componente principal
 const DiplomasSection = () => {
   const { levels, loading: loadingLevels, error: errorLevels } = useLevels();
   const { sections, loading: loadingSections } = useSections();
   const { specialties, loading: loadingSpecialties } = useSpecialties();
-
   const [selectedLevel, setSelectedLevel] = useState(null);
 
   const loading = loadingLevels || loadingSections || loadingSpecialties;
-
-  const handleSelectLevel = (level) => {
-    setSelectedLevel(level);
-  };
-
-  const handleBack = () => {
-    setSelectedLevel(null);
-  };
 
   if (loading) {
     return (
       <div className="p-8">
         <div className="flex flex-col items-center justify-center py-12">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-yellow-500 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600 font-semibold">Cargando información de diplomas...</p>
+          <p className="mt-4 text-gray-600 font-semibold">Cargando información...</p>
         </div>
       </div>
     );
@@ -679,17 +716,8 @@ const DiplomasSection = () => {
     return (
       <div className="p-8">
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0">
-              <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-red-800">Error al cargar los datos</h3>
-              <p className="text-sm text-red-700 mt-1">{errorLevels}</p>
-            </div>
-          </div>
+          <h3 className="text-sm font-bold text-red-800">Error al cargar los datos</h3>
+          <p className="text-sm text-red-700 mt-1">{errorLevels}</p>
         </div>
       </div>
     );
@@ -697,22 +725,21 @@ const DiplomasSection = () => {
 
   if (selectedLevel) {
     const isBachillerato = isBachilleratoLevel(selectedLevel.levelName);
-
+    
     if (isBachillerato) {
       return (
-        <BachilleratoDetail
+        <BachilleratoView
           level={selectedLevel}
-          sections={sections}
           specialties={specialties}
-          onBack={handleBack}
+          onBack={() => setSelectedLevel(null)}
         />
       );
     } else {
       return (
-        <TercerCicloDetail
+        <TercerCicloView
           level={selectedLevel}
           sections={sections}
-          onBack={handleBack}
+          onBack={() => setSelectedLevel(null)}
         />
       );
     }
@@ -726,29 +753,48 @@ const DiplomasSection = () => {
           <h2 className="text-2xl font-black text-gray-800">Generación de Diplomas</h2>
         </div>
         <p className="text-gray-600">
-          Selecciona el nivel académico para ver las secciones y descargar los diplomas correspondientes.
+          Selecciona el nivel académico para comenzar
         </p>
       </div>
 
       {levels.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {levels.map((level) => (
-            <LevelCard
+            <div
               key={level._id}
-              level={level}
-              sections={sections}
-              specialties={specialties}
-              onSelectLevel={handleSelectLevel}
-            />
+              onClick={() => setSelectedLevel(level)}
+              className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:shadow-xl hover:border-yellow-400 transition-all cursor-pointer transform hover:scale-105"
+            >
+              <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-6">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white p-3 rounded-lg shadow-md">
+                    <GraduationCap className="w-8 h-8 text-yellow-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-white">{level.levelName}</h3>
+                    {level.letterLevel && (
+                      <span className="text-sm font-semibold text-yellow-100">
+                        Código: {level.letterLevel}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <p className="text-sm text-gray-600">
+                  {isBachilleratoLevel(level.levelName) ? 
+                    `${specialties.length} especialidades disponibles` :
+                    `${sections.filter(s => /^[A-F]$/i.test(s.sectionName)).length} secciones disponibles`
+                  }
+                </p>
+              </div>
+            </div>
           ))}
         </div>
       ) : (
         <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
           <GraduationCap className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-gray-600 mb-2">No hay niveles disponibles</h3>
-          <p className="text-gray-500">
-            No se encontraron niveles académicos en el sistema.
-          </p>
         </div>
       )}
 
@@ -758,11 +804,11 @@ const DiplomasSection = () => {
           <div>
             <h4 className="font-bold text-gray-800 mb-2">Información sobre diplomas</h4>
             <ul className="space-y-1 text-sm text-gray-600">
-              <li>• <strong>Tercer Ciclo:</strong> Haz clic en "Ver Proyectos" para ver todos los proyectos de la sección con sus calificaciones</li>
-              <li>• <strong>Bachillerato:</strong> Haz clic en el nivel para ver especialidades con Grupo 1 (1A, 1B) y Grupo 2 (2A, 2B)</li>
-              <li>• Puedes descargar diplomas por grupo, por especialidad completa o todas a la vez</li>
-              <li>• Los proyectos se ordenan automáticamente por promedio total de mayor a menor</li>
-              <li>• <strong>Solo se generan diplomas para los 3 primeros lugares</strong></li>
+              <li>• <strong>Tercer Ciclo:</strong> Selecciona una sección para ver proyectos y descargar diplomas</li>
+              <li>• <strong>Bachillerato:</strong> Selecciona una especialidad para ver proyectos filtrados por nivel</li>
+              <li>• Los proyectos se ordenan automáticamente por promedio total</li>
+              <li>• Puedes descargar diplomas individuales o los 3 primeros lugares completos</li>
+              <li>• Solo se generan diplomas para los 3 primeros lugares</li>
             </ul>
           </div>
         </div>
