@@ -104,9 +104,9 @@ rubricController.getRubrics = async (req, res) => {
         let query = {};
 
         // Si es Docente o Evaluador
-        if (user.role === 'Docente' || user.role === 'Evaluador') {
+        if (user.role === 'Docente') {
             // Si su nivel está entre Séptimo, Octavo o Noveno → mostrar solo rúbricas con level = 1
-            if (['Séptimo', 'Octavo', 'Noveno'].includes(user.levelName)) {
+            if (['Séptimo', 'Octavo', 'Noveno'].includes(user.idLevel)) {
                 query = { level: 1 };
             } else {
                 // Si no, filtrar por su idLevel normalmente
