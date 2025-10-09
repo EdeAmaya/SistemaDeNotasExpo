@@ -1,5 +1,6 @@
 // Controller para manejar las operaciones CRUD de rúbricas y criterios
 import Rubric from "../models/Rubrics.js";
+import Level from '../models/Level';
 
 const rubricController = {};
 
@@ -99,45 +100,57 @@ rubricController.updateRubric = async (req, res) => {
 
 //Select - Con filtrado según rol del usuario
 rubricController.getRubrics = async (req, res) => {
-    try {
-        const user = req.user; // Usuario autenticado desde el middleware
-        let query = {};
+  try {
+    const user = req.user; // Usuario autenticado desde el middleware
+    let query = {};
 
-        // Si es Docente o Evaluador
-        if (user.role === 'Docente') {
-            // Si su nivel está entre Séptimo, Octavo o Noveno → mostrar solo rúbricas con level = 1
-            if (['Séptimo', 'Octavo', 'Noveno'].includes(user.idLevel)) {
-                query = { level: 1 };
-            } else {
-                // Si no, filtrar por su idLevel normalmente
-                query = { levelId: user.idLevel };
+    // Si es Docente o Evaluador
+    if (user.role === "Docente" || user.role === "Evaluador") {
+      // Obtener levelName:
+      let userLevelName = null;
 
-                // Si tiene especialidad, también filtramos por ella
-                if (user.idSpecialty) {
-                    query.specialtyId = user.idSpecialty;
-                }
+      if (user.idLevel && typeof user.idLevel === "object" && user.idLevel.levelName) {
+        userLevelName = user.idLevel.levelName;
+      } else if (user.idLevel) {
+        const levelDoc = await Level.findById(user.idLevel).lean();
+        if (levelDoc) userLevelName = levelDoc.levelName;
+      }
 
-                // Si tiene sección, también se puede filtrar
-                if (user.idSection) {
-                    query.sectionId = user.idSection;
-                }
-            }
+      // Si el nivel del usuario es Séptimo, Octavo o Noveno → mostrar solo rúbricas con level = 1
+      if (["Séptimo", "Octavo", "Noveno"].includes(userLevelName)) {
+        query = { level: 1 };
+      } else {
+        // Si no, filtrar por su idLevel normalmente
+        if (user.idLevel) {
+          query.levelId = user.idLevel;
         }
 
-        // Admin y Estudiante ven todas las rúbricas
-        const rubrics = await Rubric.find(query)
-            .populate("specialtyId", "specialtyName")
-            .populate("stageId", "name")
-            .populate("levelId", "levelName");
+        // Si tiene especialidad, también filtramos por ella
+        if (user.idSpecialty) {
+          query.specialtyId = user.idSpecialty;
+        }
 
-        res.status(200).json(rubrics);
-    } catch (error) {
-        console.error("Error al obtener rúbricas:", error);
-        res.status(500).json({
-            message: "Error al obtener rúbricas",
-            error: error.message
-        });
+        // Si tiene sección, también se puede filtrar
+        if (user.idSection) {
+          query.sectionId = user.idSection;
+        }
+      }
     }
+
+    // Admin y Estudiante ven todas las rúbricas
+    const rubrics = await Rubric.find(query)
+      .populate("specialtyId", "specialtyName")
+      .populate("stageId", "name")
+      .populate("levelId", "levelName");
+
+    res.status(200).json(rubrics);
+  } catch (error) {
+    console.error("Error al obtener rúbricas:", error);
+    res.status(500).json({
+      message: "Error al obtener rúbricas",
+      error: error.message,
+    });
+  }
 };
 
 // Obtener una rúbrica por ID
