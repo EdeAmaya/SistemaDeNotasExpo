@@ -3,8 +3,16 @@ import { Lightbulb, Plus, BookOpen, CheckCircle, XCircle, Globe, Info } from 'lu
 import ListProjects from './components/ListProjects';
 import RegisterProject from './components/RegisterProject';
 import useDataProjects from './hooks/useDataProjects';
+import { useAuth } from '../../context/AuthContext';
 
 const Projects = () => {
+  const { user } = useAuth();
+
+  // Cambiar el título del documento al montar el componente
+  React.useEffect(() => {
+    document.title = 'Proyectos | STC';
+  }, []);
+
   const [activeTab, setActiveTab] = useState('list');
   const [levels, setLevels] = useState([]);
   const [sections, setSections] = useState([]);
@@ -49,6 +57,21 @@ const Projects = () => {
   const handleCancelEdit = () => {
     clearForm();
     setActiveTab('list');
+  };
+
+  // Acceso
+  const isTabEnabled = (tab) => {
+    if (!user) return false;
+
+    switch (user.role) {
+      case 'Docente':
+        return tab !== 'register';
+      case 'Admin':
+      case 'Estudiante':
+        return true;
+      default:
+        return false;
+    }
   };
 
   const stats = {
@@ -152,20 +175,25 @@ const Projects = () => {
               )}
             </button>
 
-            <button
-              onClick={() => handleTabChange('register')}
-              className={`cursor-pointer relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${activeTab === 'register' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
-                }`}
-            >
-              <div className="flex items-center gap-2">
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span className="hidden sm:inline">{id ? 'Editar Proyecto' : 'Nuevo Proyecto'}</span>
-                <span className="sm:hidden">{id ? 'Editar' : 'Nuevo'}</span>
-              </div>
-              {activeTab === 'register' && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-full"></div>
-              )}
-            </button>
+            {isTabEnabled('register') && (
+              <button
+                onClick={() => handleTabChange('register')}
+                className={`cursor-pointer relative px-4 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${activeTab === 'register'
+                    ? 'text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                  }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Plus className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                  <span className="hidden sm:inline">{id ? 'Editar Proyecto' : 'Nuevo Proyecto'}</span>
+                  <span className="sm:hidden">{id ? 'Editar' : 'Nuevo'}</span>
+                </div>
+                {activeTab === 'register' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-full"></div>
+                )}
+              </button>
+            )}
+
           </div>
         </div>
       </div>

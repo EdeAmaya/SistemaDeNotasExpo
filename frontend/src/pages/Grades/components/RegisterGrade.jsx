@@ -13,30 +13,50 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
   const [errors, setErrors] = useState({});
   const [criteriaScores, setCriteriaScores] = useState([]);
 
-  // Definir niveles de calificación por ponderación
-  const getScoreOptions = (weight) => {
-    if (weight === 20) {
-      return [
-        { label: 'Excelente', value: 2.0, color: 'green' },
-        { label: 'Bueno', value: 1.6, color: 'blue' },
-        { label: 'Regular', value: 1.0, color: 'yellow' },
-        { label: 'Deficiente', value: 0.8, color: 'red' }
-      ];
-    } else if (weight === 15) {
-      return [
-        { label: 'Excelente', value: 1.5, color: 'green' },
-        { label: 'Bueno', value: 1.2, color: 'blue' },
-        { label: 'Regular', value: 0.9, color: 'yellow' },
-        { label: 'Deficiente', value: 0.6, color: 'red' }
-      ];
-    } else if (weight === 10) {
-      return [
-        { label: 'Excelente', value: 1.0, color: 'green' },
-        { label: 'Bueno', value: 0.8, color: 'blue' },
-        { label: 'Regular', value: 0.6, color: 'yellow' },
-        { label: 'Deficiente', value: 0.4, color: 'red' }
-      ];
+  // Obtener opciones de calificación según el tipo de escala y el criterio
+  const getScoreOptions = (criterion, criterionWeight) => {
+    // Tipo 1: Promedio de puntuación - calificación manual de 0 a 10
+    if (selectedRubric?.scaleType === 1) {
+      return null; // Se usará input numérico
     }
+
+    // Tipo 2: Escala de ejecución - niveles estándar (10, 8, 6, 4, opcionalmente 2)
+    if (selectedRubric?.scaleType === 2) {
+      const weights = criterion.weights || [];
+      return weights.map(w => ({
+        label: w.value === 10 ? 'Excelente' :
+               w.value === 8 ? 'Bueno' :
+               w.value === 6 ? 'Regular' :
+               w.value === 4 ? 'Necesita Mejorar' :
+               w.value === 2 ? 'Deficiente' : `Nivel ${w.value}`,
+        value: (w.value * criterionWeight) / 100,
+        baseValue: w.value,
+        color: w.value === 10 ? 'green' :
+               w.value === 8 ? 'blue' :
+               w.value === 6 ? 'yellow' :
+               w.value === 4 ? 'orange' : 'red'
+      }));
+    }
+
+    // Tipo 3: Desempeño por criterios - niveles personalizados con descripciones
+    if (selectedRubric?.scaleType === 3) {
+      const weights = criterion.weights || [];
+      return weights.map(w => ({
+        label: w.value === 10 ? 'Excelente' :
+               w.value === 8 ? 'Bueno' :
+               w.value === 6 ? 'Regular' :
+               w.value === 4 ? 'Necesita Mejorar' :
+               w.value === 2 ? 'Deficiente' : `Nivel ${w.value}`,
+        value: (w.value * criterionWeight) / 100,
+        baseValue: w.value,
+        description: w.description,
+        color: w.value === 10 ? 'green' :
+               w.value === 8 ? 'blue' :
+               w.value === 6 ? 'yellow' :
+               w.value === 4 ? 'orange' : 'red'
+      }));
+    }
+
     return [];
   };
 
@@ -108,25 +128,31 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
       setCriteriaScores(rubric.criteria.map(criterio => ({
         criterioId: criterio._id,
         criterionName: criterio.criterionName,
+        criterionDescription: criterio.criterionDescription,
         criterionWeight: criterio.criterionWeight || 0,
+        weights: criterio.weights || [],
         puntajeObtenido: 0,
-        nivelSeleccionado: ''
+        nivelSeleccionado: '',
+        baseValueSelected: null
       })));
     }
   };
 
-  const updateCriterionScore = (index, selectedLevel, scoreValue) => {
+  const updateCriterionScore = (index, selectedLevel, scoreValue, baseValue = null) => {
     const newScores = [...criteriaScores];
     newScores[index].puntajeObtenido = scoreValue;
     newScores[index].nivelSeleccionado = selectedLevel;
+    newScores[index].baseValueSelected = baseValue;
     setCriteriaScores(newScores);
   };
 
   const calculateTotalScore = () => {
     if (!selectedRubric || criteriaScores.length === 0) return 0;
     if (selectedRubric.rubricType === 1) {
+      // Para Escala Estimativa, siempre es suma ponderada
       return criteriaScores.reduce((total, criterio) => total + criterio.puntajeObtenido, 0);
     } else {
+      // Para Rúbrica tradicional, es promedio
       const sum = criteriaScores.reduce((total, criterio) => total + criterio.puntajeObtenido, 0);
       return sum / criteriaScores.length;
     }
@@ -145,10 +171,14 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
   const isWeightValid = validateWeights();
 
   const allCriteriaScored = () => {
-    if (selectedRubric?.rubricType === 1) {
-      return criteriaScores.every(c => c.nivelSeleccionado !== '');
-    }
-    return criteriaScores.every(c => c.puntajeObtenido > 0);
+    return criteriaScores.every(c => {
+      // Para tipo 1 (Promedio), el usuario ingresa manualmente de 0 a 10
+      if (selectedRubric?.scaleType === 1) {
+        return c.puntajeObtenido > 0;
+      }
+      // Para tipos 2 y 3, debe seleccionar un nivel
+      return c.nivelSeleccionado !== '';
+    });
   };
 
   const handleSubmit = async () => {
@@ -246,7 +276,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
 
           {selectedRubric && (
             <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-              <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                 <div>
                   <div className="text-gray-500 font-semibold">Tipo</div>
                   <div className="text-gray-800 font-bold">{getRubricTypeName(selectedRubric.rubricType)}</div>
@@ -255,6 +285,22 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                   <div className="text-gray-500 font-semibold">Criterios</div>
                   <div className="text-gray-800 font-bold">{selectedRubric.criteria?.length || 0}</div>
                 </div>
+                {selectedRubric.rubricType === 1 && (
+                  <>
+                    <div>
+                      <div className="text-gray-500 font-semibold">Tipo de Escala</div>
+                      <div className="text-gray-800 font-bold">
+                        {selectedRubric.scaleType === 1 ? 'Promedio' : 
+                         selectedRubric.scaleType === 2 ? 'Ejecución' : 
+                         selectedRubric.scaleType === 3 ? 'Por Criterios' : 'N/A'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 font-semibold">Cálculo</div>
+                      <div className="text-gray-800 font-bold">Ponderado</div>
+                    </div>
+                  </>
+                )}
               </div>
               {selectedRubric.rubricType === 1 && (
                 <div className={`mt-3 p-3 rounded-lg border-2 ${isWeightValid ? 'bg-green-50 border-green-300' : 'bg-orange-50 border-orange-300'}`}>
@@ -302,12 +348,8 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
 
             <div className="space-y-3">
               {criteriaScores.map((criterio, index) => {
-                const scoreOptions = getScoreOptions(criterio.criterionWeight);
-                const hasValidOptions = scoreOptions.length > 0;
-
-                // Obtener descripción del criterio original
                 const criterioOriginal = selectedRubric.criteria.find(c => c._id === criterio.criterioId);
-                const descripcion = criterioOriginal?.criterionDescription || '';
+                const scoreOptions = getScoreOptions(criterioOriginal, criterio.criterionWeight);
 
                 return (
                   <div key={criterio.criterioId} className="bg-white rounded-lg p-4 border-2 border-gray-200">
@@ -317,14 +359,21 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                           <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">#{index + 1}</span>
                           <span className="font-bold text-gray-800">{criterio.criterionName}</span>
                         </div>
-                        {descripcion && (
-                          <div className="text-sm text-gray-600 mt-1 mb-2">
-                            {descripcion}
+                        {criterio.criterionDescription && (
+                          <div className="text-sm text-gray-600 mt-1 mb-2 pl-2 border-l-2 border-gray-300">
+                            {criterio.criterionDescription}
                           </div>
                         )}
                         {selectedRubric.rubricType === 1 && (
-                          <div className="text-sm text-purple-600 font-semibold">
-                            Ponderación: {criterio.criterionWeight}%
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-sm text-purple-600 font-semibold">
+                              Ponderación: {criterio.criterionWeight}%
+                            </span>
+                            {selectedRubric.scaleType === 1 && (
+                              <span className="text-xs text-gray-500">
+                                (0 a 10 puntos)
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -338,33 +387,108 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                       )}
                     </div>
 
-                    {selectedRubric.rubricType === 1 ? (
-                      hasValidOptions ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                          {scoreOptions.map((option) => (
-                            <button
-                              key={option.label}
-                              type="button"
-                              onClick={() => updateCriterionScore(index, option.label, option.value)}
-                              className={`p-3 rounded-lg border-2 font-bold transition-all ${
-                                criterio.nivelSeleccionado === option.label
-                                  ? 'bg-yellow-500 border-yellow-600 text-white shadow-lg scale-105'
-                                  : 'bg-white border-gray-300 text-gray-700 hover:border-yellow-400 hover:bg-yellow-50'
-                              }`}
-                              disabled={evaluationLoading}
-                            >
-                              <div className="text-sm mb-1">{option.label}</div>
-                              <div className="text-lg">{option.value}</div>
-                            </button>
-                          ))}
+                    {/* Tipo 1: Promedio - Input manual */}
+                    {selectedRubric.scaleType === 1 && (
+                      <div className="border-2 border-gray-300 rounded-lg p-3 bg-gray-50">
+                        <label className="block text-xs font-semibold text-gray-600 mb-2">
+                          Calificación (0 a 10)
+                        </label>
+                        <input
+                          type="number"
+                          value={criterio.puntajeObtenido || ''}
+                          onChange={(e) => {
+                            let value = parseFloat(e.target.value);
+                            if (isNaN(value) || value < 0) value = 0;
+                            if (value > 10) value = 10;
+                            // Calcular el puntaje ponderado
+                            const weightedScore = (value * criterio.criterionWeight) / 100;
+                            updateCriterionScore(index, value.toString(), weightedScore, value);
+                          }}
+                          className="w-full px-4 py-3 text-center font-bold text-xl border-2 border-gray-300 rounded-lg focus:border-yellow-500 focus:ring-2 focus:ring-yellow-100 bg-white"
+                          placeholder="0.00"
+                          min="0"
+                          max="10"
+                          step="0.01"
+                          disabled={evaluationLoading}
+                        />
+                        <div className="mt-2 text-xs text-center text-gray-500">
+                          Puntaje ponderado: {criterio.puntajeObtenido.toFixed(2)} puntos
                         </div>
-                      ) : (
-                        <div className="p-3 bg-orange-50 border-2 border-orange-300 rounded-lg text-orange-700 text-sm">
-                          <AlertTriangle className="w-4 h-4 inline mr-2" />
-                          Ponderación {criterio.criterionWeight}% no soportada. Use: 20%, 15% o 10%
+                      </div>
+                    )}
+
+                    {/* Tipo 2 y 3: Botones de niveles */}
+                    {(selectedRubric.scaleType === 2 || selectedRubric.scaleType === 3) && scoreOptions && (
+                      <div className="space-y-3">
+                        <div className={`grid ${scoreOptions.length === 5 ? 'grid-cols-2 md:grid-cols-5' : 'grid-cols-2 md:grid-cols-4'} gap-2`}>
+                          {scoreOptions.map((option) => {
+                            const colorClasses = {
+                              green: {
+                                active: 'bg-green-500 border-green-600 text-white shadow-lg',
+                                inactive: 'bg-green-50 border-green-300 text-green-700 hover:border-green-400 hover:bg-green-100'
+                              },
+                              blue: {
+                                active: 'bg-blue-500 border-blue-600 text-white shadow-lg',
+                                inactive: 'bg-blue-50 border-blue-300 text-blue-700 hover:border-blue-400 hover:bg-blue-100'
+                              },
+                              yellow: {
+                                active: 'bg-yellow-500 border-yellow-600 text-white shadow-lg',
+                                inactive: 'bg-yellow-50 border-yellow-300 text-yellow-700 hover:border-yellow-400 hover:bg-yellow-100'
+                              },
+                              orange: {
+                                active: 'bg-orange-500 border-orange-600 text-white shadow-lg',
+                                inactive: 'bg-orange-50 border-orange-300 text-orange-700 hover:border-orange-400 hover:bg-orange-100'
+                              },
+                              red: {
+                                active: 'bg-red-500 border-red-600 text-white shadow-lg',
+                                inactive: 'bg-red-50 border-red-300 text-red-700 hover:border-red-400 hover:bg-red-100'
+                              }
+                            };
+
+                            const isSelected = criterio.baseValueSelected === option.baseValue;
+                            const colorClass = colorClasses[option.color] || colorClasses.blue;
+
+                            return (
+                              <button
+                                key={option.baseValue}
+                                type="button"
+                                onClick={() => updateCriterionScore(index, option.label, option.value, option.baseValue)}
+                                className={`p-3 rounded-lg border-2 font-bold transition-all ${
+                                  isSelected ? colorClass.active + ' scale-105' : colorClass.inactive
+                                }`}
+                                disabled={evaluationLoading}
+                              >
+                                <div className="text-xs mb-1">{option.label}</div>
+                                <div className="text-lg font-black">{option.baseValue}</div>
+                                <div className="text-[10px] mt-1 opacity-75">
+                                  {option.value.toFixed(2)}pts
+                                </div>
+                              </button>
+                            );
+                          })}
                         </div>
-                      )
-                    ) : (
+
+                        {/* Mostrar descripción del nivel seleccionado (solo tipo 3) */}
+                        {selectedRubric.scaleType === 3 && criterio.nivelSeleccionado && (
+                          <div className="p-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <div className="text-xs font-bold text-blue-800 mb-1">
+                                  {criterio.nivelSeleccionado}
+                                </div>
+                                <div className="text-xs text-gray-700">
+                                  {scoreOptions.find(opt => opt.label === criterio.nivelSeleccionado)?.description || 'Sin descripción'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Para Rúbrica tradicional (rubricType === 2) */}
+                    {selectedRubric.rubricType === 2 && (
                       <div className="border-2 border-gray-300 rounded-lg p-2 bg-white">
                         <input
                           type="number"
@@ -377,10 +501,10 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                             updateCriterionScore(index, '', value);
                           }}
                           className="w-full px-3 py-2 text-center font-bold text-lg focus:outline-none"
-                          placeholder="0.00000"
+                          placeholder="0.00"
                           min="0"
                           max="10"
-                          step="0.00001"
+                          step="0.01"
                           disabled={evaluationLoading}
                         />
                       </div>

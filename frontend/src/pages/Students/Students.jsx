@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GraduationCap, UserPlus, BookOpen, Users, Award, Briefcase, Info, Upload } from 'lucide-react';
 import ListStudents from './components/ListStudents';
 import RegisterStudent from './components/RegisterStudent';
 import BulkStudentUpload from './components/BulkStudentUpload';
 import useDataStudents from './hooks/useDataStudents';
 import DeleteAllStudentsButton from './components/DeleteAllStudentsButton';
+import { useAuth } from '../../context/AuthContext';
 
 const Students = () => {
+  // Cambiar el título del documento al montar el componente
+  React.useEffect(() => {
+    document.title = 'Estudiantes | STC';
+  }, []);
+
+  const { user } = useAuth();
+
   const [activeTab, setActiveTab] = useState('list');
   const [levels, setLevels] = useState([]);
   const [sections, setSections] = useState([]);
@@ -39,6 +47,23 @@ const Students = () => {
     clearForm,
     refreshStudents
   } = useDataStudents();
+
+  // Acceso
+  const isTabEnabled = (tab) => {
+    if (!user) return false;
+
+    switch (user.role) {
+      case 'Docente':
+        // Bloquea acceso a todas las pestañas de registro, carga masiva y eliminación
+        return !['register', 'bulk', 'deleteAll'].includes(tab);
+      case 'Admin':
+      case 'Estudiante':
+        return true;
+      default:
+        return false;
+    }
+  };
+
 
   React.useEffect(() => {
     const fetchCatalogs = async () => {
@@ -156,38 +181,49 @@ const Students = () => {
               )}
             </button>
 
-            <button
-              onClick={() => handleTabChange('register')}
-              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 ${activeTab === 'register' ? 'text-green-600' : 'text-gray-500 hover:text-gray-700'
-                }`}
-            >
-              <div className="flex items-center gap-2">
-                <UserPlus className="w-5 h-5" />
-                <span>{id ? 'Editar Estudiante' : 'Nuevo Estudiante'}</span>
-              </div>
-              {activeTab === 'register' && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-green-500 rounded-t-full"></div>
-              )}
-            </button>
+            {isTabEnabled('register') && (
+              <button
+                onClick={() => handleTabChange('register')}
+                className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 ${activeTab === 'register'
+                  ? 'text-green-600'
+                  : 'text-gray-500 hover:text-gray-700'
+                  }`}
+              >
+                <div className="flex items-center gap-2">
+                  <UserPlus className="w-5 h-5" />
+                  <span>{id ? 'Editar Estudiante' : 'Nuevo Estudiante'}</span>
+                </div>
+                {activeTab === 'register' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-green-500 rounded-t-full"></div>
+                )}
+              </button>
+            )}
 
-            <button
-              onClick={() => handleTabChange('bulk')}
-              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 ${activeTab === 'bulk' ? 'text-green-600' : 'text-gray-500 hover:text-gray-700'
-                }`}
-            >
-              <div className="flex items-center gap-2">
-                <Upload className="w-5 h-5" />
-                <span>Carga Masiva</span>
-              </div>
-              {activeTab === 'bulk' && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-green-500 rounded-t-full"></div>
-              )}
-            </button>
+            {isTabEnabled('bulk') && (
+              <button
+                onClick={() => handleTabChange('bulk')}
+                className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 ${activeTab === 'bulk'
+                  ? 'text-green-600'
+                  : 'text-gray-500 hover:text-gray-700'
+                  }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Upload className="w-5 h-5" />
+                  <span>Carga Masiva</span>
+                </div>
+                {activeTab === 'bulk' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-green-500 rounded-t-full"></div>
+                )}
+              </button>
+            )}
 
-            <DeleteAllStudentsButton
-              totalStudents={students.length}
-              onDeleteAll={deleteAllStudents}
-            />
+            {isTabEnabled('deleteAll') && (
+              <DeleteAllStudentsButton
+                totalStudents={students.length}
+                onDeleteAll={deleteAllStudents}
+              />
+            )}
+
           </div>
         </div>
       </div>

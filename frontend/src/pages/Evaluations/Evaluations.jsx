@@ -3,6 +3,7 @@ import { CheckSquare, Plus, BookOpen, ClipboardList, Award, Layers, Info, FileTe
 import ListRubrics from './components/ListRubrics';
 import RegisterRubric from './components/RegisterRubric';
 import useDataRubrics from './hooks/useDataRubrics';
+import { useAuth } from '../../context/AuthContext';
 
 const Evaluations = () => {
   // Cambiar el título del documento al montar el componente
@@ -10,8 +11,9 @@ const Evaluations = () => {
     document.title = "Evaluaciones | STC";
   }, []);
 
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('list');
-  
+
   const {
     rubrics,
     loading,
@@ -34,6 +36,21 @@ const Evaluations = () => {
     rubricType: '',
     criteria: []
   });
+
+  // Acceso
+  const isTabEnabled = (tab) => {
+    if (!user) return false;
+
+    switch (user.role) {
+      case 'Docente':
+        return tab !== 'register';
+      case 'Admin':
+      case 'Estudiante':
+        return true;
+      default:
+        return false;
+    }
+  };
 
   // Cargar rúbricas al montar el componente
   useEffect(() => {
@@ -116,12 +133,12 @@ const Evaluations = () => {
 
   return (
     <div className="min-h-screen">
-      
+
       {/* Header Superior */}
       <div className="bg-white border-b-2 border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
-            
+
             <div>
               <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                 <span>Sistema</span>
@@ -170,9 +187,8 @@ const Evaluations = () => {
           <div className="flex gap-1">
             <button
               onClick={() => handleTabChange('list')}
-              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
-                activeTab === 'list' ? 'text-purple-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 ${activeTab === 'list' ? 'text-purple-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5" />
@@ -185,28 +201,31 @@ const Evaluations = () => {
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-purple-600 rounded-t-full"></div>
               )}
             </button>
-            
-            <button
-              onClick={() => handleTabChange('register')}
-              className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 ${
-                activeTab === 'register' ? 'text-purple-600' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Plus className="w-5 h-5" />
-                <span>{formData.id ? 'Editar Rúbrica' : 'Nueva Rúbrica'}</span>
-              </div>
-              {activeTab === 'register' && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-purple-600 rounded-t-full"></div>
-              )}
-            </button>
+
+            {isTabEnabled('register') && (
+              <button
+                onClick={() => handleTabChange('register')}
+                className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 ${activeTab === 'register'
+                    ? 'text-purple-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                  }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  <span>{formData.id ? 'Editar Rúbrica' : 'Nueva Rúbrica'}</span>
+                </div>
+                {activeTab === 'register' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-purple-600 rounded-t-full"></div>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-8 py-8">
-        
+
         {/* Stats móvil 
         <div className="lg:hidden grid grid-cols-3 gap-3 mb-6">
           <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-3 rounded-xl shadow-lg text-center">
@@ -239,7 +258,7 @@ const Evaluations = () => {
                 <h3 className="text-sm font-bold text-red-800">Error</h3>
                 <p className="text-sm text-red-700 mt-1">{error}</p>
               </div>
-              <button 
+              <button
                 onClick={clearError}
                 className="text-red-500 hover:text-red-700"
               >
@@ -254,7 +273,7 @@ const Evaluations = () => {
         {/* Contenido */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
           {activeTab === 'list' ? (
-            <ListRubrics 
+            <ListRubrics
               rubrics={rubrics}
               loading={loading}
               deleteRubric={handleDelete}

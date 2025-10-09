@@ -36,8 +36,8 @@ const NavBar = () => {
   const adminMenuItems = [
     { id: 'users', title: 'Usuarios', icon: Users, route: '/users', roles: ['Admin'] },
     { id: 'students', title: 'Estudiantes', icon: GraduationCap, route: '/students', roles: ['Admin', 'Docente'] },
-    { id: 'projects', title: 'Proyectos', icon: Triangle, route: '/projects', roles: ['Admin', 'Estudiante'] },
-    { id: 'evaluations', title: 'Evaluaciones', icon: ClipboardList, route: '/evaluations', roles: ['Admin', 'Estudiante'] },
+    { id: 'projects', title: 'Proyectos', icon: Triangle, route: '/projects', roles: ['Admin', 'Estudiante', 'Docente'] },
+    { id: 'evaluations', title: 'Evaluaciones', icon: ClipboardList, route: '/evaluations', roles: ['Admin', 'Estudiante', 'Docente'] },
     { id: 'grades', title: 'Notas', icon: BookOpenCheck, route: '/grades', roles: ['Admin', 'Docente', 'Evaluador', 'Estudiante'] }
   ];
 
@@ -86,7 +86,7 @@ const NavBar = () => {
     <>
       {/* Botón hamburguesa solo en móviles */}
       <div className="md:hidden fixed top-0 left-0 w-full bg-gray-900 text-white flex items-center justify-between px-4 py-3 z-40">
-        <button onClick={() => setIsMobileMenuOpen(true)} className="flex items-center gap-2">
+        <button onClick={() => setIsMobileMenuOpen(true)} className="cursor-pointer flex items-center gap-2">
           <Menu size={22} />
           <span className="font-medium text-sm">Menú</span>
         </button>
