@@ -13,7 +13,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
   const [loadingLevels, setLoadingLevels] = useState(false);
   const [errors, setErrors] = useState({});
   const [criteriaCount, setCriteriaCount] = useState(1);
-  const [includeDeficiente, setIncludeDeficiente] = useState(false); // Ahora es global
+  const [includeDeficiente, setIncludeDeficiente] = useState(false);
   const [showScaleInfo, setShowScaleInfo] = useState(null);
 
   const levelOptions = [
@@ -44,7 +44,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     }
   ];
 
-  // Definir escalas predeterminadas
   const getDefaultWeights = (scaleType) => {
     const baseWeights = [
       { value: 10, description: null },
@@ -53,12 +52,10 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       { value: 4, description: null }
     ];
 
-    // Para escala tipo 2, revisar la configuración global
     if (scaleType === "2" && includeDeficiente) {
       baseWeights.push({ value: 2, description: null });
     }
 
-    // Para escala tipo 3, siempre incluir deficiente
     if (scaleType === "3") {
       baseWeights.push({ value: 2, description: null });
     }
@@ -66,22 +63,18 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     return baseWeights;
   };
 
-  // Toggle global de deficiente para escala tipo 2
   const toggleDeficiente = () => {
     const newValue = !includeDeficiente;
     setIncludeDeficiente(newValue);
 
-    // Actualizar todos los criterios existentes
     if (formData.criteria.length > 0 && formData.scaleType === "2") {
       const newCriteria = formData.criteria.map(criterion => {
         const updatedCriterion = { ...criterion };
         if (newValue) {
-          // Agregar deficiente si no existe
           if (!updatedCriterion.weights.some(w => w.value === 2)) {
             updatedCriterion.weights.push({ value: 2, description: null });
           }
         } else {
-          // Remover deficiente
           updatedCriterion.weights = updatedCriterion.weights.filter(w => w.value !== 2);
         }
         return updatedCriterion;
@@ -90,7 +83,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     }
   };
 
-  // Cargar datos iniciales
   useEffect(() => {
     const fetchData = async () => {
       setLoadingSpecialties(true);
@@ -141,7 +133,18 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     fetchData();
   }, []);
 
-  // Limpiar campos al cambiar nivel
+  // Cargar criterios existentes al editar
+  useEffect(() => {
+    if (isEditing && formData.criteria && formData.criteria.length > 0) {
+      if (formData.scaleType === "2") {
+        const hasDeficiente = formData.criteria.some(criterion => 
+          criterion.weights?.some(w => w.value === 2)
+        );
+        setIncludeDeficiente(hasDeficiente);
+      }
+    }
+  }, [isEditing, formData.criteria, formData.scaleType]);
+
   useEffect(() => {
     if (formData.level !== "2") {
       if (formData.specialtyId || formData.levelId) {
@@ -154,7 +157,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     }
   }, [formData.level, formData.specialtyId, formData.levelId, setFormData]);
 
-  // Calcular ponderación total
   const calculateTotalWeight = () => {
     if (formData.rubricType !== "1") return 0;
     return formData.criteria.reduce((sum, criterion) => {
@@ -165,7 +167,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
   const totalWeight = calculateTotalWeight();
   const isWeightValid = formData.rubricType === "1" ? totalWeight === 100 : true;
 
-  // Inicializar criterios
   const initializeCriteria = (count) => {
     const newCriteria = [];
     for (let i = 0; i < count; i++) {
@@ -176,7 +177,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
           criterionWeight: ""
         };
 
-        // Si es escala de ejecución o desempeño por criterios, inicializar weights
         if (formData.scaleType === "2" || formData.scaleType === "3") {
           criterion.weights = getDefaultWeights(formData.scaleType);
         }
@@ -190,20 +190,17 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     }
     setFormData(prev => ({ ...prev, criteria: newCriteria }));
 
-    // Resetear el estado de includeDeficiente
     if (formData.scaleType === "2") {
       setIncludeDeficiente(false);
     }
   };
 
-  // Actualizar campo de criterio
   const updateCriterionField = (index, field, value) => {
     const newCriteria = [...formData.criteria];
     newCriteria[index][field] = value;
     setFormData(prev => ({ ...prev, criteria: newCriteria }));
   };
 
-  // Actualizar descripción de un weight específico
   const updateWeightDescription = (criterionIndex, weightIndex, description) => {
     const newCriteria = [...formData.criteria];
     if (!newCriteria[criterionIndex].weights) {
@@ -213,7 +210,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     setFormData(prev => ({ ...prev, criteria: newCriteria }));
   };
 
-  // Cambiar tipo de rúbrica
   const handleRubricTypeChange = (value) => {
     setFormData(prev => ({
       ...prev,
@@ -225,7 +221,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     setIncludeDeficiente(false);
   };
 
-  // Cambiar tipo de escala
   const handleScaleTypeChange = (value) => {
     setFormData(prev => ({
       ...prev,
@@ -236,12 +231,10 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     setIncludeDeficiente(false);
   };
 
-  // Validación y envío
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
 
-    // Validaciones básicas
     if (!formData.rubricName || !formData.level || !formData.year || !formData.stageId || !formData.rubricType) {
       setErrors({ general: "Completa todos los campos obligatorios." });
       return;
@@ -273,7 +266,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       return;
     }
 
-    // Validaciones para Escala Estimativa
     if (formData.rubricType === "1") {
       const emptyWeights = formData.criteria.some(c => !c.criterionWeight || parseFloat(c.criterionWeight) <= 0);
       if (emptyWeights) {
@@ -286,7 +278,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
         return;
       }
 
-      // Validar descripciones para tipo 3
       if (formData.scaleType === "3") {
         const missingDescriptions = formData.criteria.some(criterion =>
           criterion.weights?.some(w => !w.description?.trim())
@@ -298,7 +289,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       }
     }
 
-    // Preparar datos
     const dataToSend = {
       rubricName: formData.rubricName,
       level: parseInt(formData.level),
@@ -317,7 +307,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
         if (formData.rubricType === "1") {
           baseCriterion.criterionWeight = parseFloat(criterion.criterionWeight);
 
-          // Agregar weights si aplica
           if (formData.scaleType === "2" || formData.scaleType === "3") {
             baseCriterion.weights = criterion.weights || getDefaultWeights(formData.scaleType);
           }
@@ -359,7 +348,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     }
   };
 
-  // Componente de tooltip para info
   const InfoTooltip = ({ content, id }) => (
     <div className="relative inline-block">
       <button
@@ -381,7 +369,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-lg">
@@ -398,7 +385,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
         </div>
       </div>
 
-      {/* Errores */}
       {(errors.general || rubricError) && (
         <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
           <div className="flex items-center gap-2">
@@ -409,7 +395,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Datos Generales */}
         <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <ClipboardList className="w-5 h-5" />
@@ -509,7 +494,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
               </select>
             </div>
 
-            {/* Tipo de Escala - Solo para Escala Estimativa */}
             {formData.rubricType === "1" && (
               <div className="md:col-span-2">
                 <label className="block text-sm font-bold text-gray-700 mb-2">Tipo de Escala *</label>
@@ -542,7 +526,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
                   ))}
                 </div>
 
-                {/* Checkbox global para incluir Deficiente en tipo 2 */}
                 {formData.scaleType === "2" && (
                   <div className="mt-4 p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
                     <label className="flex items-center gap-3 cursor-pointer">
@@ -619,7 +602,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
           </div>
         </div>
 
-        {/* Criterios */}
         {formData.rubricType && (formData.rubricType === "2" || (formData.rubricType === "1" && formData.scaleType)) && (
           <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -674,31 +656,30 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
                   </div>
                 )}
 
-                {/* Vista previa de configuración para Escala de ejecución */}
                 {formData.scaleType === "2" && (
                   <div className="mb-6 bg-white rounded-lg border-2 border-purple-200 p-4">
                     <h4 className="text-sm font-bold text-gray-700 mb-3">Configuración de Niveles de Desempeño</h4>
                     <div className={`grid ${includeDeficiente ? 'grid-cols-2 md:grid-cols-5' : 'grid-cols-2 md:grid-cols-4'} gap-3`}>
-                      <div className="bg-green-50 p-3 rounded-lg border-2 border-green-200 text-center">
-                        <div className="font-bold text-green-800 mb-1">Excelente</div>
-                        <div className="text-2xl font-black text-green-600">10</div>
+                      <div className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200 text-center">
+                        <div className="font-bold text-purple-800 mb-1">Excelente</div>
+                        <div className="text-2xl font-black text-purple-600">10</div>
                       </div>
-                      <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200 text-center">
-                        <div className="font-bold text-blue-800 mb-1">Bueno</div>
-                        <div className="text-2xl font-black text-blue-600">8</div>
+                      <div className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200 text-center">
+                        <div className="font-bold text-purple-800 mb-1">Bueno</div>
+                        <div className="text-2xl font-black text-purple-600">8</div>
                       </div>
-                      <div className="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200 text-center">
-                        <div className="font-bold text-yellow-800 mb-1">Regular</div>
-                        <div className="text-2xl font-black text-yellow-600">6</div>
+                      <div className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200 text-center">
+                        <div className="font-bold text-purple-800 mb-1">Regular</div>
+                        <div className="text-2xl font-black text-purple-600">6</div>
                       </div>
-                      <div className="bg-orange-50 p-3 rounded-lg border-2 border-orange-200 text-center">
-                        <div className="font-bold text-orange-800 mb-1">Necesita Mejorar</div>
-                        <div className="text-2xl font-black text-orange-600">4</div>
+                      <div className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200 text-center">
+                        <div className="font-bold text-purple-800 mb-1">Necesita Mejorar</div>
+                        <div className="text-2xl font-black text-purple-600">4</div>
                       </div>
                       {includeDeficiente && (
-                        <div className="bg-red-50 p-3 rounded-lg border-2 border-red-200 text-center animate-fadeIn">
-                          <div className="font-bold text-red-800 mb-1">Deficiente</div>
-                          <div className="text-2xl font-black text-red-600">2</div>
+                        <div className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200 text-center animate-fadeIn">
+                          <div className="font-bold text-purple-800 mb-1">Deficiente</div>
+                          <div className="text-2xl font-black text-purple-600">2</div>
                         </div>
                       )}
                     </div>
@@ -708,7 +689,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
                   </div>
                 )}
 
-                {/* Tabla para todos los tipos */}
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
@@ -793,7 +773,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
                             )}
                           </tr>
 
-                          {/* Fila expandible para descripciones de niveles (solo tipo 3) */}
                           {formData.scaleType === "3" && (
                             <tr id={`levels-${index}`} className="hidden">
                               <td colSpan={formData.rubricType === "1" ? 5 : 4} className="border-2 border-gray-300 p-4 bg-gray-50">
@@ -803,23 +782,13 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
                                   </h5>
                                   {criterion.weights?.map((weight, weightIndex) => {
                                     const labels = ['Excelente', 'Bueno', 'Regular', 'Necesita Mejorar', 'Deficiente'];
-                                    const colors = ['green', 'blue', 'yellow', 'orange', 'red'];
-                                    const bgColors = ['bg-green-50', 'bg-blue-50', 'bg-yellow-50', 'bg-orange-50', 'bg-red-50'];
-                                    const borderColors = ['border-green-200', 'border-blue-200', 'border-yellow-200', 'border-orange-200', 'border-red-200'];
-                                    const textColors = ['text-green-800', 'text-blue-800', 'text-yellow-800', 'text-orange-800', 'text-red-800'];
-                                    const valueColors = ['text-green-600', 'text-blue-600', 'text-yellow-600', 'text-orange-600', 'text-red-600'];
-
                                     const label = labels[weightIndex];
-                                    const bgColor = bgColors[weightIndex];
-                                    const borderColor = borderColors[weightIndex];
-                                    const textColor = textColors[weightIndex];
-                                    const valueColor = valueColors[weightIndex];
 
                                     return (
-                                      <div key={weightIndex} className={`${bgColor} p-3 rounded-lg border-2 ${borderColor}`}>
+                                      <div key={weightIndex} className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200">
                                         <div className="flex items-center justify-between mb-2">
-                                          <span className={`font-bold ${textColor}`}>{label}</span>
-                                          <span className={`text-xl font-black ${valueColor}`}>{weight.value}</span>
+                                          <span className="font-bold text-purple-800">{label}</span>
+                                          <span className="text-xl font-black text-purple-600">{weight.value}</span>
                                         </div>
                                         <textarea
                                           value={weight.description || ''}
@@ -858,7 +827,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
           </div>
         )}
 
-        {/* Botones */}
         <div className="flex gap-4 pt-4">
           <button
             type="submit"
@@ -895,7 +863,6 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
         </div>
       </form>
 
-      {/* Info adicional */}
       <div className="mt-6 bg-purple-50 border-l-4 border-purple-500 p-4 rounded-r-lg">
         <div className="flex gap-3">
           <Info className="w-6 h-6 text-purple-600 flex-shrink-0" />

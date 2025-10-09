@@ -4,6 +4,10 @@ import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const Login = () => {
+  useEffect(() => {
+    document.title = "Iniciar Sesión | STC";
+  }, []);
+
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -29,7 +33,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.email || !formData.password) {
       toast.error('Por favor completa todos los campos');
       return;
@@ -39,7 +43,7 @@ const Login = () => {
 
     try {
       const result = await login(formData.email, formData.password);
-      
+
       if (result.success) {
         toast.success(result.message || 'Login exitoso');
         navigate('/dashboard');
@@ -55,7 +59,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gray-200 flex items-center justify-center relative overflow-hidden p-4">
-      
+
       {/* ESQUINA SUPERIOR IZQUIERDA - Rectángulo amarillo - Responsive */}
       <div className="absolute top-0 left-0 w-24 h-24 sm:w-32 sm:h-32 lg:w-44 lg:h-44 bg-yellow-400">
         {/* Círculo blanco con borde */}
@@ -92,25 +96,25 @@ const Login = () => {
       {/* CÍRCULOS DECORATIVOS DISPERSOS - Responsive */}
       {/* Círculo rojo borde - izquierda medio */}
       <div className="absolute top-32 left-6 sm:top-44 sm:left-8 lg:top-56 lg:left-12 w-8 h-8 sm:w-10 sm:h-10 lg:w-14 lg:h-14 border-2 sm:border-3 lg:border-4 border-red-500 rounded-full"></div>
-      
+
       {/* Círculo rojo sólido - centro izquierda */}
       <div className="absolute top-48 left-32 sm:top-64 sm:left-48 lg:top-96 lg:left-80 w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-red-600 rounded-full"></div>
-      
+
       {/* Círculo rojo sólido - centro derecha abajo */}
       <div className="absolute bottom-24 right-32 sm:bottom-32 sm:right-48 lg:bottom-48 lg:right-96 w-10 h-10 sm:w-14 sm:h-14 lg:w-20 lg:h-20 bg-red-600 rounded-full"></div>
-      
+
       {/* Círculo rojo borde - derecha medio */}
       <div className="absolute top-1/2 right-24 sm:right-40 lg:right-64 w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 border-2 sm:border-3 lg:border-4 border-red-500 rounded-full hidden sm:block"></div>
 
       {/* TARJETA CENTRAL - Responsive */}
       <div className="relative z-10 w-full max-w-sm sm:max-w-md px-4">
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-12">
-          
+
           {/* Título - Responsive */}
           <div className="text-center mb-6 sm:mb-8">
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-800 mb-1">TÉCNICO</h2>
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-800 mb-4 sm:mb-6">CIENTÍFICO</h2>
-            
+
             <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">
               ¡Bienvenido al Sistema de<br />Notas PTC!
             </h1>
@@ -121,7 +125,7 @@ const Login = () => {
 
           {/* Formulario - Responsive */}
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-            
+
             {/* Campo Usuario */}
             <input
               type="email"
@@ -160,11 +164,10 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-2.5 sm:py-3 rounded-full font-bold text-white uppercase tracking-wide transition-all text-sm sm:text-base ${
-                isLoading
+              className={`w-full py-2.5 sm:py-3 rounded-full font-bold text-white uppercase tracking-wide transition-all text-sm sm:text-base ${isLoading
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-yellow-500 hover:bg-yellow-600 active:scale-95'
-              }`}
+                }`}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">

@@ -8,11 +8,39 @@ const projectScoreController = {};
 // ===============================
 projectScoreController.getProjectScores = async (req, res) => {
   try {
-    const scores = await ProjectScore.find()
+    const user = req.user; // Usuario autenticado desde el middleware
+    let projectQuery = {};
+
+    // Filtrado según rol del usuario
+    if (user.role === "Docente" || user.role === "Evaluador") {
+      projectQuery.idLevel = user.idLevel;
+
+      if (user.idSpecialty) {
+        projectQuery.selectedSpecialty = user.idSpecialty;
+      }
+
+      if (user.idSection) {
+        projectQuery.idSection = user.idSection;
+      }
+    }
+
+    if (user.role === "Estudiante") {
+      projectQuery.assignedStudents = user._id;
+    }
+
+    // Obtener proyectos filtrados según el usuario
+    const projects = await Project.find(projectQuery).select("_id");
+
+    // Obtener los projectIds de los proyectos filtrados
+    const projectIds = projects.map(p => p._id);
+
+    // Filtrar ProjectScore solo para esos proyectos
+    const scores = await ProjectScore.find({ projectId: { $in: projectIds } })
       .populate("projectId");
 
     res.status(200).json({ success: true, data: scores });
   } catch (error) {
+    console.error("Error fetching project scores:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching project scores",

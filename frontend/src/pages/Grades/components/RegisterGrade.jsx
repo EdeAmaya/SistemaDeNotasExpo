@@ -31,6 +31,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                w.value === 2 ? 'Deficiente' : `Nivel ${w.value}`,
         value: (w.value * criterionWeight) / 100,
         baseValue: w.value,
+        description: w.description,
         color: w.value === 10 ? 'green' :
                w.value === 8 ? 'blue' :
                w.value === 6 ? 'yellow' :
@@ -204,7 +205,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
         puntajeObtenido: c.puntajeObtenido,
         comentario: ''
       })),
-      notaFinal: parseFloat(totalScore.toFixed(2)),
+      notaFinal: parseFloat(totalScore.toFixed(8)),
       tipoCalculo: selectedRubric.rubricType === 1 ? 'ponderado' : 'promedio'
     };
 
@@ -380,7 +381,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                       {criterio.puntajeObtenido > 0 && (
                         <div className="text-right">
                           <div className="text-2xl font-black text-green-600">
-                            {criterio.puntajeObtenido.toFixed(2)}
+                            {criterio.puntajeObtenido.toFixed(8)}
                           </div>
                           <div className="text-xs text-gray-500">puntos</div>
                         </div>
@@ -395,24 +396,30 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                         </label>
                         <input
                           type="number"
-                          value={criterio.puntajeObtenido || ''}
+                          value={criterio.baseValueSelected !== null ? criterio.baseValueSelected : ''}
                           onChange={(e) => {
-                            let value = parseFloat(e.target.value);
-                            if (isNaN(value) || value < 0) value = 0;
+                            const inputValue = e.target.value;
+                            if (inputValue === '') {
+                              updateCriterionScore(index, '', 0, null);
+                              return;
+                            }
+                            let value = parseFloat(inputValue);
+                            if (isNaN(value)) return;
+                            if (value < 0) value = 0;
                             if (value > 10) value = 10;
                             // Calcular el puntaje ponderado
                             const weightedScore = (value * criterio.criterionWeight) / 100;
                             updateCriterionScore(index, value.toString(), weightedScore, value);
                           }}
                           className="w-full px-4 py-3 text-center font-bold text-xl border-2 border-gray-300 rounded-lg focus:border-yellow-500 focus:ring-2 focus:ring-yellow-100 bg-white"
-                          placeholder="0.00"
+                          placeholder="0.00000000"
                           min="0"
                           max="10"
-                          step="0.01"
+                          step="0.00000001"
                           disabled={evaluationLoading}
                         />
                         <div className="mt-2 text-xs text-center text-gray-500">
-                          Puntaje ponderado: {criterio.puntajeObtenido.toFixed(2)} puntos
+                          Puntaje ponderado: {criterio.puntajeObtenido.toFixed(8)} puntos
                         </div>
                       </div>
                     )}
@@ -449,36 +456,46 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                             const colorClass = colorClasses[option.color] || colorClasses.blue;
 
                             return (
-                              <button
-                                key={option.baseValue}
-                                type="button"
-                                onClick={() => updateCriterionScore(index, option.label, option.value, option.baseValue)}
-                                className={`p-3 rounded-lg border-2 font-bold transition-all ${
-                                  isSelected ? colorClass.active + ' scale-105' : colorClass.inactive
-                                }`}
-                                disabled={evaluationLoading}
-                              >
-                                <div className="text-xs mb-1">{option.label}</div>
-                                <div className="text-lg font-black">{option.baseValue}</div>
-                                <div className="text-[10px] mt-1 opacity-75">
-                                  {option.value.toFixed(2)}pts
-                                </div>
-                              </button>
+                              <div key={option.baseValue} className="relative group">
+                                <button
+                                  type="button"
+                                  onClick={() => updateCriterionScore(index, option.label, option.value, option.baseValue)}
+                                  className={`w-full p-3 rounded-lg border-2 font-bold transition-all ${
+                                    isSelected ? colorClass.active + ' scale-105' : colorClass.inactive
+                                  }`}
+                                  disabled={evaluationLoading}
+                                >
+                                  <div className="text-xs mb-1">{option.label}</div>
+                                  <div className="text-lg font-black">{option.baseValue}</div>
+                                  <div className="text-[10px] mt-1 opacity-75">
+                                    {option.value.toFixed(8)}pts
+                                  </div>
+                                </button>
+                                
+                                {/* Tooltip con descripción */}
+                                {option.description && (
+                                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 pointer-events-none">
+                                    <div className="font-semibold mb-1">{option.label} ({option.baseValue})</div>
+                                    <div>{option.description}</div>
+                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 w-2 h-2 bg-gray-900 rotate-45"></div>
+                                  </div>
+                                )}
+                              </div>
                             );
                           })}
                         </div>
 
-                        {/* Mostrar descripción del nivel seleccionado (solo tipo 3) */}
-                        {selectedRubric.scaleType === 3 && criterio.nivelSeleccionado && (
+                        {/* Mostrar descripción del nivel seleccionado */}
+                        {criterio.nivelSeleccionado && scoreOptions.find(opt => opt.label === criterio.nivelSeleccionado)?.description && (
                           <div className="p-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
                             <div className="flex items-start gap-2">
                               <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                              <div>
+                              <div className="flex-1">
                                 <div className="text-xs font-bold text-blue-800 mb-1">
-                                  {criterio.nivelSeleccionado}
+                                  {criterio.nivelSeleccionado} ({criterio.baseValueSelected})
                                 </div>
                                 <div className="text-xs text-gray-700">
-                                  {scoreOptions.find(opt => opt.label === criterio.nivelSeleccionado)?.description || 'Sin descripción'}
+                                  {scoreOptions.find(opt => opt.label === criterio.nivelSeleccionado)?.description}
                                 </div>
                               </div>
                             </div>
@@ -492,19 +509,24 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                       <div className="border-2 border-gray-300 rounded-lg p-2 bg-white">
                         <input
                           type="number"
-                          value={criterio.puntajeObtenido}
+                          value={criterio.puntajeObtenido || ''}
                           onChange={(e) => {
-                            let value = parseFloat(e.target.value);
-                            if (isNaN(value)) value = 0;
+                            const inputValue = e.target.value;
+                            if (inputValue === '') {
+                              updateCriterionScore(index, '', 0);
+                              return;
+                            }
+                            let value = parseFloat(inputValue);
+                            if (isNaN(value)) return;
                             if (value < 0) value = 0;
                             if (value > 10) value = 10;
                             updateCriterionScore(index, '', value);
                           }}
                           className="w-full px-3 py-2 text-center font-bold text-lg focus:outline-none"
-                          placeholder="0.00"
+                          placeholder="0.00000000"
                           min="0"
                           max="10"
-                          step="0.01"
+                          step="0.00000001"
                           disabled={evaluationLoading}
                         />
                       </div>
@@ -526,7 +548,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="text-5xl font-black text-green-600">{totalScore.toFixed(2)}</div>
+                  <div className="text-5xl font-black text-green-600">{totalScore.toFixed(8)}</div>
                   <div className="text-sm text-gray-500 mt-1">sobre 10.0</div>
                 </div>
               </div>
@@ -540,7 +562,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
               type="button"
               onClick={handleSubmit}
               disabled={evaluationLoading}
-              className="flex-1 py-4 px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="cursor-pointer flex-1 py-4 px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {evaluationLoading ? (
                 <>
@@ -553,7 +575,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
               ) : (
                 <>
                   <CheckCircle className="w-5 h-5" />
-                  <span>{isEditing ? "Actualizar" : "Guardar"}</span>
+                  <span>{isEditing ? "Actualizar" :"Guardar"}</span>
                 </>
               )}
             </button>
@@ -562,7 +584,7 @@ const RegisterGrade = ({ formData, setFormData, onCancel, isEditing }) => {
                 type="button"
                 onClick={onCancel}
                 disabled={evaluationLoading}
-                className="px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="cursor-pointer px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <XCircle className="w-5 h-5" />
                 <span>Cancelar</span>
