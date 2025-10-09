@@ -13,6 +13,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
   const [loadingLevels, setLoadingLevels] = useState(false);
   const [errors, setErrors] = useState({});
   const [criteriaCount, setCriteriaCount] = useState(1);
+  const [includeDeficiente, setIncludeDeficiente] = useState(false); // Ahora es global
   const [showScaleInfo, setShowScaleInfo] = useState(null);
 
   const levelOptions = [
@@ -34,17 +35,17 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     {
       value: "2",
       label: "Escala de ejecución",
-      description: "Define niveles de desempeño estándar: Excelente (10), Bueno (8), Regular (6), Necesita Mejorar (4), opcionalmente Deficiente (2)."
+      description: "Define niveles de desempeño estándar: Excelente (10), Bueno (8), Regular (6), Necesita Mejorar (4). Opcionalmente puedes agregar Deficiente (2) para todos los criterios."
     },
     {
       value: "3",
       label: "Desempeño por criterios",
-      description: "Personaliza cada nivel de desempeño con descripciones específicas para cada criterio: Excelente (10), Bueno (8), Regular (6), Necesita Mejorar (4), Deficiente (2)."
+      description: "Personaliza cada nivel de desempeño con descripciones específicas: Excelente (10), Bueno (8), Regular (6), Necesita Mejorar (4), Deficiente (2)."
     }
   ];
 
   // Definir escalas predeterminadas
-  const getDefaultWeights = (scaleType, includeDeficiente = false) => {
+  const getDefaultWeights = (scaleType) => {
     const baseWeights = [
       { value: 10, description: null },
       { value: 8, description: null },
@@ -52,11 +53,41 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       { value: 4, description: null }
     ];
 
-    if (scaleType === "2" || (scaleType === "3" && includeDeficiente)) {
+    // Para escala tipo 2, revisar la configuración global
+    if (scaleType === "2" && includeDeficiente) {
+      baseWeights.push({ value: 2, description: null });
+    }
+
+    // Para escala tipo 3, siempre incluir deficiente
+    if (scaleType === "3") {
       baseWeights.push({ value: 2, description: null });
     }
 
     return baseWeights;
+  };
+
+  // Toggle global de deficiente para escala tipo 2
+  const toggleDeficiente = () => {
+    const newValue = !includeDeficiente;
+    setIncludeDeficiente(newValue);
+
+    // Actualizar todos los criterios existentes
+    if (formData.criteria.length > 0 && formData.scaleType === "2") {
+      const newCriteria = formData.criteria.map(criterion => {
+        const updatedCriterion = { ...criterion };
+        if (newValue) {
+          // Agregar deficiente si no existe
+          if (!updatedCriterion.weights.some(w => w.value === 2)) {
+            updatedCriterion.weights.push({ value: 2, description: null });
+          }
+        } else {
+          // Remover deficiente
+          updatedCriterion.weights = updatedCriterion.weights.filter(w => w.value !== 2);
+        }
+        return updatedCriterion;
+      });
+      setFormData(prev => ({ ...prev, criteria: newCriteria }));
+    }
   };
 
   // Cargar datos iniciales
@@ -158,6 +189,11 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       }
     }
     setFormData(prev => ({ ...prev, criteria: newCriteria }));
+
+    // Resetear el estado de includeDeficiente
+    if (formData.scaleType === "2") {
+      setIncludeDeficiente(false);
+    }
   };
 
   // Actualizar campo de criterio
@@ -186,6 +222,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       criteria: []
     }));
     setCriteriaCount(1);
+    setIncludeDeficiente(false);
   };
 
   // Cambiar tipo de escala
@@ -196,6 +233,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       criteria: []
     }));
     setCriteriaCount(1);
+    setIncludeDeficiente(false);
   };
 
   // Validación y envío
@@ -328,7 +366,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
         type="button"
         onMouseEnter={() => setShowScaleInfo(id)}
         onMouseLeave={() => setShowScaleInfo(null)}
-        className="ml-2 text-blue-500 hover:text-blue-700 transition-colors"
+        className="cursor-pointer ml-2 text-blue-500 hover:text-blue-700 transition-colors"
       >
         <HelpCircle className="w-4 h-4" />
       </button>
@@ -342,7 +380,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
   );
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">
@@ -480,8 +518,8 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
                     <div
                       key={option.value}
                       className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${formData.scaleType === option.value
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-gray-300'
                         }`}
                       onClick={() => !rubricLoading && handleScaleTypeChange(option.value)}
                     >
@@ -503,6 +541,29 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
                     </div>
                   ))}
                 </div>
+
+                {/* Checkbox global para incluir Deficiente en tipo 2 */}
+                {formData.scaleType === "2" && (
+                  <div className="mt-4 p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={includeDeficiente}
+                        onChange={toggleDeficiente}
+                        className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                        disabled={rubricLoading}
+                      />
+                      <div>
+                        <span className="text-sm font-bold text-gray-900">
+                          Incluir nivel "Deficiente (2)" para todos los criterios
+                        </span>
+                        <p className="text-xs text-gray-600 mt-0.5">
+                          Activa esta opción si necesitas evaluar el nivel más bajo de desempeño
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                )}
               </div>
             )}
 
@@ -584,7 +645,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
                   <button
                     type="button"
                     onClick={() => initializeCriteria(criteriaCount)}
-                    className="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="cursor-pointer px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={rubricLoading}
                   >
                     Crear Criterios
@@ -613,30 +674,68 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
                   </div>
                 )}
 
-                {/* Tabla para Promedio de puntuación y Rúbrica normal */}
-                {(formData.rubricType === "2" || formData.scaleType === "1") && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-purple-100">
-                          <th className="border-2 border-gray-300 px-4 py-3 text-left text-sm font-bold text-gray-700">#</th>
-                          <th className="border-2 border-gray-300 px-4 py-3 text-left text-sm font-bold text-gray-700">
-                            Nombre del Criterio *
+                {/* Vista previa de configuración para Escala de ejecución */}
+                {formData.scaleType === "2" && (
+                  <div className="mb-6 bg-white rounded-lg border-2 border-purple-200 p-4">
+                    <h4 className="text-sm font-bold text-gray-700 mb-3">Configuración de Niveles de Desempeño</h4>
+                    <div className={`grid ${includeDeficiente ? 'grid-cols-2 md:grid-cols-5' : 'grid-cols-2 md:grid-cols-4'} gap-3`}>
+                      <div className="bg-green-50 p-3 rounded-lg border-2 border-green-200 text-center">
+                        <div className="font-bold text-green-800 mb-1">Excelente</div>
+                        <div className="text-2xl font-black text-green-600">10</div>
+                      </div>
+                      <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200 text-center">
+                        <div className="font-bold text-blue-800 mb-1">Bueno</div>
+                        <div className="text-2xl font-black text-blue-600">8</div>
+                      </div>
+                      <div className="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200 text-center">
+                        <div className="font-bold text-yellow-800 mb-1">Regular</div>
+                        <div className="text-2xl font-black text-yellow-600">6</div>
+                      </div>
+                      <div className="bg-orange-50 p-3 rounded-lg border-2 border-orange-200 text-center">
+                        <div className="font-bold text-orange-800 mb-1">Necesita Mejorar</div>
+                        <div className="text-2xl font-black text-orange-600">4</div>
+                      </div>
+                      {includeDeficiente && (
+                        <div className="bg-red-50 p-3 rounded-lg border-2 border-red-200 text-center animate-fadeIn">
+                          <div className="font-bold text-red-800 mb-1">Deficiente</div>
+                          <div className="text-2xl font-black text-red-600">2</div>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-600 mt-3">
+                      Esta configuración se aplicará a todos los criterios
+                    </p>
+                  </div>
+                )}
+
+                {/* Tabla para todos los tipos */}
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-purple-100">
+                        <th className="border-2 border-gray-300 px-4 py-3 text-left text-sm font-bold text-gray-700 w-12">#</th>
+                        <th className="border-2 border-gray-300 px-4 py-3 text-left text-sm font-bold text-gray-700">
+                          Nombre del Criterio *
+                        </th>
+                        <th className="border-2 border-gray-300 px-4 py-3 text-left text-sm font-bold text-gray-700">
+                          Descripción {formData.scaleType === "3" ? "" : "(Opcional)"}
+                        </th>
+                        {formData.rubricType === "1" && (
+                          <th className="border-2 border-gray-300 px-4 py-3 text-left text-sm font-bold text-gray-700 w-32">
+                            Ponderación (%) *
                           </th>
-                          {formData.rubricType === "1" && formData.scaleType === "1" && (
-                            <>
-                              <th className="border-2 border-gray-300 px-4 py-3 text-left text-sm font-bold text-gray-700">
-                                Descripción
-                              </th>
-                              <th className="border-2 border-gray-300 px-4 py-3 text-left text-sm font-bold text-gray-700">
-                                Ponderación (%) *</th>
-                            </>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {formData.criteria.map((criterion, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
+                        )}
+                        {formData.scaleType === "3" && (
+                          <th className="border-2 border-gray-300 px-4 py-3 text-left text-sm font-bold text-gray-700 w-16">
+                            Niveles *
+                          </th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {formData.criteria.map((criterion, index) => (
+                        <React.Fragment key={index}>
+                          <tr className="hover:bg-gray-50">
                             <td className="border-2 border-gray-300 px-4 py-2 text-center font-semibold text-gray-600">
                               {index + 1}
                             </td>
@@ -650,205 +749,106 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
                                 disabled={rubricLoading}
                               />
                             </td>
-                            {formData.rubricType === "1" && formData.scaleType === "1" && (
-                              <>
-                                <td className="border-2 border-gray-300 px-2 py-2">
-                                  <textarea
-                                    value={criterion.criterionDescription}
-                                    onChange={(e) => updateCriterionField(index, "criterionDescription", e.target.value)}
-                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded focus:border-purple-500 focus:ring-2 focus:ring-purple-100 resize-none"
-                                    rows="2"
-                                    placeholder="Descripción del criterio..."
-                                    disabled={rubricLoading}
-                                  />
-                                </td>
-                                <td className="border-2 border-gray-300 px-2 py-2">
-                                  <input
-                                    type="number"
-                                    value={criterion.criterionWeight}
-                                    onChange={(e) => updateCriterionField(index, "criterionWeight", e.target.value)}
-                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                                    placeholder="0"
-                                    min="0"
-                                    max="100"
-                                    step="0.1"
-                                    disabled={rubricLoading}
-                                  />
-                                </td>
-                              </>
+                            <td className="border-2 border-gray-300 px-2 py-2">
+                              <textarea
+                                value={criterion.criterionDescription}
+                                onChange={(e) => updateCriterionField(index, "criterionDescription", e.target.value)}
+                                className="w-full px-3 py-2 border-2 border-gray-200 rounded focus:border-purple-500 focus:ring-2 focus:ring-purple-100 resize-none"
+                                rows="2"
+                                placeholder="Descripción del criterio..."
+                                disabled={rubricLoading}
+                              />
+                            </td>
+                            {formData.rubricType === "1" && (
+                              <td className="border-2 border-gray-300 px-2 py-2">
+                                <input
+                                  type="number"
+                                  value={criterion.criterionWeight}
+                                  onChange={(e) => updateCriterionField(index, "criterionWeight", e.target.value)}
+                                  className="w-full px-3 py-2 border-2 border-gray-200 rounded focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                                  placeholder="0"
+                                  min="0"
+                                  max="100"
+                                  step="0.1"
+                                  disabled={rubricLoading}
+                                />
+                              </td>
+                            )}
+                            {formData.scaleType === "3" && (
+                              <td className="border-2 border-gray-300 px-2 py-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const element = document.getElementById(`levels-${index}`);
+                                    if (element) {
+                                      element.classList.toggle('hidden');
+                                    }
+                                  }}
+                                  className="cursor-pointer px-3 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded font-semibold transition-colors"
+                                  disabled={rubricLoading}
+                                >
+                                  Editar
+                                </button>
+                              </td>
                             )}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
 
-                {/* Layout para Escala de ejecución */}
-                {formData.rubricType === "1" && formData.scaleType === "2" && (
-                  <div className="space-y-6">
-                    {formData.criteria.map((criterion, criterionIndex) => (
-                      <div key={criterionIndex} className="bg-white rounded-lg border-2 border-gray-300 p-4">
-                        <div className="mb-4">
-                          <label className="block text-sm font-bold text-gray-700 mb-2">
-                            Criterio #{criterionIndex + 1} - Nombre *
-                          </label>
-                          <input
-                            type="text"
-                            value={criterion.criterionName}
-                            onChange={(e) => updateCriterionField(criterionIndex, "criterionName", e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                            placeholder="Ej: Creatividad"
-                            disabled={rubricLoading}
-                          />
-                        </div>
+                          {/* Fila expandible para descripciones de niveles (solo tipo 3) */}
+                          {formData.scaleType === "3" && (
+                            <tr id={`levels-${index}`} className="hidden">
+                              <td colSpan={formData.rubricType === "1" ? 5 : 4} className="border-2 border-gray-300 p-4 bg-gray-50">
+                                <div className="space-y-3">
+                                  <h5 className="text-sm font-bold text-gray-700 mb-2">
+                                    Descripciones de Niveles de Desempeño - Criterio #{index + 1}
+                                  </h5>
+                                  {criterion.weights?.map((weight, weightIndex) => {
+                                    const labels = ['Excelente', 'Bueno', 'Regular', 'Necesita Mejorar', 'Deficiente'];
+                                    const colors = ['green', 'blue', 'yellow', 'orange', 'red'];
+                                    const bgColors = ['bg-green-50', 'bg-blue-50', 'bg-yellow-50', 'bg-orange-50', 'bg-red-50'];
+                                    const borderColors = ['border-green-200', 'border-blue-200', 'border-yellow-200', 'border-orange-200', 'border-red-200'];
+                                    const textColors = ['text-green-800', 'text-blue-800', 'text-yellow-800', 'text-orange-800', 'text-red-800'];
+                                    const valueColors = ['text-green-600', 'text-blue-600', 'text-yellow-600', 'text-orange-600', 'text-red-600'];
 
-                        <div className="mb-4">
-                          <label className="block text-sm font-bold text-gray-700 mb-2">
-                            Descripción
-                          </label>
-                          <textarea
-                            value={criterion.criterionDescription}
-                            onChange={(e) => updateCriterionField(criterionIndex, "criterionDescription", e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 resize-none"
-                            rows="2"
-                            placeholder="Descripción general del criterio..."
-                            disabled={rubricLoading}
-                          />
-                        </div>
+                                    const label = labels[weightIndex];
+                                    const bgColor = bgColors[weightIndex];
+                                    const borderColor = borderColors[weightIndex];
+                                    const textColor = textColors[weightIndex];
+                                    const valueColor = valueColors[weightIndex];
 
-                        <div className="mb-4">
-                          <label className="block text-sm font-bold text-gray-700 mb-2">
-                            Ponderación (%) *
-                          </label>
-                          <input
-                            type="number"
-                            value={criterion.criterionWeight}
-                            onChange={(e) => updateCriterionField(criterionIndex, "criterionWeight", e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                            placeholder="0"
-                            min="0"
-                            max="100"
-                            step="0.1"
-                            disabled={rubricLoading}
-                          />
-                        </div>
-
-                        <div className="border-t-2 border-gray-200 pt-4">
-                          <h4 className="text-sm font-bold text-gray-700 mb-3">Niveles de Desempeño</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div className="bg-green-50 p-3 rounded-lg border-2 border-green-200">
-                              <div className="font-bold text-green-800 text-center mb-1">Excelente</div>
-                              <div className="text-2xl font-black text-green-600 text-center">10</div>
-                            </div>
-                            <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
-                              <div className="font-bold text-blue-800 text-center mb-1">Bueno</div>
-                              <div className="text-2xl font-black text-blue-600 text-center">8</div>
-                            </div>
-                            <div className="bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
-                              <div className="font-bold text-yellow-800 text-center mb-1">Regular</div>
-                              <div className="text-2xl font-black text-yellow-600 text-center">6</div>
-                            </div>
-                            <div className="bg-orange-50 p-3 rounded-lg border-2 border-orange-200">
-                              <div className="font-bold text-orange-800 text-center mb-1">Necesita Mejorar</div>
-                              <div className="text-2xl font-black text-orange-600 text-center">4</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Layout para Desempeño por criterios */}
-                {formData.rubricType === "1" && formData.scaleType === "3" && (
-                  <div className="space-y-6">
-                    {formData.criteria.map((criterion, criterionIndex) => (
-                      <div key={criterionIndex} className="bg-white rounded-lg border-2 border-gray-300 p-4">
-                        <div className="mb-4">
-                          <label className="block text-sm font-bold text-gray-700 mb-2">
-                            Criterio #{criterionIndex + 1} - Nombre *
-                          </label>
-                          <input
-                            type="text"
-                            value={criterion.criterionName}
-                            onChange={(e) => updateCriterionField(criterionIndex, "criterionName", e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                            placeholder="Ej: Creatividad"
-                            disabled={rubricLoading}
-                          />
-                        </div>
-
-                        <div className="mb-4">
-                          <label className="block text-sm font-bold text-gray-700 mb-2">
-                            Descripción
-                          </label>
-                          <textarea
-                            value={criterion.criterionDescription}
-                            onChange={(e) => updateCriterionField(criterionIndex, "criterionDescription", e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 resize-none"
-                            rows="2"
-                            placeholder="Descripción general del criterio..."
-                            disabled={rubricLoading}
-                          />
-                        </div>
-
-                        <div className="mb-4">
-                          <label className="block text-sm font-bold text-gray-700 mb-2">
-                            Ponderación (%) *
-                          </label>
-                          <input
-                            type="number"
-                            value={criterion.criterionWeight}
-                            onChange={(e) => updateCriterionField(criterionIndex, "criterionWeight", e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
-                            placeholder="0"
-                            min="0"
-                            max="100"
-                            step="0.1"
-                            disabled={rubricLoading}
-                          />
-                        </div>
-
-                        <div className="border-t-2 border-gray-200 pt-4">
-                          <h4 className="text-sm font-bold text-gray-700 mb-3">
-                            Niveles de Desempeño - Descripciones Personalizadas *
-                          </h4>
-                          <div className="space-y-3">
-                            {criterion.weights?.map((weight, weightIndex) => {
-                              const labels = ['Excelente', 'Bueno', 'Regular', 'Necesita Mejorar', 'Deficiente'];
-                              const colors = ['green', 'blue', 'yellow', 'orange', 'red'];
-                              const label = labels[weightIndex];
-                              const color = colors[weightIndex];
-
-                              return (
-                                <div key={weightIndex} className={`bg-${color}-50 p-4 rounded-lg border-2 border-${color}-200`}>
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className={`font-bold text-${color}-800`}>{label}</span>
-                                    <span className={`text-xl font-black text-${color}-600`}>{weight.value}</span>
-                                  </div>
-                                  <textarea
-                                    value={weight.description || ''}
-                                    onChange={(e) => updateWeightDescription(criterionIndex, weightIndex, e.target.value)}
-                                    className={`w-full px-3 py-2 border-2 border-${color}-200 rounded-lg focus:border-${color}-500 focus:ring-2 focus:ring-${color}-100 resize-none bg-white`}
-                                    rows="2"
-                                    placeholder={`Describe qué significa "${label}" para este criterio...`}
-                                    disabled={rubricLoading}
-                                  />
+                                    return (
+                                      <div key={weightIndex} className={`${bgColor} p-3 rounded-lg border-2 ${borderColor}`}>
+                                        <div className="flex items-center justify-between mb-2">
+                                          <span className={`font-bold ${textColor}`}>{label}</span>
+                                          <span className={`text-xl font-black ${valueColor}`}>{weight.value}</span>
+                                        </div>
+                                        <textarea
+                                          value={weight.description || ''}
+                                          onChange={(e) => updateWeightDescription(index, weightIndex, e.target.value)}
+                                          className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 resize-none bg-white text-sm"
+                                          rows="2"
+                                          placeholder={`Describe qué significa "${label}" para este criterio...`}
+                                          disabled={rubricLoading}
+                                        />
+                                      </div>
+                                    );
+                                  })}
                                 </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
                 <button
                   type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, criteria: [] }))}
-                  className="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, criteria: [] }));
+                    setIncludeDeficiente(false);
+                  }}
+                  className="cursor-pointer mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={rubricLoading}
                 >
                   Reiniciar Criterios
@@ -863,7 +863,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
           <button
             type="submit"
             disabled={rubricLoading}
-            className="flex-1 py-4 px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="cursor-pointer flex-1 py-4 px-6 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {rubricLoading ? (
               <>
@@ -886,7 +886,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
               type="button"
               onClick={onCancel}
               disabled={rubricLoading}
-              className="px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="cursor-pointer px-6 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <XCircle className="w-5 h-5" />
               <span>Cancelar</span>
@@ -896,19 +896,35 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       </form>
 
       {/* Info adicional */}
-      <div className="mt-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+      <div className="mt-6 bg-purple-50 border-l-4 border-purple-500 p-4 rounded-r-lg">
         <div className="flex gap-3">
-          <Info className="w-6 h-6 text-blue-600 flex-shrink-0" />
+          <Info className="w-6 h-6 text-purple-600 flex-shrink-0" />
           <div className="flex-1 text-sm text-gray-700">
             <p className="font-bold text-gray-900 mb-1">Tipos de Escala Estimativa</p>
             <ul className="space-y-1">
               <li>• <strong>Promedio:</strong> Solo defines el porcentaje de cada criterio</li>
-              <li>• <strong>Escala de ejecución:</strong> Niveles estándar predefinidos (10, 8, 6, 4)</li>
-              <li>• <strong>Desempeño por criterios:</strong> Personaliza descripciones para cada nivel (10, 8, 6, 4, 2)</li>
+              <li>• <strong>Escala de ejecución:</strong> Niveles estándar aplicados a todos los criterios (10, 8, 6, 4, opcionalmente 2)</li>
+              <li>• <strong>Desempeño por criterios:</strong> Personaliza descripciones para cada nivel de cada criterio (10, 8, 6, 4, 2)</li>
             </ul>
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-out;
+        }
+      `}</style>
     </div>
   );
 };
