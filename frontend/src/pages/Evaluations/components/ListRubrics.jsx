@@ -1,11 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { List, LayoutGrid, CheckCircle, BookOpen, Search } from 'lucide-react';
 import RubricCard from "./RubricCard";
+import Logo from "../../../assets/logo.svg";
 
 const ListRubrics = ({ rubrics, loading, deleteRubric, updateRubric }) => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('list');
+  const [logoBase64, setLogoBase64] = useState(null);
+
+  // Convertir SVG a PNG usando Canvas
+  useEffect(() => {
+    const convertSvgToPng = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 200;
+        canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, 200, 200);
+        const pngData = canvas.toDataURL('image/png');
+        setLogoBase64(pngData);
+      };
+      img.onerror = () => {
+        console.error('Error al cargar el logo SVG');
+        setLogoBase64(null);
+      };
+      img.src = Logo;
+    };
+
+    convertSvgToPng();
+  }, []);
+
+  // Información de la institución para el PDF
+  const institutionInfo = {
+    logo: logoBase64
+  };
 
   // Filtrado según búsqueda y tipo de rúbrica
   const filteredRubrics = rubrics.filter(rubric => {
@@ -35,6 +65,7 @@ const ListRubrics = ({ rubrics, loading, deleteRubric, updateRubric }) => {
     { key: 'escala', label: 'Escalas Estimativas', gradient: 'from-purple-500 to-purple-700' },
     { key: 'rubrica', label: 'Rúbricas', gradient: 'from-purple-600 to-purple-800' }
   ];
+
   return (
     <div className="p-6 space-y-6">
       {/* Barra de búsqueda y vista */}
@@ -99,6 +130,7 @@ const ListRubrics = ({ rubrics, loading, deleteRubric, updateRubric }) => {
               deleteRubric={deleteRubric}
               updateRubric={updateRubric}
               viewMode={viewMode}
+              institutionInfo={institutionInfo}
             />
           ))}
         </div>
