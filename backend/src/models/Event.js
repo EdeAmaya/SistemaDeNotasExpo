@@ -1,20 +1,20 @@
-// backend/src/models/Event.js
+// Modelo para gestionar eventos en el sistema
 import { Schema, model } from "mongoose";
 
-const eventSchema = new Schema({
-    title: {
+const eventSchema = new Schema({ 
+    title: { // Título del evento
         type: String,
         required: [true, 'El título del evento es requerido'],
         maxLength: [200, 'El título no puede exceder 200 caracteres'],
         trim: true
     },
 
-    startDate: {
+    startDate: { // Fecha de inicio
         type: Date,
         required: [true, 'La fecha de inicio es requerida']
     },
 
-    endDate: {
+    endDate: { // Fecha de fin
         type: Date,
         required: [true, 'La fecha de fin es requerida'],
         validate: {
@@ -25,20 +25,20 @@ const eventSchema = new Schema({
         }
     },
 
-    description: {
+    description: {  // Descripción del evento
         type: String,
         maxLength: [500, 'La descripción no puede exceder 500 caracteres'],
         trim: true,
         default: ''
     },
 
-    color: {
+    color: { // Color representativo del evento en formato hexadecimal
         type: String,
         default: '#3b82f6', // Azul por defecto
         match: [/^#[0-9A-F]{6}$/i, 'Color inválido, debe ser formato hexadecimal']
     },
 
-    createdBy: {
+    createdBy: { // Usuario creador del evento o 'Admin' si es creado por el sistema
         type: Schema.Types.Mixed,
         required: [true, 'El usuario creador es requerido'],
         validate: {

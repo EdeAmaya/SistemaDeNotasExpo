@@ -10,7 +10,7 @@ const evaluatedCriterionSchema = new Schema({
     type: String, // redundancia para no tener que hacer join
     required: true
   },
-  puntajeObtenido: {
+  puntajeObtenido: { // puntaje obtenido en este criterio
     type: Number,
     required: true
   }
@@ -22,29 +22,29 @@ const evaluationSchema = new Schema({
     ref: "Project", //Proyectos
     required: true
   },
-  rubricId: {
-    type: Schema.Types.ObjectId,
+  rubricId: { // Rúbrica utilizada para la evaluación
+    type: Schema.Types.ObjectId, 
     ref: "Rubric",
     required: true
   },
-  criteriosEvaluados: [evaluatedCriterionSchema],
+  criteriosEvaluados: [evaluatedCriterionSchema], // Lista de criterios evaluados
   fecha: {
     type: Date,
     default: Date.now
   },
-  evaluadorTipo: {
+  evaluadorTipo: { // Tipo de evaluador: interna o externa
     type: String,
     enum: ["interna", "externa"],
     required: true,
     default: "interna"
   },
-  notaFinal: {
+  notaFinal: { // Nota final de la evaluación
     type: Number,
     required: true,
     min: 0,
     max: 10
   },
-  tipoCalculo: {
+  tipoCalculo: { // Tipo de cálculo de la nota final
     type: String,
     enum: ['ponderado', 'promedio'],
     required: true

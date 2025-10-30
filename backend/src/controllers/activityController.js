@@ -1,16 +1,14 @@
 const activityController = {};
 
-import activityModel from "../models/Activity.js";
+import activityModel from "../models/Activity.js"; // Modelo
 
-//Select
-
+// Select
 activityController.getActivities = async (req,res) => {
   const activities = await activityModel.find()
   res.json(activities)
 };
 
-//Insert
-
+// Insert
 activityController.insertActivity = async (req,res) =>{
     const{title, startDate, endDate} = req.body;
     const newActivity = new activityModel({title, startDate, endDate})
@@ -18,14 +16,14 @@ activityController.insertActivity = async (req,res) =>{
     res.json({message: "activity saved"})
 };
 
-//Delete
+// Delete
 
 activityController.deleteActivity = async(req,res) =>{
     await activityModel.findByIdAndDelete(req.params.id);
     res.json({message: "activity deleted"})
 };
 
-//Update
+// Update
 
 activityController.updateActivity = async(req,res) =>{
     const {title, startDate, endDate} = req.body;

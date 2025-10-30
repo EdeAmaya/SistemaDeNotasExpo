@@ -1,6 +1,6 @@
 // Controller para manejar las operaciones CRUD de rúbricas y criterios
-import Rubric from "../models/Rubrics.js";
-import Level from '../models/Level.js';
+import Rubric from "../models/Rubrics.js"; // Modelo de rúbricas
+import Level from '../models/Level.js'; // Para obtener levelName del usuario
 
 const rubricController = {};
 

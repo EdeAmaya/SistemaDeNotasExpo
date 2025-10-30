@@ -1,11 +1,12 @@
-import PDFDocument from 'pdfkit';
-import JSZip from 'jszip';
-import ProjectScore from "../models/ProjectScore.js";
-import Project from "../models/Project.js";
-import Specialty from "../models/Specialty.js";
+import PDFDocument from 'pdfkit'; // Librería para generar PDFs
+import JSZip from 'jszip'; // Librería para crear archivos ZIP
+import ProjectScore from "../models/ProjectScore.js"; // Modelo de calificaciones de proyectos
+import Project from "../models/Project.js"; // Modelo de proyectos
+import Specialty from "../models/Specialty.js"; // Modelo de especialidades
 
 const diplomasController = {};
 
+// Función para generar el PDF de diplomas para un proyecto
 const generateProjectDiplomaPDF = async (students, place, projectName, date) => {
   return new Promise((resolve, reject) => {
     try {
@@ -15,6 +16,7 @@ const generateProjectDiplomaPDF = async (students, place, projectName, date) => 
         margins: { top: 50, bottom: 50, left: 50, right: 50 }
       });
 
+      // Configurar flujo de datos para capturar el PDF en un buffer
       const chunks = [];
       doc.on('data', chunk => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
@@ -25,6 +27,7 @@ const generateProjectDiplomaPDF = async (students, place, projectName, date) => 
           doc.addPage();
         }
 
+        // Contenido del diploma
         const studentName = `${student.name} ${student.lastName}`;
         const placeText = place === 1 ? 'PRIMER LUGAR' : place === 2 ? 'SEGUNDO LUGAR' : 'TERCER LUGAR';
 
@@ -32,7 +35,7 @@ const generateProjectDiplomaPDF = async (students, place, projectName, date) => 
         const startY = pageHeight / 2 - 150;
 
         doc.fontSize(28)
-           .font('Helvetica-Bold')
+           .font('Helvetica-Bold') // Título en negrita
            .text(studentName.toUpperCase(), 50, startY, {
              width: doc.page.width - 100,
              align: 'center'
@@ -40,7 +43,7 @@ const generateProjectDiplomaPDF = async (students, place, projectName, date) => 
 
         doc.moveDown(2);
         doc.fontSize(22)
-           .font('Helvetica-Bold')
+           .font('Helvetica-Bold') // Título en negrita
            .text(placeText, {
              width: doc.page.width - 100,
              align: 'center'
@@ -97,6 +100,7 @@ diplomasController.downloadDiplomasSection = async (req, res) => {
   try {
     const { sectionId } = req.params;
 
+    // Obtener todos los proyectos de la sección
     const projects = await Project.find({ idSection: sectionId })
       .populate("idLevel")
       .populate("idSection")
@@ -104,6 +108,7 @@ diplomasController.downloadDiplomasSection = async (req, res) => {
       .populate("assignedStudents")
       .sort({ teamNumber: 1 });
 
+    // Filtrar proyectos
     if (!projects || projects.length === 0) {
       return res.status(404).json({
         success: false,
@@ -111,6 +116,7 @@ diplomasController.downloadDiplomasSection = async (req, res) => {
       });
     }
 
+    // Calcular promedios y ordenar
     const projectsWithScores = await Promise.all(
       projects.map(async (project) => {
         const score = await ProjectScore.findOne({ projectId: project._id });
@@ -130,8 +136,10 @@ diplomasController.downloadDiplomasSection = async (req, res) => {
       })
     );
 
+    // Ordenar proyectos por promedio descendente
     projectsWithScores.sort((a, b) => b.promedioTotal - a.promedioTotal);
 
+    // Seleccionar los top 3 proyectos
     const top3Projects = projectsWithScores.slice(0, 3);
 
     if (top3Projects.length === 0) {
@@ -141,6 +149,7 @@ diplomasController.downloadDiplomasSection = async (req, res) => {
       });
     }
 
+    // Generar diplomas y agregarlos al ZIP
     const zip = new JSZip();
     const fecha = new Date().toLocaleDateString('es-SV', {
       year: 'numeric',
@@ -148,11 +157,13 @@ diplomasController.downloadDiplomasSection = async (req, res) => {
       day: 'numeric'
     });
 
+    // Generar diplomas para los top 3 proyectos
     for (let i = 0; i < top3Projects.length; i++) {
       const { project } = top3Projects[i];
       const place = i + 1;
       const students = project.assignedStudents;
 
+      // Generar PDF solo si hay estudiantes asignados
       if (students && students.length > 0) {
         const pdfBuffer = await generateProjectDiplomaPDF(
           students,
@@ -161,6 +172,7 @@ diplomasController.downloadDiplomasSection = async (req, res) => {
           `San Salvador, ${fecha}`
         );
 
+        // Nombre del archivo y carpeta dentro del ZIP
         const placeFolder = `${place === 1 ? '1er' : place === 2 ? '2do' : '3er'}_Lugar`;
         const projectNameClean = project.projectName.replace(/[^a-zA-Z0-9]/g, '_');
         const fileName = `${projectNameClean}_${students.length}_estudiantes.pdf`;
@@ -169,12 +181,14 @@ diplomasController.downloadDiplomasSection = async (req, res) => {
       }
     }
 
+    // Generar el archivo ZIP
     const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
 
     const sectionName = projects[0]?.idSection?.sectionName || 'Seccion';
     const levelName = projects[0]?.idLevel?.levelName || 'Nivel';
     const fileName = `Diplomas_${levelName.replace(/\s+/g, '_')}_${sectionName}_Top3.zip`;
 
+    // Configurar headers de respuesta para descargar el ZIP
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.setHeader('Content-Length', zipBuffer.length);
@@ -218,6 +232,7 @@ diplomasController.downloadDiplomasBachillerato = async (req, res) => {
       return parsed && parsed.specialtyLetter === specialty.letterSpecialty;
     });
 
+    // Verificar si hay proyectos
     if (!projects || projects.length === 0) {
       return res.status(404).json({
         success: false,
@@ -245,8 +260,10 @@ diplomasController.downloadDiplomasBachillerato = async (req, res) => {
       })
     );
 
+    // Ordenar proyectos por promedio descendente
     projectsWithScores.sort((a, b) => b.promedioTotal - a.promedioTotal);
 
+    // Seleccionar los top 3 proyectos
     const top3Projects = projectsWithScores.slice(0, 3);
 
     if (top3Projects.length === 0) {
@@ -256,6 +273,7 @@ diplomasController.downloadDiplomasBachillerato = async (req, res) => {
       });
     }
 
+    // Generar diplomas y agregarlos al ZIP
     const zip = new JSZip();
     const fecha = new Date().toLocaleDateString('es-SV', {
       year: 'numeric',
@@ -284,8 +302,10 @@ diplomasController.downloadDiplomasBachillerato = async (req, res) => {
       }
     }
 
+    // Generar el archivo ZIP
     const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
 
+    // Nombre del archivo ZIP
     const levelName = projects[0]?.idLevel?.levelName || 'Nivel';
     const specialtyName = specialty.specialtyName.replace(/\s+/g, '_');
     const fileName = `Diplomas_${levelName.replace(/\s+/g, '_')}_${specialtyName}_Top3.zip`;
@@ -341,6 +361,7 @@ diplomasController.downloadDiplomaByPlace = async (req, res) => {
       return parsed && parsed.specialtyLetter === specialty.letterSpecialty;
     });
 
+    // Verificar si hay proyectos
     if (!projects || projects.length === 0) {
       return res.status(404).json({
         success: false,
@@ -368,6 +389,7 @@ diplomasController.downloadDiplomaByPlace = async (req, res) => {
       })
     );
 
+    // Ordenar proyectos por promedio descendente
     projectsWithScores.sort((a, b) => b.promedioTotal - a.promedioTotal);
 
     if (projectsWithScores.length < placeNum) {
@@ -377,9 +399,11 @@ diplomasController.downloadDiplomaByPlace = async (req, res) => {
       });
     }
 
+    // Seleccionar el proyecto correspondiente al lugar solicitado
     const selectedProject = projectsWithScores[placeNum - 1];
     const students = selectedProject.project.assignedStudents;
 
+    // Verificar si el proyecto tiene estudiantes asignados
     if (!students || students.length === 0) {
       return res.status(404).json({
         success: false,
@@ -387,12 +411,14 @@ diplomasController.downloadDiplomaByPlace = async (req, res) => {
       });
     }
 
+    // Generar el PDF del diploma
     const fecha = new Date().toLocaleDateString('es-SV', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
 
+    // Generar el PDF del diploma
     const pdfBuffer = await generateProjectDiplomaPDF(
       students,
       placeNum,
@@ -400,6 +426,7 @@ diplomasController.downloadDiplomaByPlace = async (req, res) => {
       `San Salvador, ${fecha}`
     );
 
+    // Nombre del archivo PDF
     const projectNameClean = selectedProject.project.projectName.replace(/[^a-zA-Z0-9]/g, '_');
     const placeText = placeNum === 1 ? '1er' : placeNum === 2 ? '2do' : '3er';
     const fileName = `Diploma_${placeText}_Lugar_${projectNameClean}.pdf`;

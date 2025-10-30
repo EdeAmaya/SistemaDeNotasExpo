@@ -1,13 +1,14 @@
+// Modelo para registrar logs de actividad de usuarios
 import {Schema, model} from "mongoose";
 
 const activityLogSchema = new Schema({
-    userId: {
+    userId: { // Referencia al usuario que realizó la acción
         type: Schema.Types.ObjectId,
         ref: "User",
         required: true
     },
     
-    action: {
+    action: { // Tipo de acción realizada
         type: String,
         required: true,
         enum: [
@@ -25,43 +26,43 @@ const activityLogSchema = new Schema({
             'DELETE_STAGE',
             'LOGIN',
             'LOGOUT',
-            'HEARTBEAT' // ← NUEVO: Para mantener presencia activa
+            'HEARTBEAT' // Presencia activa
         ]
     },
     
-    actionDescription: {
+    actionDescription: { // Descripción detallada de la acción
         type: String,
         required: true
     },
     
-    targetModel: {
+    targetModel: { // Modelo objetivo de la acción
         type: String,
-        enum: ['Project', 'Student', 'User', 'Stage', 'Auth', 'Presence'] // ← NUEVO: Presence
+        enum: ['Project', 'Student', 'User', 'Stage', 'Auth', 'Presence'] // Presencia
     },
     
-    targetId: {
+    targetId: { // ID del documento objetivo
         type: Schema.Types.ObjectId
     },
     
-    metadata: {
+    metadata: { // Información adicional relevante
         type: Schema.Types.Mixed
     },
     
-    ipAddress: {
+    ipAddress: { // Dirección IP del usuario
         type: String
     },
     
-    userAgent: {
+    userAgent: { // Información del agente de usuario (navegador, SO, etc.)
         type: String
     },
     
-    // ← NUEVO: Campos para presencia
-    lastHeartbeat: {
+    // Campos para presencia
+    lastHeartbeat: { // Última actividad registrada
         type: Date,
         default: Date.now
     },
     
-    isActive: {
+    isActive: { // Estado de presencia del usuario
         type: Boolean,
         default: true
     }
@@ -74,6 +75,6 @@ const activityLogSchema = new Schema({
 activityLogSchema.index({ userId: 1, createdAt: -1 });
 activityLogSchema.index({ action: 1 });
 activityLogSchema.index({ createdAt: -1 });
-activityLogSchema.index({ userId: 1, lastHeartbeat: -1 }); // ← NUEVO: Para consultas de presencia
+activityLogSchema.index({ userId: 1, lastHeartbeat: -1 }); // Para consultas de presencia
 
 export default model("ActivityLog", activityLogSchema);

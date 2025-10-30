@@ -1,6 +1,7 @@
+// Rutas para la gestión de heartbeats
 import express from "express";
-import heartbeatController from "../controllers/heartbeatController.js";
-import { authenticateToken } from "../middlewares/auth.js";
+import heartbeatController from "../controllers/heartbeatController.js"; // Controlador
+import { authenticateToken } from "../middlewares/auth.js"; // Middleware de autenticación
 
 const router = express.Router();
 

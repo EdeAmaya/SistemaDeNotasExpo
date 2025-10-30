@@ -1,6 +1,6 @@
-import Evaluation from "../models/Evaluations.js";
-import Rubric from "../models/Rubrics.js";
-import ProjectScore from "../models/ProjectScore.js";
+import Evaluation from "../models/Evaluations.js"; // Modelo
+import Rubric from "../models/Rubrics.js"; // Modelo de Rúbricas
+import ProjectScore from "../models/ProjectScore.js"; // Modelo de ProjectScore
 
 const evaluationController = {};
 
@@ -52,10 +52,12 @@ const updateProjectScore = async (projectId) => {
         const notasExternas = externas.map(e => e.notaFinal || 0);
         const todasNotas = [...notasInternas, ...notasExternas];
 
+        // Calcular promedios individuales
         const promedioInterno = notasInternas.length
             ? notasInternas.reduce((a, b) => a + b, 0) / notasInternas.length
             : 0;
 
+        // Promedio externo
         const promedioExterno = notasExternas.length
             ? notasExternas.reduce((a, b) => a + b, 0) / notasExternas.length
             : 0;
@@ -78,6 +80,7 @@ const updateProjectScore = async (projectId) => {
             promedioMejora = primera > 0 ? ((ultima - primera) / primera) * 100 : 0;
         }
 
+        // Obtener nivel desde la primera evaluación
         const firstEvaluation = evaluations[0];
         const nivel = firstEvaluation.rubricId?.level || 1;
 
@@ -95,7 +98,7 @@ const updateProjectScore = async (projectId) => {
                 const stageName = ev.rubricId?.stageId?.name || '';
                 const isExternal = stageName.toLowerCase().includes('externa') ||
                     stageName.toLowerCase() === 'evaluación externa';
-
+                // Retornar datos de la evaluación
                 return {
                     evaluationId: ev._id,
                     rubricId: ev.rubricId._id,
@@ -106,6 +109,7 @@ const updateProjectScore = async (projectId) => {
                     evaluacionTipo: isExternal ? "externa" : "interna"
                 };
             }),
+            // Resumen
             evaluacionesInternas: internas,
             evaluacionesExternas: externas,
             promedioInterno,
@@ -132,6 +136,7 @@ const updateProjectScore = async (projectId) => {
 // ===============================
 evaluationController.getEvaluations = async (req, res) => {
     try {
+        // Obtener todas las evaluaciones con detalles completos
         const evaluations = await Evaluation.find()
             .populate("projectId")
             .populate({
@@ -225,6 +230,7 @@ evaluationController.getEvaluationsByProject = async (req, res) => {
                 const criterioCompleto = rubric.criteria.id(ce.criterionId);
 
                 return {
+                    // Datos de la evaluación
                     criterionId: ce.criterionId,
                     criterionName: ce.criterionName,
                     criterionDescription: criterioCompleto?.criterionDescription || "",
@@ -243,6 +249,7 @@ evaluationController.getEvaluationsByProject = async (req, res) => {
             const totalPeso = criteriosDetalle.reduce((sum, c) => sum + (c.peso || 0), 0);
 
             return {
+                // Datos generales de la evaluación
                 evaluationId: ev._id,
                 projectId: ev.projectId?._id,
                 projectName: ev.projectId?.projectName,
@@ -258,6 +265,7 @@ evaluationController.getEvaluationsByProject = async (req, res) => {
                     level: rubric.levelId?.levelName || "Sin nivel",
                     tipoRubrica: rubric.rubricType
                 },
+                // Detalles de los criterios evaluados
                 criterios: criteriosDetalle,
                 resumen: {
                     totalCriterios: criteriosDetalle.length,
@@ -326,12 +334,14 @@ evaluationController.createEvaluation = async (req, res) => {
                 throw new Error("Cada criterio debe tener criterioId o criterionId");
             }
 
+            // Buscar el criterio en la rúbrica
             const crit = rubric.criteria.id(criterionId);
             if (!crit) {
                 throw new Error(`Criterion ${criterionId} not found in rubric`);
             }
 
             return {
+                // Usar _id del criterio de la rúbrica
                 criterionId: crit._id,
                 criterionName: crit.criterionName,
                 puntajeObtenido: c.puntajeObtenido,
@@ -367,9 +377,11 @@ evaluationController.createEvaluation = async (req, res) => {
 // ===============================
 evaluationController.updateEvaluation = async (req, res) => {
     try {
+        // Buscar la rúbrica si se está actualizando
         const { criteriosEvaluados, rubricId } = req.body;
         let updateData = { ...req.body };
 
+        // Si se está actualizando la rúbrica, revisar el tipo de evaluación
         if (rubricId) {
             const rubric = await Rubric.findById(rubricId).populate("stageId", "name");
             if (!rubric) {
@@ -384,14 +396,18 @@ evaluationController.updateEvaluation = async (req, res) => {
                 ? "externa"
                 : "interna";
 
+            // Mapear criterios si se proporcionan
             if (criteriosEvaluados) {
                 const mappedCriteria = criteriosEvaluados.map(c => {
+                    // Buscar el criterio en la rúbrica
                     const criterionId = c.criterioId || c.criterionId;
                     if (!criterionId) throw new Error("Cada criterio debe tener criterioId o criterionId");
 
+                    // Buscar el criterio en la rúbrica
                     const crit = rubric.criteria.id(criterionId);
                     if (!crit) throw new Error(`Criterion ${criterionId} not found in rubric`);
 
+                    // Usar _id del criterio de la rúbrica
                     return {
                         criterionId: crit._id,
                         criterionName: crit.criterionName,
@@ -403,6 +419,7 @@ evaluationController.updateEvaluation = async (req, res) => {
             }
         }
 
+        // Actualizar la evaluación
         const evaluation = await Evaluation.findByIdAndUpdate(
             req.params.id,
             updateData,
@@ -434,6 +451,7 @@ evaluationController.updateEvaluation = async (req, res) => {
 // ===============================
 evaluationController.deleteEvaluation = async (req, res) => {
     try {
+        // Buscar la evaluación para obtener el projectId
         const evaluation = await Evaluation.findById(req.params.id);
         if (!evaluation) {
             return res.status(404).json({
@@ -442,8 +460,10 @@ evaluationController.deleteEvaluation = async (req, res) => {
             });
         }
 
+        // Obtener el projectId antes de eliminar
         const projectId = evaluation.projectId;
 
+        // Eliminar la evaluación
         await Evaluation.findByIdAndDelete(req.params.id);
 
         // IMPORTANTE: Actualizar ProjectScore automáticamente

@@ -1,21 +1,22 @@
+// Modelo de Usuario
 import {Schema, model} from "mongoose";
 
 const userSchema = new Schema({
-    name: {
+    name: { // Nombre del usuario
         type: String,
         required: [true, 'El nombre es requerido'],
         maxLength: [100, 'El nombre no puede exceder 100 caracteres'],
         trim: true
     },
 
-    lastName: {
+    lastName: { // Apellido del usuario
         type: String,
         required: [true, 'El apellido es requerido'],
         maxLength: [100, 'El apellido no puede exceder 100 caracteres'],
         trim: true
     },
 
-    email: {
+    email: { // Email del usuario
         type: String,
         required: [true, 'El email es requerido'],
         unique: true, // Esto ya crea un índice automáticamente
@@ -24,13 +25,13 @@ const userSchema = new Schema({
         match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Formato de email inválido']
     },
 
-    password: {
+    password: { // Contraseña del usuario
         type: String,
         required: [true, 'La contraseña es requerida'],
         minLength: [6, 'La contraseña debe tener al menos 6 caracteres']
     },
 
-    role: {
+    role: { // Rol del usuario
         type: String,
         enum: {
             values: ['Admin', 'Estudiante', 'Docente', 'Evaluador'],
@@ -41,7 +42,7 @@ const userSchema = new Schema({
    
     isVerified: {
         type: Boolean,
-        default: false
+        default: true
     },
 
     // Para los maestros
@@ -66,6 +67,7 @@ const userSchema = new Schema({
         default: 0
     },
 
+    // Tiempo de bloqueo hasta (timestamp)
     lockTime: {
         type: Date,
         default: null

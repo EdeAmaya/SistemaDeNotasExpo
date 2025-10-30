@@ -1,7 +1,7 @@
-// backend/src/routes/events.js
+// Rutas para la gestión de eventos
 import express from "express";
-import eventController from "../controllers/eventController.js";
-import { requireAdmin, authenticateToken } from "../middlewares/auth.js";
+import eventController from "../controllers/eventController.js"; // Controlador
+import { requireAdmin, authenticateToken } from "../middlewares/auth.js"; // Middleware de autenticación y autorización
 
 const router = express.Router();
 

@@ -1,6 +1,7 @@
+// Rutas para el registro y verificación de usuarios
 import express from "express";
-import registerController from "../controllers/registerController.js";
-import { requireAdmin } from "../middlewares/auth.js";
+import registerController from "../controllers/registerController.js"; // Controlador
+import { requireAdmin } from "../middlewares/auth.js"; // Middleware para verificar rol de Admin
 
 const router = express.Router();
 

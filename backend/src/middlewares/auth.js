@@ -1,23 +1,17 @@
-import jwt from 'jsonwebtoken';
-import userModel from '../models/User.js';
-import { config } from '../config.js';
+import jwt from 'jsonwebtoken'; // Manejo de token
+import userModel from '../models/User.js'; // Modelo de usuario
+import { config } from '../config.js'; // Configuración
 
 // Middleware principal de autenticación
 export const authenticateToken = async (req, res, next) => {
-  try {
-    console.log('🔍 Verificando autenticación...');
-    
+  try {    
     const token = req.cookies.authToken;
     
     if (!token) {
-      console.log('❌ No se encontró token en las cookies');
       return res.status(401).json({ message: 'Token de acceso requerido' });
     }
 
-    console.log('✅ Token encontrado');
-
     const decoded = jwt.verify(token, config.JWT.secret);
-    console.log('✅ Token decodificado:', decoded);
     
     // Si es admin, no buscar en la base de datos
     if (decoded.id === "Admin") {
@@ -27,7 +21,6 @@ export const authenticateToken = async (req, res, next) => {
         userType: "Admin",
         role: "Admin"
       };
-      console.log('✅ Usuario Admin autenticado');
       return next();
     }
     
@@ -35,13 +28,11 @@ export const authenticateToken = async (req, res, next) => {
     const user = await userModel.findById(decoded.id).select('-password');
     
     if (!user) {
-      console.log('❌ Usuario no encontrado en BD:', decoded.id);
       return res.status(401).json({ message: 'Usuario no encontrado' });
     }
 
     // Verificar si el usuario está verificado
     if (!user.isVerified) {
-      console.log('❌ Usuario no verificado:', user.email);
       return res.status(403).json({ message: 'Usuario no verificado' });
     }
 
@@ -51,11 +42,8 @@ export const authenticateToken = async (req, res, next) => {
       userType: user.role
     };
     
-    console.log('✅ Usuario autenticado:', user.email, 'Rol:', user.role);
     next();
-  } catch (error) {
-    console.error('❌ Error en autenticación:', error);
-    
+  } catch (error) {    
     if (error.name === 'JsonWebTokenError') {
       return res.status(403).json({ message: 'Token inválido' });
     }
@@ -76,15 +64,12 @@ export const validateAuthToken = (allowedUserTypes = []) => {
       await authenticateToken(req, res, () => {
         // Una vez autenticado, verificar el rol
         if (allowedUserTypes.length > 0 && !allowedUserTypes.includes(req.user.userType)) {
-          console.log('❌ Rol insuficiente. Usuario:', req.user.userType, 'Requerido:', allowedUserTypes);
           return res.status(403).json({ message: "Acceso denegado. Rol insuficiente." });
         }
 
-        console.log('✅ Rol verificado:', req.user.userType);
         next();
       });
     } catch (error) {
-      console.error("❌ Error en validación de token:", error);
       return res.status(403).json({ message: "Error de validación" });
     }
   };

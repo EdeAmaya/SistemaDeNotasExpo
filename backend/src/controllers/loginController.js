@@ -1,7 +1,7 @@
-import userModel from "../models/User.js";
-import bcryptjs from "bcryptjs";
-import jsonwebtoken from "jsonwebtoken";
-import { config } from "../config.js";
+import userModel from "../models/User.js"; // Modelo de usuario
+import bcryptjs from "bcryptjs"; // Para comparar contraseñas
+import jsonwebtoken from "jsonwebtoken"; // Para generar tokens JWT
+import { config } from "../config.js"; // Configuración
 
 const loginController = {};
 
@@ -9,11 +9,8 @@ loginController.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    console.log('🔐 Intento de login para:', email);
-    console.log('🌍 Origin:', req.headers.origin);
-
-    let userFound;
-    let userType;
+    let userFound; // Variable para almacenar el usuario encontrado
+    let userType; // Variable para almacenar el tipo de usuario
 
     // Validación robusta de emailAdmin
     if (!config.emailAdmin || !config.emailAdmin.email || !config.emailAdmin.password) {
@@ -24,24 +21,20 @@ loginController.login = async (req, res) => {
     if (email === config.emailAdmin.email && password === config.emailAdmin.password) {
       userType = "Admin";
       userFound = { _id: "Admin" };
-      console.log('👑 Login como Admin');
     } else {
       // Buscar usuario en la base de datos
       userFound = await userModel.findOne({ email: email });
       if (userFound) {
         userType = userFound.role;
-        console.log('👤 Usuario encontrado:', email, 'Rol:', userType);
       }
     }
 
     if (!userFound) {
-      console.log('❌ Usuario no encontrado:', email);
       return res.status(401).json({ message: "Usuario no encontrado" });
     }
 
     // Si el usuario no está verificado (excepto Admin)
     if (userType !== "Admin" && userFound.isVerified === false) {
-      console.log('⚠️ Usuario no verificado:', email);
       return res.status(401).json({ 
         message: "Cuenta no verificada. Contacta al administrador para verificar tu cuenta.",
         needVerification: true 
@@ -52,7 +45,6 @@ loginController.login = async (req, res) => {
     if (userType !== "Admin") {
       const isMatch = await bcryptjs.compare(password, userFound.password);
       if (!isMatch) {
-        console.log('❌ Contraseña incorrecta para:', email);
         return res.status(401).json({ message: "Contraseña inválida" });
       }
     }
@@ -64,11 +56,10 @@ loginController.login = async (req, res) => {
       { expiresIn: config.JWT.expiresIn }
     );
 
-    console.log('🎫 Token generado exitosamente');
-
     // CONFIGURACIÓN DE COOKIE PARA PRODUCCIÓN
     const isProduction = process.env.NODE_ENV === 'production';
     
+    // Opciones de la cookie
     const cookieOptions = {
       httpOnly: true,
       secure: isProduction, // TRUE en producción (HTTPS)
@@ -77,9 +68,6 @@ loginController.login = async (req, res) => {
       path: '/', // Disponible en toda la app
       domain: isProduction ? undefined : undefined // Sin domain específico
     };
-
-    console.log('🍪 Configuración de cookie:', cookieOptions);
-    console.log('🌐 Entorno:', isProduction ? 'PRODUCCIÓN' : 'DESARROLLO');
 
     // Establecer la cookie
     res.cookie("authToken", token, cookieOptions);
@@ -109,8 +97,6 @@ loginController.login = async (req, res) => {
       };
     }
 
-    console.log('✅ Login exitoso para:', userData.email, 'Rol:', userType);
-
     res.json({
       message: "Login exitoso",
       userType,
@@ -118,7 +104,7 @@ loginController.login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error en login:', error);
+    console.error('Error en login:', error);
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

@@ -1,5 +1,6 @@
+// Rutas para la gestión de etapas
 import express from "express";
-import stageController from "../controllers/stageController.js";
+import stageController from "../controllers/stageController.js"; // Controlador
 
 const router = express.Router();
 

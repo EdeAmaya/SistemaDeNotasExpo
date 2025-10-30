@@ -1,5 +1,6 @@
+// Rutas para la gestión de login
 import express from "express";
-import loginController from "../controllers/loginController.js";
+import loginController from "../controllers/loginController.js"; // Controlador
 
 const router = express.Router();
 

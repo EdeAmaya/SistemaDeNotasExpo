@@ -3,13 +3,13 @@ import { Schema, model } from "mongoose";
 
 // Subdocumento para las ponderaciones con descripción
 const weightSchema = new Schema({
-  value: {
+  value: { // valor numérico de la ponderación (Ej: 10, 8, 6, etc.)
     type: Number,
     required: true,
     min: 0,
     max: 10
   },
-  description: {
+  description: { // descripción de la ponderación, por si necesita especificarse
     type: String,
     required: false,
     default: null
@@ -18,11 +18,11 @@ const weightSchema = new Schema({
 
 // Subdocumento para los criterios
 const criterionSchema = new Schema({
-  criterionName: {
+  criterionName: { // Nombre del criterio
     type: String,
     required: true
   },
-  criterionDescription: {
+  criterionDescription: { // Descripción del criterio
     type: String,
     required: false
   },
@@ -31,7 +31,7 @@ const criterionSchema = new Schema({
     required: false // Porcentaje que vale el criterio
   },
   weights: {
-    type: [weightSchema],
+    type: [weightSchema], // Array de ponderaciones (Excelente, Bueno, Regular, etc.)
     required: false,
     default: []
   }
@@ -53,26 +53,26 @@ const rubricSchema = new Schema({
     ref: "Level", // Grado específico
     required: false
   },
-  specialtyId: {
+  specialtyId: { // Especialidad (solo para bachillerato)
     type: Schema.Types.ObjectId,
     ref: 'Specialty',
     required: false
   },
-  year: {
+  year: { // Año actual
     type: String,
     required: true
   },
-  stageId: {
+  stageId: { // Etapa del proyecto
     type: Schema.Types.ObjectId,
     ref: 'Stage',
     required: true
   },
-  rubricType: {
+  rubricType: { // Tipo de rúbrica
     type: Number,
     enum: [1, 2], // 1 = Escala estimativa, 2 = Rúbrica
     required: true,
   },
-  scaleType: {
+  scaleType: { // Tipo de escala (solo si rubricType === 1)
     type: Number,
     enum: [1, 2, 3], // 1 = Promedio, 2 = Escala de ejecución, 3 = Desempeño por criterios
     required: false // Solo requerido si rubricType === 1

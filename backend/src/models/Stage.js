@@ -1,40 +1,33 @@
+// Modelo para gestionar las etapas: Anteproyecto, 30%, etc.
 import {Schema, model} from "mongoose";
 
 const stageSchema = new Schema({
-    percentage: {
+    percentage: { // Porcentaje de la etapa (ejemplo: "30%")
         type: String,
         required: [true, 'El porcentaje de etapa es requerido'],
         trim: true,
         
     },
 
-    startDate: {
+    startDate: { // Fecha de inicio
         type: Date,
         required: [true, 'La fecha de inicio es requerida']
     },
 
-    endDate: {
+    endDate: { // Fecha de fin
         type: Date,
         required: [true, 'La fecha de fin es requerida'],
-        // CORRECCIÓN: Removemos el validator que causa problemas de zona horaria
-        // La validación se hace en el controlador donde tenemos más control
-        /* validate: {
-            validator: function(value) {
-                return value > this.startDate;
-            },
-            message: 'La fecha de fin debe ser posterior a la fecha de inicio'
-        } */
     },
 
-    // Campos adicionales útiles para el contexto educativo
-    name: {
+    // Campos adicionales
+    name: { // Nombre de la etapa
         type: String,
         required: [true, 'El nombre de la etapa es requerido'],
         trim: true,
         maxLength: [100, 'El nombre no puede exceder 100 caracteres']
     },
 
-    description: {
+    description: { // Descripción de la etapa
         type: String,
         trim: true,
         maxLength: [500, 'La descripción no puede exceder 500 caracteres']

@@ -1,46 +1,47 @@
+// Modelo para gestionar los estudiantes
 import {Schema, model} from "mongoose";
 
 const studentSchema = new Schema({
-    studentCode: {
+    studentCode: { // Código único del estudiante
         type: Number,
         required: true,
         unique: true 
     },
 
-    name: {
+    name: { // Nombre del estudiante
         type: String,
         required: true
     },
 
-    lastName: {
+    lastName: { // Apellido del estudiante
         type: String,
         required: true
     },
 
-    idLevel: {
+    idLevel: { // Nivel educativo del estudiante
         type: Schema.Types.ObjectId,
         ref: "Level",
         required: true
     },
 
-    idSection: {
+    idSection: { // Sección del estudiante
         type: Schema.Types.ObjectId,
         ref: "Section",
         required: true
     },
 
-    idSpecialty: {
+    idSpecialty: { // Especialidad del estudiante (si aplica)
         type: Schema.Types.ObjectId,
         ref: "Specialty"
     },
 
-    projectId: {
+    projectId: { // Proyecto asignado al estudiante
         type: Schema.Types.ObjectId,
         ref: "Project"
     }
 
 }, {
-    timestamps: true,
+    timestamps: true, // Crea campos createdAt y updatedAt automáticamente
     strict: false
 });
 

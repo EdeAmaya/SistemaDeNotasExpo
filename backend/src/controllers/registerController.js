@@ -1,5 +1,5 @@
-import userModel from "../models/User.js";
-import bcryptjs from "bcryptjs";
+import userModel from "../models/User.js"; // Modelo de usuario
+import bcryptjs from "bcryptjs"; // Para hashear contraseñas
 
 const registerController = {};
 

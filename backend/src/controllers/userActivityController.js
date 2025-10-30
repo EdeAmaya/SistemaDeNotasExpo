@@ -1,13 +1,15 @@
 // backend/src/controllers/userActivityController.js
 const userActivityController = {};
-import ActivityLogger from "../utils/activityLogger.js";
+import ActivityLogger from "../utils/activityLogger.js"; // Importar el logger de actividad
 
 // Obtener usuarios conectados con estado de presencia
 userActivityController.getConnectedUsers = async (req, res) => {
     try {
+        // Obtener usuarios con actividad reciente
         const hoursAgo = req.query.hours || 2;
         const connectedUsers = await ActivityLogger.getConnectedUsers(hoursAgo);
         
+        // Formatear la respuesta
         const formattedUsers = connectedUsers.map(activity => ({
             _id: activity.user._id,
             name: activity.user.name,
@@ -15,7 +17,7 @@ userActivityController.getConnectedUsers = async (req, res) => {
             email: activity.user.email,
             role: activity.user.role,
             lastHeartbeat: activity.lastHeartbeat,
-            presenceStatus: activity.presenceStatus // ← NUEVO: Estado de presencia
+            presenceStatus: activity.presenceStatus 
         }));
         
         res.json(formattedUsers);
@@ -34,8 +36,10 @@ userActivityController.getRecentActivities = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const userRole = req.user.role;
         
+        // Obtener actividades recientes filtradas por rol
         const activities = await ActivityLogger.getRecentActivitiesByRole(userRole, limit);
         
+        // Formatear la respuesta
         const formattedActivities = activities.map(activity => ({
             _id: activity._id,
             action: activity.action,

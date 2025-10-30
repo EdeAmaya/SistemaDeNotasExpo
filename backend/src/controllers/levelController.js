@@ -1,16 +1,14 @@
 const levelController = {};
 
-import levelModel from "../models/Level.js";
+import levelModel from "../models/Level.js"; // Modelo
 
-//Select
-
+// Select
 levelController.getLevels = async (req,res) => {
   const levels = await levelModel.find()
   res.json(levels)
 };
 
-//Insert
-
+// Insert
 levelController.insertLevel = async (req,res) =>{
     const{levelName, letterLevel} = req.body;
     const newLevel = new levelModel({levelName, letterLevel})
@@ -18,15 +16,13 @@ levelController.insertLevel = async (req,res) =>{
     res.json({message: "level saved"})
 };
 
-//Delete
-
+// Delete
 levelController.deleteLevel = async(req,res) =>{
     await levelModel.findByIdAndDelete(req.params.id);
     res.json({message: "level deleted"})
 };
 
-//Update
-
+// Update
 levelController.updateLevel = async(req,res) =>{
     const {levelName, letterLevel} = req.body;
     const updateLevel = await levelModel.findByIdAndUpdate(req.params.id,{levelName, letterLevel},{new: true})

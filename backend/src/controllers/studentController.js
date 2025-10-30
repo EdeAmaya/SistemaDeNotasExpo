@@ -1,9 +1,9 @@
 const studentController = {};
 
-import studentModel from "../models/Student.js";
-import ActivityLogger from "../utils/activityLogger.js";
+import studentModel from "../models/Student.js"; // Modelo de estudiante
+import ActivityLogger from "../utils/activityLogger.js"; // Importar el logger de actividad
 
-//Select - Con filtrado según rol del usuario
+// Select - Con filtrado según rol del usuario
 studentController.getStudents = async (req, res) => {
   try {
     const user = req.user; // Usuario autenticado desde el middleware
@@ -80,7 +80,7 @@ studentController.checkStudentCode = async (req, res) => {
   }
 };
 
-//Insert
+// Insert
 studentController.insertStudent = async (req, res) => {
   try {
     const { studentCode, name, lastName, idLevel, idSection, idSpecialty, projectId } = req.body;
@@ -93,6 +93,7 @@ studentController.insertStudent = async (req, res) => {
       });
     }
 
+    // Crear y guardar nuevo estudiante
     const newStudent = new studentModel({
       studentCode: parseInt(studentCode),
       name: name.trim(),
@@ -105,6 +106,7 @@ studentController.insertStudent = async (req, res) => {
 
     const savedStudent = await newStudent.save();
 
+    // Si se asignó un proyecto, agregar el estudiante al array assignedStudents del proyecto
     await ActivityLogger.log(
       req.user._id,
       'CREATE_STUDENT',
@@ -121,6 +123,7 @@ studentController.insertStudent = async (req, res) => {
     });
 
   } catch (error) {
+    // Manejo de errores específicos
     if (error.code === 11000) {
       res.status(400).json({
         message: "El código de estudiante ya existe. Por favor, use un código diferente.",
@@ -140,18 +143,21 @@ studentController.insertStudent = async (req, res) => {
   }
 };
 
-//Update
+// Update
 studentController.updateStudent = async (req, res) => {
   try {
+    // Validar datos de entrada
     const { studentCode, name, lastName, idLevel, idSection, idSpecialty, projectId } = req.body;
     const studentId = req.params.id;
 
+    // Verificar si el código de estudiante ya existe en otro registro
     if (studentCode) {
       const existingStudent = await studentModel.findOne({
         studentCode: parseInt(studentCode),
         _id: { $ne: studentId }
       });
 
+      // Si se encuentra un estudiante existente, retornar error
       if (existingStudent) {
         return res.status(400).json({
           message: `El código ${studentCode} ya está asignado a ${existingStudent.name} ${existingStudent.lastName}`,
@@ -168,9 +174,11 @@ studentController.updateStudent = async (req, res) => {
       });
     }
 
+    // Determinar cambios en el proyecto
     const previousProjectId = previousStudent.projectId?.toString() || null;
     const newProjectId = projectId || null;
 
+    // Actualizar estudiante
     const updateData = {
       studentCode: parseInt(studentCode),
       name: name.trim(),
@@ -181,6 +189,7 @@ studentController.updateStudent = async (req, res) => {
       projectId: newProjectId
     };
 
+    // Realizar la actualización
     const updatedStudent = await studentModel.findByIdAndUpdate(
       studentId,
       updateData,
@@ -206,6 +215,7 @@ studentController.updateStudent = async (req, res) => {
       }
     }
 
+    // Registrar la actividad
     await ActivityLogger.log(
       req.user._id,
       'UPDATE_STUDENT',
@@ -241,11 +251,12 @@ studentController.updateStudent = async (req, res) => {
   }
 };
 
-//Delete
+// Delete
 studentController.deleteStudent = async (req, res) => {
   try {
     const deletedStudent = await studentModel.findByIdAndDelete(req.params.id);
 
+    // Verificar si el estudiante existía
     if (!deletedStudent) {
       return res.status(404).json({
         message: "Estudiante no encontrado"
@@ -260,6 +271,7 @@ studentController.deleteStudent = async (req, res) => {
       );
     }
 
+    // Registrar la actividad
     await ActivityLogger.log(
       req.user._id,
       'DELETE_STUDENT',
@@ -294,6 +306,7 @@ studentController.bulkInsertStudents = async (req, res) => {
       });
     }
 
+    // Resultados de la carga
     const results = {
       success: 0,
       failed: 0,
@@ -302,6 +315,7 @@ studentController.bulkInsertStudents = async (req, res) => {
       createdStudents: []
     };
 
+    // Procesar cada estudiante
     for (let i = 0; i < students.length; i++) {
       const studentData = students[i];
 
@@ -320,6 +334,7 @@ studentController.bulkInsertStudents = async (req, res) => {
           continue;
         }
 
+        // Crear y guardar nuevo estudiante
         const newStudent = new studentModel({
           studentCode: parseInt(studentData.studentCode),
           name: studentData.name.trim(),
@@ -340,6 +355,7 @@ studentController.bulkInsertStudents = async (req, res) => {
           );
         }
 
+        // Registrar la actividad
         await ActivityLogger.log(
           req.user._id,
           'CREATE_STUDENT_BULK',
@@ -363,6 +379,7 @@ studentController.bulkInsertStudents = async (req, res) => {
       }
     }
 
+    // Registrar actividad general de carga masiva
     if (results.success > 0) {
       await ActivityLogger.log(
         req.user._id,

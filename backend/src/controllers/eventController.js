@@ -1,6 +1,6 @@
 // backend/src/controllers/eventController.js
-import eventModel from "../models/Event.js";
-import ActivityLogger from "../utils/activityLogger.js";
+import eventModel from "../models/Event.js"; // Modelo de Evento
+import ActivityLogger from "../utils/activityLogger.js"; // Logger de Actividad
 
 const eventController = {};
 
@@ -14,11 +14,11 @@ eventController.getEvents = async (req, res) => {
     if (startDate && endDate) {
       filter = {
         $or: [
-          { startDate: { $gte: new Date(startDate), $lte: new Date(endDate) } },
-          { endDate: { $gte: new Date(startDate), $lte: new Date(endDate) } },
+          { startDate: { $gte: new Date(startDate), $lte: new Date(endDate) } }, // Eventos que comienzan en el rango
+          { endDate: { $gte: new Date(startDate), $lte: new Date(endDate) } }, // Eventos que terminan en el rango
           {
-            startDate: { $lte: new Date(startDate) },
-            endDate: { $gte: new Date(endDate) }
+            startDate: { $lte: new Date(startDate) }, // Eventos que abarcan todo el rango
+            endDate: { $gte: new Date(endDate) } // Eventos que abarcan todo el rango
           }
         ]
       };
@@ -184,15 +184,15 @@ eventController.updateEvent = async (req, res) => {
     const { id } = req.params;
     const { title, startDate, endDate, description, color } = req.body;
 
-    console.log('📝 Actualizando evento:', id);
-    console.log('📦 Datos recibidos:', { title, startDate, endDate, description, color });
+    console.log('Actualizando evento:', id);
+    console.log('Datos recibidos:', { title, startDate, endDate, description, color });
 
     const currentEvent = await eventModel.findById(id);
     if (!currentEvent) {
       return res.status(404).json({ message: "Evento no encontrado" });
     }
 
-    console.log('📄 Evento actual:', currentEvent);
+    console.log('Evento actual:', currentEvent);
 
     const updateData = {
       title: title?.trim() || currentEvent.title,
@@ -206,26 +206,26 @@ eventController.updateEvent = async (req, res) => {
     if (startDate) {
       finalStartDate = new Date(startDate + 'T00:00:00.000Z');
       updateData.startDate = finalStartDate;
-      console.log('📅 Nueva fecha de inicio:', finalStartDate);
+      console.log('Nueva fecha de inicio:', finalStartDate);
     }
     
     if (endDate) {
       finalEndDate = new Date(endDate + 'T23:59:59.999Z');
       updateData.endDate = finalEndDate;
-      console.log('📅 Nueva fecha de fin:', finalEndDate);
+      console.log('Nueva fecha de fin:', finalEndDate);
     }
 
-    console.log('🔍 Validando fechas:', { finalStartDate, finalEndDate });
+    console.log('Validando fechas:', { finalStartDate, finalEndDate });
 
     if (finalEndDate < finalStartDate) {
-      console.log('❌ Validación fallida: fecha de fin anterior a inicio');
+      console.log('Validación fallida: fecha de fin anterior a inicio');
       return res.status(400).json({ 
         message: "La fecha de fin debe ser posterior o igual a la fecha de inicio" 
       });
     }
 
-    console.log('✅ Fechas válidas, actualizando...');
-    console.log('📦 Datos a actualizar:', updateData);
+    console.log('Fechas válidas, actualizando...');
+    console.log('Datos a actualizar:', updateData);
 
     const updatedEvent = await eventModel.findByIdAndUpdate(
       id,
@@ -233,7 +233,7 @@ eventController.updateEvent = async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    console.log('✅ Evento actualizado:', updatedEvent);
+    console.log('Evento actualizado:', updatedEvent);
 
     if (updatedEvent.createdBy !== 'Admin') {
       await updatedEvent.populate('createdBy', 'name lastName email');
@@ -262,7 +262,7 @@ eventController.updateEvent = async (req, res) => {
       event: updatedEvent
     });
   } catch (error) {
-    console.error('❌ Error completo al actualizar evento:', error);
+    console.error('Error completo al actualizar evento:', error);
     console.error('Stack trace:', error.stack);
     
     if (error.name === 'ValidationError') {

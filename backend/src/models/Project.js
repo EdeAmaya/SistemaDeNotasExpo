@@ -1,7 +1,8 @@
+// Modelo para gestionar Proyectos
 import {Schema, model} from "mongoose";
 
 const projectSchema = new Schema({
-    projectId: {
+    projectId: { // Identificador único del proyecto
         type: String,
         required: true,
         maxLength: 7,
@@ -9,24 +10,24 @@ const projectSchema = new Schema({
         trim: true
     },
 
-    projectName: {
+    projectName: { // Nombre del proyecto
         type: String,
         required: true,
         trim: true
     },
 
-    googleSitesLink: {
+    googleSitesLink: { // Enlace al sitio de Google Sites del proyecto
         type: String,
         trim: true
     },
 
-    idLevel: {
+    idLevel: { // Nivel educativo del proyecto
         type: Schema.Types.ObjectId,
         ref: "Level",
         required: true
     },
 
-    idSection: {
+    idSection: { // Sección del proyecto
         type: Schema.Types.ObjectId,
         ref: "Section",
         // No es required porque en bachillerato puede ser null
@@ -39,19 +40,19 @@ const projectSchema = new Schema({
         // No es required porque en básica puede ser null
     },
 
-    teamNumber: {
+    teamNumber: { // Número de equipo del proyecto
         type: Number,
         required: true,
         min: 1,
         max: 99
     },
 
-    assignedStudents: [{
+    assignedStudents: [{ // Estudiantes asignados al proyecto
         type: Schema.Types.ObjectId,
         ref: "Student"
     }],
 
-    status: {
+    status: { // Estado del proyecto
         type: String,
         enum: ['Activo', 'Inactivo'],
         default: 'Activo'

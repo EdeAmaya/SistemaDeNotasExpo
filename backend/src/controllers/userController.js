@@ -1,6 +1,6 @@
-import userModel from "../models/User.js";
-import bcryptjs from "bcryptjs";
-import ActivityLogger from "../utils/activityLogger.js";
+import userModel from "../models/User.js"; // Modelo de usuario
+import bcryptjs from "bcryptjs"; // Para hashear contraseñas
+import ActivityLogger from "../utils/activityLogger.js"; // Importar el logger de actividad
 
 const userController = {};
 
@@ -38,6 +38,7 @@ userController.insertUser = async (req, res) => {
       return res.status(400).json({ message: "Todos los campos son requeridos" });
     }
 
+    // Verificar si el email ya está registrado
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "El correo electrónico ya está registrado" });
@@ -45,6 +46,7 @@ userController.insertUser = async (req, res) => {
 
     const hashedPassword = await bcryptjs.hash(password, 10);
 
+    // Crear nuevo usuario
     const newUser = new userModel({
       name: name.trim(),
       lastName: lastName.trim(),
@@ -72,6 +74,7 @@ userController.insertUser = async (req, res) => {
       req
     );
 
+    // Excluir la contraseña en la respuesta
     const userResponse = await userModel.findById(savedUser._id).select('-password');
     
     res.status(201).json({
@@ -101,6 +104,7 @@ userController.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Eliminar usuario
     const deletedUser = await userModel.findByIdAndDelete(id);
     if (!deletedUser) {
       return res.status(404).json({ message: "Usuario no encontrado" });
@@ -130,11 +134,13 @@ userController.updateUser = async (req, res) => {
     const { id } = req.params;
     let { name, lastName, email, password, role, isVerified, idLevel, idSection, idSpecialty } = req.body;
 
+    // Verificar si el usuario existe
     const currentUser = await userModel.findById(id);
     if (!currentUser) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
+    // Preparar datos para actualización
     let updateData = {
       name: name?.trim() || currentUser.name,
       lastName: lastName?.trim() || currentUser.lastName,
@@ -164,6 +170,7 @@ userController.updateUser = async (req, res) => {
       updateData.email = email.toLowerCase().trim();
     }
 
+    // Si se proporciona una nueva contraseña, hashearla
     if (password && password.trim()) {
       updateData.password = await bcryptjs.hash(password, 10);
     }
@@ -232,10 +239,12 @@ userController.checkEmailExists = async (req, res) => {
   try {
     const { email } = req.body;
 
+    // Validar que se proporcione un email
     if (!email) {
       return res.status(400).json({ message: "Email es requerido" });
     }
 
+    // Buscar usuario por email
     const exists = await userModel.findOne({ email: email.toLowerCase().trim() });
     res.json({ exists: !!exists });
   } catch (error) {

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { CheckSquare, Plus, BookOpen, ClipboardList, Award, Info, FileText, BookOpenCheck } from 'lucide-react';
+import { CheckSquare, Plus, BookOpen, ClipboardList, Award, Info, FileText, BookOpenCheck, Download } from 'lucide-react';
 import ListGrades from './components/ListGrades';
 import RegisterGrade from './components/RegisterGrade';
 import DiplomasSection from './components/DiplomasSection'; 
+import DownloadReports from './components/DownloadReports'; // Para las notas
 import useDataEvaluations from './hooks/useDataEvaluations';
 import useDataProjectScores from './hooks/useDataProjectScores';
 import ProjectInfo from './components/ProjectInfo';
@@ -81,7 +82,6 @@ const Grades = () => {
       }
       clearForm();
       
-      // Evaluador permanece en 'assign' después de guardar
       if (user?.role !== 'Evaluador') {
         setActiveTab('list');
       }
@@ -95,7 +95,6 @@ const Grades = () => {
 
   const handleCancelEdit = () => {
     clearForm();
-    // Evaluador permanece en 'assign'
     if (user?.role !== 'Evaluador') {
       setActiveTab('list');
     }
@@ -156,27 +155,6 @@ const Grades = () => {
                 </h1>
               </div>
             </div>
-
-            {/* Stats desktop - Solo visible para roles que pueden ver estadísticas
-            {user?.role !== 'Evaluador' && (
-              <div className="hidden lg:flex items-center gap-4">
-                <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 text-white px-4 py-3 rounded-xl shadow-lg text-center">
-                  <ClipboardList className="w-5 h-5 mx-auto mb-1" />
-                  <div className="text-2xl font-black">{stats.total}</div>
-                  <div className="text-xs font-semibold opacity-90">Proyectos</div>
-                </div>
-                <div className="bg-gradient-to-br from-yellow-300 to-yellow-400 text-white px-4 py-3 rounded-xl shadow-lg text-center">
-                  <Award className="w-5 h-5 mx-auto mb-1" />
-                  <div className="text-2xl font-black">{stats.avgScore}</div>
-                  <div className="text-xs font-semibold opacity-90">Promedio</div>
-                </div>
-                <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white px-4 py-3 rounded-xl shadow-lg text-center">
-                  <FileText className="w-5 h-5 mx-auto mb-1" />
-                  <div className="text-2xl font-black">{stats.totalEvaluations}</div>
-                  <div className="text-xs font-semibold opacity-90">Evaluaciones</div>
-                </div>
-              </div>
-            )}*/}
           </div>
         </div>
       </div>
@@ -206,7 +184,7 @@ const Grades = () => {
               </button>
             )}
             
-            {/* TAB: Nueva Evaluación (Visible para todos los roles que acceden a Grades) */}
+            {/* TAB: Nueva Evaluación */}
             {isTabEnabled('assign') && (
               <button
                 onClick={() => handleTabChange('assign')}
@@ -224,7 +202,25 @@ const Grades = () => {
               </button>
             )}
 
-            {/* TAB: Diplomas (NO visible para Docente ni Evaluador) */}
+            {/* TAB: Descargar Reportes - NUEVO */}
+            {isTabEnabled('download') && (
+              <button
+                onClick={() => handleTabChange('download')}
+                className={`cursor-pointer relative px-6 py-4 font-bold text-sm transition-all duration-300 whitespace-nowrap ${
+                  activeTab === 'download' ? 'text-yellow-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Download className="w-5 h-5" />
+                  <span>Descargar Reportes</span>
+                </div>
+                {activeTab === 'download' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-t-full"></div>
+                )}
+              </button>
+            )}
+
+            {/* TAB: Diplomas */}
             {isTabEnabled('diplomas') && (
               <button
                 onClick={() => handleTabChange('diplomas')}
@@ -248,7 +244,7 @@ const Grades = () => {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-8 py-8">
         
-        {/* Stats móvil - Solo visible para roles que pueden ver estadísticas */}
+        {/* Stats móvil */}
         {user?.role !== 'Evaluador' && (
           <div className="lg:hidden grid grid-cols-3 gap-3 mb-6">
             <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 text-white p-3 rounded-xl shadow-lg text-center">
@@ -307,6 +303,11 @@ const Grades = () => {
               projectId={selectedProjectId}
               onBack={handleBackToList}
             />
+          ) : activeTab === 'download' ? (
+            <DownloadReports 
+              projectScores={projectScores}
+              loading={loadingScores}
+            />
           ) : activeTab === 'diplomas' ? (
             <DiplomasSection />
           ) : (
@@ -323,7 +324,7 @@ const Grades = () => {
         </div>
 
         {/* Footer informativo */}
-        {activeTab !== 'diplomas' && (
+        {activeTab !== 'diplomas' && activeTab !== 'download' && (
           <div className="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-5 rounded-r-xl">
             <div className="flex items-start gap-3">
               <Info className="w-6 h-6 text-yellow-600 flex-shrink-0" />
@@ -348,7 +349,6 @@ const Grades = () => {
                   </div>
                 </div>
                 
-                {/* Información adicional */}
                 <div className="mt-4 pt-4 border-t border-yellow-200">
                   <h5 className="font-semibold text-gray-800 mb-2 text-sm">Cálculo de notas:</h5>
                   <div className="grid md:grid-cols-2 gap-2 text-xs text-gray-600">

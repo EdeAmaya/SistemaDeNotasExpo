@@ -1,12 +1,14 @@
+// Rutas para la gestión de actividades de usuarios
 import express from "express";
-import userActivityController from "../controllers/userActivityController.js";
+import userActivityController from "../controllers/userActivityController.js"; // Controlador
 
 const router = express.Router();
 
-// Ya no necesitan authenticateToken aquí porque app.js lo aplica globalmente
+// Ruta para obtener usuarios conectados
 router.route("/connected-users")
     .get(userActivityController.getConnectedUsers);
 
+// Ruta para obtener actividades recientes
 router.route("/recent-activities")
     .get(userActivityController.getRecentActivities);
 

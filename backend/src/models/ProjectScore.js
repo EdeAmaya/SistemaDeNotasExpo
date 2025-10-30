@@ -1,7 +1,8 @@
+// Modelo para almacenar las puntuaciones y evaluaciones de los proyectos
 import { Schema, model } from "mongoose";
 
 const projectScoreSchema = new Schema({
-  projectId: {
+  projectId: { // Referencia al proyecto
     type: Schema.Types.ObjectId,
     ref: "Project",
     required: true,
@@ -21,7 +22,7 @@ const projectScoreSchema = new Schema({
       type: Schema.Types.ObjectId,
       ref: "Evaluations"
     },
-    rubricId: {
+    rubricId: { // Rúbrica utilizada
       type: Schema.Types.ObjectId,
       ref: "Rubrics"
     },
@@ -56,14 +57,14 @@ const projectScoreSchema = new Schema({
   }],
   
   // Promedios
-  promedioInterno: {
+  promedioInterno: { // Promedio de evaluaciones internas
     type: Number,
     min: 0,
     max: 10,
     default: 0
   },
   
-  promedioExterno: {
+  promedioExterno: { // Promedio de evaluaciones externas
     type: Number,
     min: 0,
     max: 10,

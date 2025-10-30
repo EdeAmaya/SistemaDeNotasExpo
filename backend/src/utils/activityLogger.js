@@ -1,9 +1,11 @@
-import ActivityLog from "../models/ActivityLog.js";
+// Utilidad para registrar actividades de usuarios
+import ActivityLog from "../models/ActivityLog.js"; // Modelo de registro de actividades
 
 const ActivityLogger = {
     // Registrar actividad
     log: async (userId, action, description, targetModel = null, targetId = null, metadata = {}, req = null) => {
         try {
+            // Crear una nueva entrada de actividad
             const logEntry = new ActivityLog({
                 userId,
                 action,
@@ -17,6 +19,7 @@ const ActivityLogger = {
                 isActive: true
             });
             
+            // Guardar la entrada en la base de datos
             await logEntry.save();
             console.log(`Log registrado: ${description} - Usuario: ${userId}`);
         } catch (error) {
@@ -24,7 +27,7 @@ const ActivityLogger = {
         }
     },
 
-    // ← NUEVO: Registrar heartbeat (señal de vida)
+    // Registrar heartbeat (señal de vida)
     heartbeat: async (userId, isUserActive = true, req = null) => {
         try {
             // Buscar el último heartbeat del usuario
@@ -86,23 +89,23 @@ const ActivityLogger = {
         }
     },
 
-    // ← ACTUALIZADO: Obtener usuarios conectados con estado de presencia
+    // Obtener usuarios conectados con estado de presencia
     getConnectedUsers: async (hoursAgo = 2) => {
         try {
             const timeThreshold = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
             
             const activities = await ActivityLog.aggregate([
                 {
-                    $match: {
+                    $match: { // Filtrar heartbeats recientes
                         lastHeartbeat: { $gte: timeThreshold },
                         action: { $in: ['LOGIN', 'HEARTBEAT'] }
                     }
                 },
                 {
-                    $sort: { lastHeartbeat: -1 }
+                    $sort: { lastHeartbeat: -1 } // Ordenar por último heartbeat
                 },
                 {
-                    $group: {
+                    $group: { // Agrupar por usuario
                         _id: '$userId',
                         lastHeartbeat: { $first: '$lastHeartbeat' },
                         isActive: { $first: '$isActive' },
@@ -110,7 +113,7 @@ const ActivityLogger = {
                     }
                 },
                 {
-                    $lookup: {
+                    $lookup: { // Unir con la colección de usuarios
                         from: 'users',
                         localField: '_id',
                         foreignField: '_id',
@@ -118,16 +121,16 @@ const ActivityLogger = {
                     }
                 },
                 {
-                    $unwind: '$user'
+                    $unwind: '$user' // Desenrollar el arreglo de usuario
                 },
                 {
-                    $match: {
+                    $match: { // Filtrar usuarios verificados y roles específicos
                         'user.isVerified': true,
                         'user.role': { $in: ['Docente', 'Evaluador', 'Estudiante'] }
                     }
                 },
                 {
-                    $project: {
+                    $project: { // Seleccionar campos necesarios
                         user: 1,
                         lastHeartbeat: 1,
                         isActive: 1,
@@ -184,9 +187,10 @@ const ActivityLogger = {
                 };
             }
 
+            // Realizar la agregación
             const activities = await ActivityLog.aggregate([
                 {
-                    $lookup: {
+                    $lookup: { // Unir con la colección de usuarios
                         from: 'users',
                         localField: 'userId',
                         foreignField: '_id',
@@ -194,10 +198,10 @@ const ActivityLogger = {
                     }
                 },
                 {
-                    $unwind: '$user'
+                    $unwind: '$user' // Desenrollar el arreglo de usuario
                 },
                 {
-                    $match: {
+                    $match: { // Aplicar condiciones de filtro
                         ...matchCondition,
                         'user.isVerified': true,
                         'user.role': userRole === 'Admin' 
@@ -206,13 +210,13 @@ const ActivityLogger = {
                     }
                 },
                 {
-                    $sort: { createdAt: -1 }
+                    $sort: { createdAt: -1 } // Ordenar por fecha de creación descendente
                 },
                 {
-                    $limit: limit
+                    $limit: limit // Limitar el número de resultados
                 },
                 {
-                    $project: {
+                    $project: { // Seleccionar campos necesarios
                         _id: 1,
                         action: 1,
                         actionDescription: 1,

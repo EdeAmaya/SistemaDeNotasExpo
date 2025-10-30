@@ -1,6 +1,7 @@
+// Rutas para la gestión de usuarios
 import express from "express";
 import userController from "../controllers/userController.js";
-import { requireAdmin, requireAdminOrDocente, authenticateToken } from "../middlewares/auth.js";
+import { requireAdmin, requireAdminOrDocente, authenticateToken } from "../middlewares/auth.js"; // Middlewares para autenticación y autorización
 
 const router = express.Router();
 

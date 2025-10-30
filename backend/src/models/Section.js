@@ -1,7 +1,8 @@
+// Modelo para gestionar las secciones
 import {Schema, model} from "mongoose";
 
 const sectionSchema = new Schema({
-    sectionName: {
+    sectionName: { // Nombre de la sección
         type: String,
         require: true
     }

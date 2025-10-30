@@ -1,5 +1,5 @@
-import ProjectScore from "../models/ProjectScore.js";
-import Project from "../models/Project.js";
+import ProjectScore from "../models/ProjectScore.js"; // Modelo
+import Project from "../models/Project.js"; // Modelo de proyecto
 
 const projectScoreController = {};
 

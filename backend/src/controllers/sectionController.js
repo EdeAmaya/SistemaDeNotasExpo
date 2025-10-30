@@ -1,16 +1,14 @@
 const sectionController = {};
 
-import sectionModel from "../models/Section.js";
+import sectionModel from "../models/Section.js"; // Modelo
 
-//Select
-
+// Select
 sectionController.getSections = async (req,res) => {
   const sections = await sectionModel.find()
   res.json(sections)
 };
 
-//Insert
-
+// Insert
 sectionController.insertSection = async (req,res) =>{
     const{sectionName} = req.body;
     const newSection = new sectionModel({sectionName})
@@ -18,15 +16,13 @@ sectionController.insertSection = async (req,res) =>{
     res.json({message: "section saved"})
 };
 
-//Delete
-
+// Delete
 sectionController.deleteSection = async(req,res) =>{
     await sectionModel.findByIdAndDelete(req.params.id);
     res.json({message: "section deleted"})
 };
 
-//Update
-
+// Update
 sectionController.updateSection = async(req,res) =>{
     const {sectionName} = req.body;
     const updateSection = await sectionModel.findByIdAndUpdate(req.params.id,{sectionName},{new: true})

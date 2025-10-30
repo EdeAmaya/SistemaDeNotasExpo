@@ -1,5 +1,6 @@
-import ActivityLogger from "../utils/activityLogger.js";
+import ActivityLogger from "../utils/activityLogger.js"; // Importar el logger de actividad
 
+// Controlador de heartbeat
 const heartbeatController = {};
 
 // Recibir heartbeat del cliente

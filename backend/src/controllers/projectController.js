@@ -1,36 +1,39 @@
 const projectController = {};
 
-import projectModel from "../models/Project.js";
-import studentModel from "../models/Student.js";
-import ActivityLogger from "../utils/activityLogger.js";
+import projectModel from "../models/Project.js"; // Modelo
+import studentModel from "../models/Student.js"; // Modelo de estudiante
+import ActivityLogger from "../utils/activityLogger.js"; // Importar el logger de actividad
 
-//Select - Con filtrado según rol del usuario
+// Select - Con filtrado según rol del usuario
 projectController.getProjects = async (req, res) => {
   try {
+    // Obtener el usuario desde la solicitud
     const user = req.user;
     
     let query = {};
 
+    // Filtrado según rol
     if (user.role === 'Docente' || user.role === 'Evaluador') {
       query = {
-        idLevel: user.idLevel
+        idLevel: user.idLevel // Filtrar por el nivel asignado al docente/evaluador
       };
 
       if (user.idSpecialty) {
-        query.selectedSpecialty = user.idSpecialty;
+        query.selectedSpecialty = user.idSpecialty; // Filtrar por la especialidad asignada
       }
 
       if (user.idSection) {
-        query.idSection = user.idSection;
+        query.idSection = user.idSection; // Filtrar por la sección asignada
       }
     }
 
     if (user.role === 'Estudiante') {
       query = {
-        assignedStudents: user._id
+        assignedStudents: user._id // Mostrar solo el proyecto asignado al estudiante
       };
     }
 
+    // Consulta a la base de datos
     const projects = await projectModel.find(query)
       .populate("idLevel")
       .populate("idSection")
@@ -48,7 +51,7 @@ projectController.getProjects = async (req, res) => {
   }
 };
 
-//Insert
+// Insert
 projectController.insertProject = async (req,res) => {
   try {
     const {
@@ -63,7 +66,7 @@ projectController.insertProject = async (req,res) => {
       assignedStudents
     } = req.body;
 
-    if (!teamNumber || teamNumber < 1) {
+    if (!teamNumber || teamNumber < 1) { // Validar teamNumber
       return res.status(400).json({
         error: "INVALID_TEAM_NUMBER",
         message: "El número de equipo es requerido y debe ser mayor a 0"
@@ -71,7 +74,7 @@ projectController.insertProject = async (req,res) => {
     }
 
     const existingProject = await projectModel.findOne({ 
-      projectId: projectId.trim() 
+      projectId: projectId.trim() // Verificar duplicados
     });
     
     if (existingProject) {
@@ -81,6 +84,7 @@ projectController.insertProject = async (req,res) => {
       });
     }
 
+    // Crear nuevo proyecto
     const newProject = new projectModel({
       projectId: projectId.trim(), 
       projectName: projectName.trim(), 
@@ -93,6 +97,7 @@ projectController.insertProject = async (req,res) => {
       assignedStudents: assignedStudents || []
     });
 
+    // Guardar el proyecto
     const savedProject = await newProject.save();
     
     // Actualizar el projectId en los estudiantes asignados
@@ -103,6 +108,7 @@ projectController.insertProject = async (req,res) => {
       );
     }
     
+    // Registrar la actividad
     await ActivityLogger.log(
       req.user._id,
       'CREATE_PROJECT',
@@ -121,6 +127,7 @@ projectController.insertProject = async (req,res) => {
   } catch (error) {
     console.error("Error al insertar proyecto:", error);
     
+    // Manejo de errores específicos
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         error: "VALIDATION_ERROR",
@@ -144,7 +151,7 @@ projectController.insertProject = async (req,res) => {
   }
 };
 
-//Delete
+// Delete
 projectController.deleteProject = async(req,res) => {
   try {
     const deletedProject = await projectModel.findByIdAndDelete(req.params.id);
@@ -164,6 +171,7 @@ projectController.deleteProject = async(req,res) => {
       );
     }
     
+    // Registrar la actividad
     await ActivityLogger.log(
       req.user._id,
       'DELETE_PROJECT',
@@ -188,7 +196,7 @@ projectController.deleteProject = async(req,res) => {
   }
 };
 
-//Update
+// Update
 projectController.updateProject = async(req,res) => {
   try {
     const {
@@ -210,6 +218,7 @@ projectController.updateProject = async(req,res) => {
       });
     }
 
+    // Verificar si el proyecto existe
     const existingProject = await projectModel.findById(req.params.id);
     if (!existingProject) {
       return res.status(404).json({
@@ -218,11 +227,13 @@ projectController.updateProject = async(req,res) => {
       });
     }
 
+    // Verificar duplicados de projectId en otros proyectos
     const duplicateProject = await projectModel.findOne({ 
       projectId: projectId.trim(),
       _id: { $ne: req.params.id }
     });
     
+    // Si hay un duplicado, retornar error
     if (duplicateProject) {
       return res.status(400).json({
         error: "DUPLICATE_PROJECT_ID",
@@ -256,6 +267,7 @@ projectController.updateProject = async(req,res) => {
       );
     }
 
+    // Actualizar el proyecto
     const updatedProject = await projectModel.findByIdAndUpdate(
       req.params.id,
       {
@@ -275,6 +287,7 @@ projectController.updateProject = async(req,res) => {
       }
     );
 
+    // Registrar la actividad
     await ActivityLogger.log(
       req.user._id,
       'UPDATE_PROJECT',
@@ -293,6 +306,7 @@ projectController.updateProject = async(req,res) => {
   } catch (error) {
     console.error("Error al actualizar proyecto:", error);
     
+    // Manejo de errores específicos
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         error: "VALIDATION_ERROR",

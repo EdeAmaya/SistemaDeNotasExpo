@@ -1,3 +1,4 @@
+// Archivo principal del servidor
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -34,6 +35,7 @@ const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
     
+    // Lista de orígenes permitidos
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:3000',
@@ -42,6 +44,7 @@ const corsOptions = {
       'https://sistema-de-notas-expo.vercel.app'
     ];
     
+    // Verificar si el origen está en la lista permitida
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -49,8 +52,8 @@ const corsOptions = {
       callback(new Error('No permitido por CORS'));
     }
   },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true, // Permitir cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Métodos permitidos
   allowedHeaders: [
     'Origin',
     'X-Requested-With', 
@@ -63,6 +66,7 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
+// Middlewares
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
@@ -92,6 +96,7 @@ app.get("/api/test", (req, res) => {
   });
 });
 
+// Ruta para verificar si el usuario está autenticado
 app.get("/api/auth/verify", authenticateToken, (req, res) => {
   res.json({
     authenticated: true,
@@ -141,6 +146,7 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Ruta para manejar rutas no encontradas
 app.use("*", (req, res) => {
   res.status(404).json({ 
     message: "Ruta no encontrada",

@@ -1,6 +1,6 @@
 const stageController = {};
 
-import stageModel from "../models/Stage.js";
+import stageModel from "../models/Stage.js"; // Modelo
 
 // Select - Obtener todas las etapas
 stageController.getStages = async (req, res) => {
@@ -40,16 +40,12 @@ stageController.getCurrentStage = async (req, res) => {
   try {
     const now = new Date();
     
-    console.log('🔍 Buscando etapa actual. Fecha actual:', now.toISOString());
-    
     // Buscar etapa que esté dentro del rango de fechas y activa
     const currentStage = await stageModel.findOne({
       startDate: { $lte: now },
       endDate: { $gte: now },
       isActive: true
     }).sort({ order: 1 });
-
-    console.log('📊 Etapa encontrada:', currentStage ? currentStage.name : 'ninguna');
 
     // Si no hay etapa activa, retornar respuesta exitosa con null
     if (!currentStage) {
@@ -58,7 +54,6 @@ stageController.getCurrentStage = async (req, res) => {
       const lastStage = allStages[0];
       
       if (lastStage && now > lastStage.endDate) {
-        console.log('✅ Todas las etapas completadas');
         return res.status(200).json({ 
           message: "Todas las etapas han sido completadas",
           currentStage: null,
@@ -66,7 +61,6 @@ stageController.getCurrentStage = async (req, res) => {
         });
       }
       
-      console.log('ℹ️ No hay etapa activa en este momento');
       return res.status(200).json({ 
         message: "No hay etapa activa en este momento",
         currentStage: null,
@@ -74,10 +68,9 @@ stageController.getCurrentStage = async (req, res) => {
       });
     }
 
-    console.log('✅ Retornando etapa actual:', currentStage.name);
     res.json(currentStage);
   } catch (error) {
-    console.error('❌ Error al obtener etapa actual:', error);
+    console.error('Error al obtener etapa actual:', error);
     res.status(500).json({ 
       message: "Error al obtener etapa actual", 
       error: error.message 
@@ -147,6 +140,7 @@ stageController.insertStage = async (req, res) => {
       });
     }
 
+    // Crear y guardar nueva etapa
     const newStage = new stageModel({
       percentage: percentage.trim(),
       startDate: start,
@@ -167,6 +161,7 @@ stageController.insertStage = async (req, res) => {
   } catch (error) {
     console.error("Error al insertar etapa:", error);
     
+    // Manejo de errores específicos
     if (error.name === 'ValidationError') {
       const errorMessages = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({ 
@@ -195,6 +190,7 @@ stageController.deleteStage = async (req, res) => {
   try {
     const deletedStage = await stageModel.findByIdAndDelete(req.params.id);
     
+    // Verificar si la etapa existía
     if (!deletedStage) {
       return res.status(404).json({
         error: "STAGE_NOT_FOUND",
@@ -244,7 +240,8 @@ stageController.updateStage = async (req, res) => {
         order: parseInt(order),
         _id: { $ne: req.params.id }
       });
-      
+
+      // Verificar si ya existe una etapa con el mismo orden
       if (duplicateOrder) {
         return res.status(400).json({
           error: "DUPLICATE_ORDER",
@@ -293,9 +290,11 @@ stageController.updateStage = async (req, res) => {
       });
     }
 
+    // Actualizar etapa
     const updatedStage = await stageModel.findByIdAndUpdate(
       req.params.id,
       {
+        // Actualizar solo los campos proporcionados
         percentage: percentage ? percentage.trim() : existingStage.percentage,
         startDate: startDate ? new Date(startDate) : existingStage.startDate,
         endDate: endDate ? new Date(endDate) : existingStage.endDate,
@@ -318,6 +317,7 @@ stageController.updateStage = async (req, res) => {
   } catch (error) {
     console.error("Error al actualizar etapa:", error);
     
+    // Manejo de errores específicos
     if (error.name === 'ValidationError') {
       const errorMessages = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({ 
@@ -325,7 +325,8 @@ stageController.updateStage = async (req, res) => {
         message: "Error de validación: " + errorMessages.join(', ') 
       });
     }
-    
+
+    //  Manejo de error de duplicado
     if (error.code === 11000) {
       return res.status(400).json({
         error: "DUPLICATE_ERROR",
