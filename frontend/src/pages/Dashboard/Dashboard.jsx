@@ -1,3 +1,4 @@
+// Componente principal del Dashboard
 import React, { useState, useEffect } from 'react';
 import { Settings, X, Calendar, Save, CalendarDays, User, Clock, TrendingUp, FileText, Users, FolderOpen } from 'lucide-react';
 import useStages from '../../hooks/useStages';
@@ -10,16 +11,17 @@ import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   useEffect(() => {
-    document.title = "Inicio | STC";
+    document.title = "Inicio | STC"; // Establecer el título de la página
   }, []);
 
   const navigate = useNavigate();
 
-  const { user, fetchWithCookies, API } = useAuth();
-  const currentUser = user.name;
-  const { stages, calculateProgress, fetchStages, loading: stagesLoading } = useStages();
-  const currentProgress = calculateProgress();
+  const { user, fetchWithCookies, API } = useAuth(); // Obtener usuario y funciones del contexto de autenticación
+  const currentUser = user.name; // Nombre del usuario actual
+  const { stages, calculateProgress, fetchStages, loading: stagesLoading } = useStages(); // Hook personalizado para etapas del proyecto
+  const currentProgress = calculateProgress(); // Calcular el progreso actual basado en las etapas
 
+  // Hooks para usuarios conectados y actividades recientes
   const {
     connectedUsers,
     loading: usersLoading,
@@ -27,10 +29,13 @@ const Dashboard = () => {
     getPresenceInfo
   } = useConnectedUsers();
 
+  // Hook para actividades recientes
   const { recentActivities, loading: activitiesLoading, formatTimeAgo: formatActivityTime } = useRecentActivities();
 
+  // Hook para presencia de usuarios
   usePresence();
 
+  // Estado para el modal de configuración de etapas
   const [showStageModal, setShowStageModal] = useState(false);
   const [selectedStage, setSelectedStage] = useState(null);
   const [editingStage, setEditingStage] = useState(null);
@@ -48,6 +53,7 @@ const Dashboard = () => {
           fetchWithCookies(`${API}/students`)
         ]);
 
+        // Verificar respuestas
         const projects = await projectsRes.json();
         const students = await studentsRes.json();
 
@@ -66,6 +72,7 @@ const Dashboard = () => {
     fetchStats();
   }, [API, fetchWithCookies]);
 
+  // Funciones auxiliares
   const getCurrentGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Buenos días";
@@ -73,6 +80,7 @@ const Dashboard = () => {
     return "Buenas noches";
   };
 
+  // Obtener la fecha y hora actual formateada
   const getCurrentDate = () => {
     const options = {
       weekday: 'long',
@@ -83,6 +91,7 @@ const Dashboard = () => {
     return new Date().toLocaleDateString('es-ES', options);
   };
 
+  // Obtener la hora actual formateada
   const getCurrentTime = () => {
     return new Date().toLocaleTimeString('es-ES', {
       hour: '2-digit',
@@ -90,6 +99,7 @@ const Dashboard = () => {
     });
   };
 
+  // Funciones para iconos y colores según rol de usuario
   const getRoleIcon = (role) => {
     switch (role) {
       case 'Docente': return '●';
@@ -99,6 +109,7 @@ const Dashboard = () => {
     }
   };
 
+  // Obtener color según rol de usuario
   const getRoleColor = (role) => {
     switch (role) {
       case 'Docente': return 'text-emerald-600';
@@ -108,21 +119,25 @@ const Dashboard = () => {
     }
   };
 
+  // Manejo del modal de etapas
   const handleOpenModal = () => {
     setSelectedStage(null);
     setEditingStage(null);
     setShowStageModal(true);
   };
 
+  // Seleccionar etapa para editar
   const handleSelectStage = (stage) => {
     setSelectedStage(stage);
     setEditingStage({ ...stage });
   };
 
+  // Manejo de cambios en las fechas
   const handleDateChange = (field, value) => {
     setEditingStage(prev => ({ ...prev, [field]: value }));
   };
 
+  // Guardar cambios en la etapa
   const handleSaveStage = async () => {
     try {
       if (!editingStage.startDate || !editingStage.endDate) {
@@ -130,29 +145,37 @@ const Dashboard = () => {
         return;
       }
 
+      // Validar solapamiento de fechas con otras etapas
       const startDateOnly = editingStage.startDate.includes('T')
         ? editingStage.startDate.split('T')[0]
         : editingStage.startDate;
+      
+      // Asegurarse de que las fechas se comparen correctamente  
       const endDateOnly = editingStage.endDate.includes('T')
         ? editingStage.endDate.split('T')[0]
         : editingStage.endDate;
 
+        // Convertir a objetos Date para comparación
       const start = new Date(startDateOnly + 'T00:00:00');
       const end = new Date(endDateOnly + 'T00:00:00');
 
+      // Verificar que la fecha de fin sea posterior a la de inicio
       if (end <= start) {
         toast.error('La fecha de fin debe ser posterior a la fecha de inicio.');
         return;
       }
 
+      // Verificar solapamiento con otras etapas
       const otherStages = stages.filter(s => s._id !== editingStage._id);
 
+      // Comprobar solapamientos
       for (const otherStage of otherStages) {
         const otherStartOnly = otherStage.startDate.split('T')[0];
         const otherEndOnly = otherStage.endDate.split('T')[0];
         const otherStart = new Date(otherStartOnly + 'T00:00:00');
         const otherEnd = new Date(otherEndOnly + 'T00:00:00');
 
+        // Comprobar si hay solapamiento
         const hasOverlap = (
           (start >= otherStart && start <= otherEnd) ||
           (end >= otherStart && end <= otherEnd) ||
@@ -161,6 +184,7 @@ const Dashboard = () => {
           (end.getTime() === otherEnd.getTime())
         );
 
+        // Mostrar mensaje de error si hay solapamiento
         if (hasOverlap) {
           toast.error(
             `Las fechas se solapan con la etapa "${otherStage.name}". ` +
@@ -172,6 +196,7 @@ const Dashboard = () => {
 
       toast.loading('Actualizando etapa...', { id: 'saving-stage' });
 
+      // Convertir fechas a formato ISO completo
       const startDateISO = `${editingStage.startDate}T00:00:00.000Z`;
       const endDateISO = `${editingStage.endDate}T23:59:59.999Z`;
 
@@ -204,6 +229,7 @@ const Dashboard = () => {
     }
   };
 
+  // Formatear fecha para mostrar en el modal
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
@@ -213,11 +239,13 @@ const Dashboard = () => {
     });
   };
 
+  // Obtener valor de fecha sin hora
   const getDateValue = (dateString) => {
     const dateOnly = dateString.split('T')[0];
     return dateOnly;
   };
 
+  // Definir acciones rápidas
   const actions = [
     {
       id: 1,
@@ -246,6 +274,7 @@ const Dashboard = () => {
     <div className="h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-y-auto pt-16">
       <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl mx-auto">
 
+        {/* Saludo y hora actual */}
         <div className="mb-8 bg-gradient-to-br from-slate-50 to-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-slate-100 text-slate-700">
@@ -253,7 +282,7 @@ const Dashboard = () => {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-semibold text-slate-800">
-                {getCurrentGreeting()},{" "}
+                {getCurrentGreeting()},{" "} 
                 <span className="font-bold text-blue-600">{currentUser}</span>
               </h1>
               <div className="flex items-center gap-2 text-slate-500 mt-1">
@@ -271,6 +300,7 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Sección de progreso del proyecto */}
         <div className="mb-8 bg-white rounded-2xl shadow-md border border-slate-200 p-6 relative overflow-hidden flex flex-col lg:flex-row gap-32">
           <div className="flex-1 flex flex-col justify-center">
             <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-3">
@@ -282,8 +312,9 @@ const Dashboard = () => {
           </div>
 
           <div className="relative w-44 h-44 sm:w-52 sm:h-52 lg:w-60 lg:h-60 flex-shrink-0">
+            {/* Abrir modal de configuración */}
             <button
-              onClick={handleOpenModal}
+              onClick={handleOpenModal} 
               className="cursor-pointer absolute top-2 right-2 p-4 rounded-full bg-white shadow-lg hover:bg-blue-50 active:scale-95 transition-all z-10 flex items-center justify-center"
               title="Configurar fechas de etapas"
             >
@@ -348,7 +379,7 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-
+          {/* Actividad Reciente */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
               Actividad Reciente
@@ -399,6 +430,7 @@ const Dashboard = () => {
             )}
           </div>
 
+          {/* Usuarios Conectados y Estadísticas */}
           <div className="space-y-3 sm:space-y-4">
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
               <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">
@@ -483,7 +515,7 @@ const Dashboard = () => {
               )}
             </div>
 
-            {/* Card de Proyectos Activos - Mejorada */}
+            {/* Card de Proyectos Activos */}
             <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl shadow-lg p-6 text-white group hover:shadow-xl transition-all duration-300">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-500"></div>
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full -ml-12 -mb-12 group-hover:scale-110 transition-transform duration-500"></div>
@@ -514,7 +546,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Card de Estudiantes - Mejorada */}
+            {/* Card de Estudiantes */}
             <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-600 rounded-xl shadow-lg p-6 text-white group hover:shadow-xl transition-all duration-300">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-500"></div>
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full -ml-12 -mb-12 group-hover:scale-110 transition-transform duration-500"></div>
@@ -578,6 +610,7 @@ const Dashboard = () => {
 
       </div>
 
+      {/* Modal de selección de etapa */}
       {showStageModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">

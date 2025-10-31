@@ -1,4 +1,4 @@
-// frontend/src/pages/Calendar/components/CalendarGrid.jsx
+// Componente de la cuadrícula del calendario
 import React from 'react';
 
 const CalendarGrid = ({ currentDate, events, onDateClick, onEventClick, isAdmin }) => {
@@ -69,6 +69,7 @@ const CalendarGrid = ({ currentDate, events, onDateClick, onEventClick, isAdmin 
     });
   };
 
+  // Generar días del calendario
   const calendarDays = generateCalendarDays();
   const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 

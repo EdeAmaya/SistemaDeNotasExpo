@@ -1,3 +1,4 @@
+// Página de inicio de sesión
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -5,25 +6,29 @@ import toast from 'react-hot-toast';
 
 const Login = () => {
   useEffect(() => {
-    document.title = "Iniciar Sesión | STC";
+    document.title = "Iniciar Sesión | STC"; // Establecer título de la página
   }, []);
 
+  // Estado del formulario
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
-  const { login, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false); // Estado de carga
+  const [showPassword, setShowPassword] = useState(false); // Estado para mostrar/ocultar contraseña
 
+  const { login, isAuthenticated } = useAuth(); // Contexto de autenticación
+  const navigate = useNavigate(); // Hook de navegación
+
+  // Redirigir si ya está autenticado
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
 
+  // Manejo de cambios en el formulario
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -31,6 +36,7 @@ const Login = () => {
     });
   };
 
+  // Manejo del envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
 

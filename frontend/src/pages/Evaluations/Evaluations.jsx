@@ -1,3 +1,4 @@
+// Página principal para la gestión de rúbricas y evaluaciones
 import React, { useState, useEffect } from 'react';
 import { CheckSquare, Plus, BookOpen, ClipboardList, Award, Layers, Info, FileText } from 'lucide-react';
 import ListRubrics from './components/ListRubrics';
@@ -11,9 +12,11 @@ const Evaluations = () => {
     document.title = "Evaluaciones | STC";
   }, []);
 
+  // Contexto de autenticación
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('list');
+  const [activeTab, setActiveTab] = useState('list'); // Pestaña activa: 'list' o 'register'
 
+  // Hook personalizado para manejar datos de rúbricas
   const {
     rubrics,
     loading,
@@ -57,6 +60,7 @@ const Evaluations = () => {
     getRubrics();
   }, [getRubrics]);
 
+  // Manejar cambio de pestaña
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     if (tab === 'list') {
@@ -64,6 +68,7 @@ const Evaluations = () => {
     }
   };
 
+  // Limpiar formulario
   const clearForm = () => {
     setFormData({
       id: null,
@@ -77,6 +82,7 @@ const Evaluations = () => {
     });
   };
 
+  // Manejar edición de rúbrica
   const handleEdit = (rubric) => {
     setFormData({
       id: rubric._id,
@@ -91,6 +97,7 @@ const Evaluations = () => {
     setActiveTab('register');
   };
 
+  // Manejar guardado de rúbrica (crear o actualizar)
   const handleSave = async (rubricData) => {
     try {
       if (formData.id) {
@@ -106,6 +113,7 @@ const Evaluations = () => {
     }
   };
 
+  // Manejar eliminación de rúbrica
   const handleDelete = async (id) => {
     try {
       await deleteRubric(id);
@@ -115,6 +123,7 @@ const Evaluations = () => {
     }
   };
 
+  // Manejar cancelación de edición
   const handleCancelEdit = () => {
     clearForm();
     setActiveTab('list');
@@ -152,31 +161,6 @@ const Evaluations = () => {
                 </h1>
               </div>
             </div>
-
-            {/* Stats desktop 
-            <div className="hidden lg:flex items-center gap-4">
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white px-4 py-3 rounded-xl shadow-lg">
-                <div className="flex items-center justify-center mb-1">
-                  <ClipboardList className="w-5 h-5" />
-                </div>
-                <div className="text-2xl font-black text-center">{stats.total}</div>
-                <div className="text-xs font-semibold opacity-90 text-center">Total Rúbricas</div>
-              </div>
-              <div className="bg-gradient-to-br from-blue-400 to-blue-500 text-white px-4 py-3 rounded-xl shadow-lg">
-                <div className="flex items-center justify-center mb-1">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div className="text-2xl font-black text-center">{stats.totalCriteria}</div>
-                <div className="text-xs font-semibold opacity-90 text-center">Criterios</div>
-              </div>
-              <div className="bg-gradient-to-br from-green-400 to-green-500 text-white px-4 py-3 rounded-xl shadow-lg">
-                <div className="flex items-center justify-center mb-1">
-                  <Award className="w-5 h-5" />
-                </div>
-                <div className="text-2xl font-black text-center">{stats.withSpecialty}</div>
-                <div className="text-xs font-semibold opacity-90 text-center">Especialidad</div>
-              </div>
-            </div>*/}
           </div>
         </div>
       </div>
@@ -225,26 +209,6 @@ const Evaluations = () => {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-8 py-8">
-
-        {/* Stats móvil 
-        <div className="lg:hidden grid grid-cols-3 gap-3 mb-6">
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-3 rounded-xl shadow-lg text-center">
-            <ClipboardList className="w-5 h-5 mx-auto mb-1" />
-            <div className="text-xl font-black">{stats.total}</div>
-            <div className="text-xs font-semibold opacity-90">Rúbricas</div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-400 to-blue-500 text-white p-3 rounded-xl shadow-lg text-center">
-            <FileText className="w-5 h-5 mx-auto mb-1" />
-            <div className="text-xl font-black">{stats.totalCriteria}</div>
-            <div className="text-xs font-semibold opacity-90">Criterios</div>
-          </div>
-          <div className="bg-gradient-to-br from-green-400 to-green-500 text-white p-3 rounded-xl shadow-lg text-center">
-            <Award className="w-5 h-5 mx-auto mb-1" />
-            <div className="text-xl font-black">{stats.withSpecialty}</div>
-            <div className="text-xs font-semibold opacity-90">Especial.</div>
-          </div>
-        </div>*/}
-
         {/* Mensaje de error */}
         {error && (
           <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">

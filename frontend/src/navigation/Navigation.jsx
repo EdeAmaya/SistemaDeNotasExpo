@@ -1,4 +1,4 @@
-// frontend/src/navigation/Navigation.jsx
+// Componente de navegación principal
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 
@@ -12,7 +12,7 @@ import Students from "../pages/Students/Students";
 import Projects from "../pages/Projects/Projects";
 import Evaluations from "../pages/Evaluations/Evaluations";
 import Grades from "../pages/Grades/Grades";
-import Calendar from "../pages/Calendar/Calendar"; // ← NUEVA IMPORTACIÓN
+import Calendar from "../pages/Calendar/Calendar";
 import Login from "../pages/Login/Login";
 
 // Navegación

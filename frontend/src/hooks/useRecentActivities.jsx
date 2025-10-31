@@ -1,5 +1,6 @@
+// Hook personalizado para obtener y gestionar actividades recientes del usuario
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext'; // Importar el hook de autenticación
 
 const useRecentActivities = () => {
   const [recentActivities, setRecentActivities] = useState([]);
@@ -12,12 +13,14 @@ const useRecentActivities = () => {
     try {
       setLoading(true);
       
+      // Llamar al endpoint del backend para obtener actividades recientes
       const response = await fetchWithCookies(`${API}/user-activities/recent-activities?limit=10`);
       
       if (!response.ok) {
         throw new Error('Error al obtener actividades recientes');
       }
       
+      // Parsear la respuesta JSON
       const activities = await response.json();
       setRecentActivities(activities);
       
@@ -45,6 +48,7 @@ const useRecentActivities = () => {
     return 'Hace más de 1 semana';
   };
 
+  // Obtener actividades al montar el hook
   useEffect(() => {
     fetchRecentActivities();
     
@@ -54,6 +58,7 @@ const useRecentActivities = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Retornar datos y funciones del hook
   return {
     recentActivities,
     loading,

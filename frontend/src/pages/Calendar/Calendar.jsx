@@ -1,3 +1,4 @@
+// Componente principal de la página de calendario
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, List, Grid3x3 } from 'lucide-react';
 import CalendarGrid from './components/CalendarGrid';
@@ -14,6 +15,7 @@ const Calendar = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
 
+  // Usar el hook personalizado para manejar eventos
   const {
     events,
     loading,
@@ -23,21 +25,24 @@ const Calendar = () => {
     getOccupiedDates
   } = useEvents();
 
+  // Estado local
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState('calendar'); // 'calendar' o 'list'
-  const [showEventModal, setShowEventModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [editingEvent, setEditingEvent] = useState(null);
+  const [showEventModal, setShowEventModal] = useState(false); // Mostrar/ocultar modal de evento
+  const [selectedDate, setSelectedDate] = useState(null); // Fecha seleccionada para crear evento
+  const [editingEvent, setEditingEvent] = useState(null); // Evento que se está editando
 
   // Navegación de meses
   const goToPreviousMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
 
+  // Navegar al mes siguiente
   const goToNextMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
+  // Navegar al mes actual
   const goToToday = () => {
     setCurrentDate(new Date());
   };
@@ -50,12 +55,14 @@ const Calendar = () => {
     setShowEventModal(true);
   };
 
+  // Manejar clic en evento para editar
   const handleEventClick = (event) => {
     setEditingEvent(event);
     setSelectedDate(new Date(event.startDate));
     setShowEventModal(true);
   };
 
+  // Guardar evento (crear o actualizar)
   const handleSaveEvent = async (eventData) => {
     if (editingEvent) {
       const result = await updateEvent(editingEvent._id, eventData);
@@ -71,16 +78,28 @@ const Calendar = () => {
     }
   };
 
+  // Eliminar evento
   const handleDeleteEvent = async (eventId) => {
-    if (window.confirm('¿Estás seguro de eliminar este evento?')) {
+    try {
+      // Función
       const result = await deleteEvent(eventId);
+
       if (result.success) {
+        // Cierra modal de edición si estaba abierto
         setShowEventModal(false);
         setEditingEvent(null);
+
+        // Lista eventos localmente
+        setEvents(prevEvents => prevEvents.filter(e => e._id !== eventId));
+      } else {
+        console.error('No se pudo eliminar el evento:', result.message);
       }
+    } catch (error) {
+      console.error('Error al eliminar el evento:', error);
     }
   };
 
+  // Cerrar modal de evento
   const handleCloseModal = () => {
     setShowEventModal(false);
     setEditingEvent(null);
@@ -93,6 +112,7 @@ const Calendar = () => {
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ];
 
+  // Mes y año actuales
   const currentMonth = monthNames[currentDate.getMonth()];
   const currentYear = currentDate.getFullYear();
 
@@ -107,6 +127,7 @@ const Calendar = () => {
     past: events.filter(e => new Date(e.endDate) < new Date()).length
   };
 
+  // Renderizar componente
   return (
     <div className="min-h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
 
@@ -174,8 +195,8 @@ const Calendar = () => {
                 <button
                   onClick={() => setViewMode('calendar')}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-md font-semibold text-xs sm:text-sm transition-all ${viewMode === 'calendar'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
                     }`}
                 >
                   <Grid3x3 className="w-4 h-4" />
@@ -184,8 +205,8 @@ const Calendar = () => {
                 <button
                   onClick={() => setViewMode('list')}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-md font-semibold text-xs sm:text-sm transition-all ${viewMode === 'list'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
                     }`}
                 >
                   <List className="w-4 h-4" />
@@ -228,7 +249,7 @@ const Calendar = () => {
           </div>
         ) : (
           <>
-            {viewMode === 'calendar' ? (
+            {viewMode === 'calendar' ? ( // Mostrar vista de calendario
               <CalendarGrid
                 currentDate={currentDate}
                 events={events}
@@ -237,7 +258,7 @@ const Calendar = () => {
                 isAdmin={isAdmin}
               />
             ) : (
-              <EventsList
+              <EventsList // Mostrar vista de lista
                 events={events}
                 onEventClick={handleEventClick}
                 onDeleteEvent={handleDeleteEvent}

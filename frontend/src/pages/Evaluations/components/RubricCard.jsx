@@ -1,3 +1,4 @@
+// Componente para mostrar una tarjeta de rúbrica en vista de lista o cuadrícula
 import React from "react";
 import { ClipboardList, Award, Calendar, Edit2, Trash2, FileText, CheckCircle, Layers, GraduationCap, Target, Download } from 'lucide-react';
 import { generateRubricPDF } from '../hooks/generateRubricPDF'; // Función para generar el PDF
@@ -27,33 +28,39 @@ const RubricCard = ({ rubric, deleteRubric, updateRubric, viewMode = 'list', ins
     return stage.stageName || stage.name || 'Etapa no definida';
   };
 
+  // Obtiene el nombre de la especialidad
   const getSpecialtyName = (specialty) => {
     if (!specialty) return null;
     return specialty.specialtyName || specialty.name || 'Especialidad no definida';
   };
 
+  // Obtiene el nombre del nivel
   const getLevelName = (level) => {
     if (level === 1) return 'Tercer Ciclo';
     if (level === 2) return 'Bachillerato';
     return 'Nivel no definido';
   };
 
+  // Obtiene el nombre del tipo de rúbrica
   const getRubricTypeName = (type) => {
     if (type === 1) return 'Escala Estimativa';
     if (type === 2) return 'Rúbrica';
     return 'Tipo no definido';
   };
 
+  // Cuenta de criterios
   const getCriteriaCount = () => {
     return rubric.criteria?.length || 0;
   };
 
+  // Colores e íconos según el tipo de rúbrica
   const getRubricTypeColor = (type) => {
     if (type === 1) return 'bg-purple-600';
     if (type === 2) return 'bg-purple-600';
     return 'from-gray-500 via-gray-600 to-gray-700';
   };
 
+  // Ícono según el tipo de rúbrica
   const getRubricTypeIcon = (type) => {
     if (type === 1) return <Target className="w-3 h-3" />;
     if (type === 2) return <CheckCircle className="w-3 h-3" />;

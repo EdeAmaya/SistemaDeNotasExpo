@@ -1,3 +1,4 @@
+// Hook para generar un PDF de la rúbrica utilizando jsPDF y jsPDF-AutoTable
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -7,12 +8,14 @@ const getStageName = (stage) => {
   return stage.stageName || stage.name || 'Etapa no definida';
 };
 
+// Obtiene el nombre del nivel
 const getLevelName = (level) => {
   if (level === 1) return 'Tercer Ciclo';
   if (level === 2) return 'Bachillerato';
   return 'Nivel no definido';
 };
 
+// Obtiene el nombre específico del nivel (para Bachillerato)
 const getSpecificLevel = (level) => {
   if (!level) return null;
   let levelName = level.levelName || level.name || 'Especialidad no definida';
@@ -20,6 +23,7 @@ const getSpecificLevel = (level) => {
   return levelName || 'Especialidad no definida';
 };
 
+// Función principal para generar el PDF de la rúbrica
 export const generateRubricPDF = (rubric, institutionInfo = {}) => {
   try {
     const doc = new jsPDF('p', 'mm', 'letter');
@@ -77,6 +81,7 @@ export const generateRubricPDF = (rubric, institutionInfo = {}) => {
         : specialtyName;
     }
 
+    // Texto de nivel y especialidad centrado
     const levelSpecialtyText = levelName;
 
     doc.setFillColor(229, 231, 235);
@@ -97,6 +102,7 @@ export const generateRubricPDF = (rubric, institutionInfo = {}) => {
       3: tableWidth - 30 - 25 - 0.5 * (tableWidth - 30 - 25 - 50)
     };
 
+    // Datos de la tabla
     const tableData = [
       [
         { content: 'PROYECTO:', styles: { fillColor: [229, 231, 235], fontStyle: 'bold' } },
@@ -116,6 +122,7 @@ export const generateRubricPDF = (rubric, institutionInfo = {}) => {
       ]
     ];
 
+    // Generar la tabla
     autoTable(doc, {
       startY: yPos,
       head: [],
@@ -147,10 +154,12 @@ export const generateRubricPDF = (rubric, institutionInfo = {}) => {
       doc.text('ESCALA DE REFERENCIA:', margin, yPos);
       yPos += 5;
 
+      // Datos de la escala
       const scaleData = [
         ['No se verifica\n0', 'Regular\n1-4', 'Bueno\n5-6', 'Muy Bueno\n7-8', 'Excelente\n9-10']
       ];
 
+      // Generar la tabla de escala
       autoTable(doc, {
         startY: yPos,
         head: [],
@@ -193,6 +202,7 @@ export const generateRubricPDF = (rubric, institutionInfo = {}) => {
         ''
       ]);
 
+      // Generar la tabla de criterios
       autoTable(doc, {
         startY: yPos,
         head: criteriaHead,
@@ -229,6 +239,7 @@ export const generateRubricPDF = (rubric, institutionInfo = {}) => {
         ''
       ]);
 
+      // Generar la tabla de criterios
       autoTable(doc, {
         startY: yPos,
         head: criteriaHead,
@@ -259,8 +270,7 @@ export const generateRubricPDF = (rubric, institutionInfo = {}) => {
       });
 
     } else if (rubric.scaleType === 3) {
-      // Desempeño por criterios - FORMATO CON COLUMNAS
-      
+      // Desempeño por criterios      
       // Verificar si algún criterio tiene weight con value 2
       const hasDeficiente = rubric.criteria.some(criterion => {
         const weights = criterion.weights || [];
@@ -282,6 +292,7 @@ export const generateRubricPDF = (rubric, institutionInfo = {}) => {
         const weight4 = weights.find(w => w.value === 4);
         const weight2 = weights.find(w => w.value === 2);
 
+        // Fila para el criterio actual
         const row = [
           `${criterion.criterionName.toUpperCase()}\n${criterion.criterionWeight || 0}%`,
           weight10?.description || '',
@@ -298,20 +309,23 @@ export const generateRubricPDF = (rubric, institutionInfo = {}) => {
         return row;
       });
 
-      // Calcular ancho de columnas dinámicamente
+      // Calcular ancho de columnas
       const numColumns = hasDeficiente ? 6 : 5;
       const firstColWidth = 40; // Ancho para la columna CRITERIO
       const remainingWidth = pageWidth - 2 * margin - firstColWidth;
       const otherColWidth = remainingWidth / (numColumns - 1);
 
+      // Definir estilos de columnas
       const columnStyles = {
         0: { cellWidth: firstColWidth, halign: 'center', valign: 'middle', fontStyle: 'bold' }
       };
 
+      // Asignar anchos a las demás columnas
       for (let i = 1; i < numColumns; i++) {
         columnStyles[i] = { cellWidth: otherColWidth, halign: 'left', valign: 'top' };
       }
 
+      // Generar la tabla de criterios
       autoTable(doc, {
         startY: yPos,
         head: [headerRow],

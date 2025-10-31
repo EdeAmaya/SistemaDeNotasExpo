@@ -1,31 +1,35 @@
+// Componente para registrar o editar una rúbrica de evaluación
 import React, { useState, useEffect } from "react";
 import { PlusCircle, Edit2, XCircle, ClipboardList, Calendar, Layers, CheckCircle, Award, AlertTriangle, Info, HelpCircle } from "lucide-react";
 import useDataRubrics from '../hooks/useDataRubrics';
 
 const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
-  const { createRubric, updateRubric, loading: rubricLoading, error: rubricError } = useDataRubrics();
+  const { createRubric, updateRubric, loading: rubricLoading, error: rubricError } = useDataRubrics(); // Hook personalizado para manejar rúbricas
 
-  const [specialties, setSpecialties] = useState([]);
-  const [stages, setStages] = useState([]);
-  const [levels, setLevels] = useState([]);
-  const [loadingSpecialties, setLoadingSpecialties] = useState(false);
-  const [loadingStages, setLoadingStages] = useState(false);
-  const [loadingLevels, setLoadingLevels] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [criteriaCount, setCriteriaCount] = useState(1);
-  const [includeDeficiente, setIncludeDeficiente] = useState(false);
-  const [showScaleInfo, setShowScaleInfo] = useState(null);
+  const [specialties, setSpecialties] = useState([]); // Estado para especialidades
+  const [stages, setStages] = useState([]); // Estado para etapas
+  const [levels, setLevels] = useState([]); // Estado para niveles
+  const [loadingSpecialties, setLoadingSpecialties] = useState(false); // Estado de carga para especialidades
+  const [loadingStages, setLoadingStages] = useState(false); // Estado de carga para etapas
+  const [loadingLevels, setLoadingLevels] = useState(false); // Estado de carga para niveles
+  const [errors, setErrors] = useState({}); // Estado para errores de validación
+  const [criteriaCount, setCriteriaCount] = useState(1); // Número de criterios
+  const [includeDeficiente, setIncludeDeficiente] = useState(false); // Incluir nivel Deficiente
+  const [showScaleInfo, setShowScaleInfo] = useState(null); // Tooltip de información del tipo de escala
 
+  // Opciones para selects
   const levelOptions = [
     { value: "1", label: "Tercer Ciclo" },
     { value: "2", label: "Bachillerato" }
   ];
 
+  // Opciones para tipo de rúbrica y escala
   const rubricTypeOptions = [
     { value: "1", label: "Escala Estimativa" },
     { value: "2", label: "Rúbrica" }
   ];
 
+  // Opciones para tipo de escala
   const scaleTypeOptions = [
     {
       value: "1",
@@ -44,6 +48,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     }
   ];
 
+  // Obtener ponderaciones por defecto según el tipo de escala
   const getDefaultWeights = (scaleType) => {
     const baseWeights = [
       { value: 10, description: null },
@@ -52,10 +57,12 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       { value: 4, description: null }
     ];
 
+    // Agregar Deficiente si aplica
     if (scaleType === "2" && includeDeficiente) {
       baseWeights.push({ value: 2, description: null });
     }
 
+    // Agregar Deficiente para tipo 3 siempre
     if (scaleType === "3") {
       baseWeights.push({ value: 2, description: null });
     }
@@ -63,10 +70,12 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     return baseWeights;
   };
 
+  // Alternar inclusión de nivel Deficiente
   const toggleDeficiente = () => {
     const newValue = !includeDeficiente;
     setIncludeDeficiente(newValue);
 
+    // Actualizar criterios existentes
     if (formData.criteria.length > 0 && formData.scaleType === "2") {
       const newCriteria = formData.criteria.map(criterion => {
         const updatedCriterion = { ...criterion };
@@ -83,6 +92,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     }
   };
 
+  // Cargar datos iniciales (especialidades, etapas, niveles)
   useEffect(() => {
     const fetchData = async () => {
       setLoadingSpecialties(true);
@@ -100,22 +110,26 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
           ...(token && { 'Authorization': `Bearer ${token}` })
         };
 
+        // Realizar solicitudes en paralelo
         const [specialtiesRes, stagesRes, levelsRes] = await Promise.all([
           fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/specialties', { headers, credentials: 'include' }),
           fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/stages', { headers, credentials: 'include' }),
           fetch('https://stc-instituto-tecnico-ricaldone.onrender.com/api/levels', { headers, credentials: 'include' })
         ]);
 
+        // Procesar respuestas
         if (levelsRes.ok) {
           const levelsData = await levelsRes.json();
           setLevels(levelsData);
         }
 
+        // Especialidades
         if (specialtiesRes.ok) {
           const specialtiesData = await specialtiesRes.json();
           setSpecialties(specialtiesData);
         }
 
+        // Etapas
         if (stagesRes.ok) {
           const stagesData = await stagesRes.json();
           setStages(stagesData);
@@ -137,7 +151,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
   useEffect(() => {
     if (isEditing && formData.criteria && formData.criteria.length > 0) {
       if (formData.scaleType === "2") {
-        const hasDeficiente = formData.criteria.some(criterion => 
+        const hasDeficiente = formData.criteria.some(criterion =>
           criterion.weights?.some(w => w.value === 2)
         );
         setIncludeDeficiente(hasDeficiente);
@@ -145,6 +159,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     }
   }, [isEditing, formData.criteria, formData.scaleType]);
 
+  // Limpiar especialidad y nivel si no es Bachillerato
   useEffect(() => {
     if (formData.level !== "2") {
       if (formData.specialtyId || formData.levelId) {
@@ -157,6 +172,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     }
   }, [formData.level, formData.specialtyId, formData.levelId, setFormData]);
 
+  // Calcular ponderación total
   const calculateTotalWeight = () => {
     if (formData.rubricType !== "1") return 0;
     return formData.criteria.reduce((sum, criterion) => {
@@ -164,9 +180,11 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     }, 0);
   };
 
+  // Validar ponderación total
   const totalWeight = calculateTotalWeight();
   const isWeightValid = formData.rubricType === "1" ? totalWeight === 100 : true;
 
+  // Inicializar criterios
   const initializeCriteria = (count) => {
     const newCriteria = [];
     for (let i = 0; i < count; i++) {
@@ -195,12 +213,14 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     }
   };
 
+  // Actualizar campo de un criterio
   const updateCriterionField = (index, field, value) => {
     const newCriteria = [...formData.criteria];
     newCriteria[index][field] = value;
     setFormData(prev => ({ ...prev, criteria: newCriteria }));
   };
 
+  // Actualizar descripción de una ponderación
   const updateWeightDescription = (criterionIndex, weightIndex, description) => {
     const newCriteria = [...formData.criteria];
     if (!newCriteria[criterionIndex].weights) {
@@ -210,6 +230,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     setFormData(prev => ({ ...prev, criteria: newCriteria }));
   };
 
+  // Manejar cambio de tipo de rúbrica
   const handleRubricTypeChange = (value) => {
     setFormData(prev => ({
       ...prev,
@@ -221,6 +242,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     setIncludeDeficiente(false);
   };
 
+  // Manejar cambio de tipo de escala
   const handleScaleTypeChange = (value) => {
     setFormData(prev => ({
       ...prev,
@@ -231,6 +253,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     setIncludeDeficiente(false);
   };
 
+  // Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
@@ -266,6 +289,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       return;
     }
 
+    // Validaciones específicas para Escala Estimativa
     if (formData.rubricType === "1") {
       const emptyWeights = formData.criteria.some(c => !c.criterionWeight || parseFloat(c.criterionWeight) <= 0);
       if (emptyWeights) {
@@ -289,6 +313,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       }
     }
 
+    // Preparar datos para enviar
     const dataToSend = {
       rubricName: formData.rubricName,
       level: parseInt(formData.level),
@@ -316,8 +341,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       })
     };
 
-    console.log('Datos a enviar:', dataToSend);
-
+    // Enviar datos
     try {
       let result;
       if (isEditing && formData._id) {
@@ -327,7 +351,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
       }
 
       if (result) {
-        console.log('Rúbrica guardada exitosamente:', result);
+        // Reiniciar formulario
         setFormData({
           rubricName: "",
           level: "",
@@ -348,6 +372,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
     }
   };
 
+  // Componente Tooltip de información
   const InfoTooltip = ({ content, id }) => (
     <div className="relative inline-block">
       <button
@@ -827,6 +852,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
           </div>
         )}
 
+        {/* Componente Tooltip de información */}
         <div className="flex gap-4 pt-4">
           <button
             type="submit"
@@ -863,6 +889,7 @@ const RegisterRubric = ({ formData, setFormData, onCancel, isEditing }) => {
         </div>
       </form>
 
+      {/* Tooltip de información */}
       <div className="mt-6 bg-purple-50 border-l-4 border-purple-500 p-4 rounded-r-lg">
         <div className="flex gap-3">
           <Info className="w-6 h-6 text-purple-600 flex-shrink-0" />

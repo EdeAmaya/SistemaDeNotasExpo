@@ -1,13 +1,14 @@
+// Conponente para listar rúbricas con filtros, búsqueda y modos de vista
 import React, { useState, useEffect } from "react";
 import { List, LayoutGrid, CheckCircle, BookOpen, Search } from 'lucide-react';
 import RubricCard from "./RubricCard";
 import Logo from "../../../assets/logo.svg";
 
 const ListRubrics = ({ rubrics, loading, deleteRubric, updateRubric }) => {
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState('list');
-  const [logoBase64, setLogoBase64] = useState(null);
+  const [activeFilter, setActiveFilter] = useState('all'); // Filtro activo
+  const [searchTerm, setSearchTerm] = useState(''); // Término de búsqueda
+  const [viewMode, setViewMode] = useState('list'); // Modo de vista: 'list' o 'grid'
+  const [logoBase64, setLogoBase64] = useState(null); // Estado para el logo en base64
 
   // Convertir SVG a PNG usando Canvas
   useEffect(() => {
@@ -46,6 +47,7 @@ const ListRubrics = ({ rubrics, loading, deleteRubric, updateRubric }) => {
       (rubric.stageId?.stageName && rubric.stageId.stageName.toLowerCase().includes(searchLower)) ||
       (rubric.specialtyId?.specialtyName && rubric.specialtyId.specialtyName.toLowerCase().includes(searchLower));
 
+    // Filtrado por tipo de rúbrica
     const matchesFilter =
       activeFilter === 'all' ||
       (activeFilter === 'escala' && rubric.rubricType === 1) ||
@@ -54,12 +56,14 @@ const ListRubrics = ({ rubrics, loading, deleteRubric, updateRubric }) => {
     return matchesSearch && matchesFilter;
   });
 
+  // Estadísticas de rúbricas por tipo
   const stats = {
     all: rubrics.length,
     escala: rubrics.filter(r => r.rubricType === 1).length,
     rubrica: rubrics.filter(r => r.rubricType === 2).length
   };
 
+  // Botones de filtro con estilos
   const filterButtons = [
     { key: 'all', label: 'Todas', gradient: 'from-purple-500 to-purple-700' },
     { key: 'escala', label: 'Escalas Estimativas', gradient: 'from-purple-500 to-purple-700' },

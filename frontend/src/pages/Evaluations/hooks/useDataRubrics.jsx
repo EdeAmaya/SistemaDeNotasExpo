@@ -1,6 +1,7 @@
+// Hook personalizado para manejar operaciones CRUD de rúbricas y criterios
 import { useState, useCallback } from 'react';
 
-const API_URL = 'https://stc-instituto-tecnico-ricaldone.onrender.com/api/rubrics';
+const API_URL = 'https://stc-instituto-tecnico-ricaldone.onrender.com/api/rubrics'; // URL base de la API
 
 const useDataRubrics = () => {
   const [loading, setLoading] = useState(false);

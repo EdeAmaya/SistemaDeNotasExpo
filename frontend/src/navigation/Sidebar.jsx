@@ -1,3 +1,4 @@
+// Componente de la barra lateral de navegación
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -8,16 +9,21 @@ import { useAuth } from '../context/AuthContext';
 import useStages from '../hooks/useStages';
 import toast from 'react-hot-toast';
 import logoImg from '../assets/logo.svg';
+import LogoutAlert from '../navigation/logoutAlert.jsx';
 
+// Componente NavBar
 const NavBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
 
+  // Obtener progreso de etapas
   const { calculateProgress, loading: stagesLoading } = useStages();
   const progress = calculateProgress();
 
+  // Obtener color basado en el progreso
   const getProgressInfo = (progressValue) => {
     if (progressValue <= 20) return { color: 'bg-red-500', textColor: 'text-red-500' };
     if (progressValue <= 40) return { color: 'bg-yellow-500', textColor: 'text-yellow-500' };
@@ -26,49 +32,40 @@ const NavBar = () => {
     return { color: 'bg-green-500', textColor: 'text-green-500' };
   };
 
+  // Obtener información del progreso
   const progressInfo = getProgressInfo(progress);
 
+  // Definir elementos del menú según roles
   const baseMenuItems = [
     { id: 'dashboard', title: 'Inicio', icon: Home, route: '/', roles: ['Admin', 'Docente', 'Evaluador', 'Estudiante'] },
     { id: 'calendar', title: 'Calendario', icon: Calendar, route: '/calendar', roles: ['Admin', 'Docente', 'Evaluador', 'Estudiante'] }
   ];
 
+  // Elementos adicionales para administradores y otros roles
   const adminMenuItems = [
-    { id: 'users', title: 'Usuarios', icon: Users, route: '/users', roles: ['Admin'] },
-    { id: 'students', title: 'Estudiantes', icon: GraduationCap, route: '/students', roles: ['Admin', 'Docente'] },
-    { id: 'projects', title: 'Proyectos', icon: Triangle, route: '/projects', roles: ['Admin', 'Estudiante', 'Docente'] },
-    { id: 'evaluations', title: 'Evaluaciones', icon: ClipboardList, route: '/evaluations', roles: ['Admin', 'Estudiante', 'Docente'] },
-    { id: 'grades', title: 'Notas', icon: BookOpenCheck, route: '/grades', roles: ['Admin', 'Docente', 'Evaluador', 'Estudiante'] }
+    { id: 'users', title: 'Usuarios', icon: Users, route: '/users', roles: ['Admin'] }, // Solo Admin
+    { id: 'students', title: 'Estudiantes', icon: GraduationCap, route: '/students', roles: ['Admin', 'Docente'] }, // Admin y Docente
+    { id: 'projects', title: 'Proyectos', icon: Triangle, route: '/projects', roles: ['Admin', 'Estudiante', 'Docente'] }, // Admin, Docente y Estudiante
+    { id: 'evaluations', title: 'Evaluaciones', icon: ClipboardList, route: '/evaluations', roles: ['Admin', 'Estudiante', 'Docente'] }, // Admin, Docente y Estudiante
+    { id: 'grades', title: 'Notas', icon: BookOpenCheck, route: '/grades', roles: ['Admin', 'Docente', 'Evaluador', 'Estudiante'] } // Todos los roles
   ];
 
+  // Filtrar elementos del menú según el rol del usuario
   const getFilteredMenuItems = () => {
     if (!user) return [];
     return [...baseMenuItems, ...adminMenuItems].filter(item => item.roles.includes(user.role));
   };
 
+  // Obtener elementos del menú filtrados
   const menuItems = getFilteredMenuItems();
 
+  // Manejar navegación y cierre de menú móvil
   const handleNavigation = (route) => {
     navigate(route);
     setIsMobileMenuOpen(false);
   };
 
-  const handleLogout = async () => {
-    if (window.confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-      try {
-        const result = await logout();
-        if (result.success) {
-          toast.success(result.message || 'Sesión cerrada exitosamente');
-          navigate('/login');
-        } else {
-          toast.error(result.message || 'Error al cerrar sesión');
-        }
-      } catch (error) {
-        toast.error('Error de conexión');
-      }
-    }
-  };
-
+  // Obtener información del rol del usuario
   const getRoleInfo = (role) => {
     switch (role) {
       case 'Admin': return { icon: UserPlus, color: 'text-purple-400', label: 'Administrador' };
@@ -79,6 +76,7 @@ const NavBar = () => {
     }
   };
 
+  // Información del rol del usuario
   const roleInfo = user ? getRoleInfo(user.role) : { icon: User, color: 'text-gray-400', label: 'Usuario' };
   const RoleIcon = roleInfo.icon;
 
@@ -153,11 +151,10 @@ const NavBar = () => {
               <button
                 key={item.id}
                 onClick={() => handleNavigation(item.route)}
-                className={`w-full flex items-center px-3 py-2 mb-1.5 rounded-lg border-none cursor-pointer transition-colors ${
-                  isActive
+                className={`w-full flex items-center px-3 py-2 mb-1.5 rounded-lg border-none cursor-pointer transition-colors ${isActive
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                }`}
+                  }`}
               >
                 <IconComponent size={16} className="mr-2 flex-shrink-0" />
                 <span className="font-medium text-xs truncate">{item.title}</span>
@@ -185,7 +182,7 @@ const NavBar = () => {
         {/* Cerrar sesión */}
         <div className="px-3 pb-3 flex-shrink-0">
           <button
-            onClick={handleLogout}
+            onClick={() => setShowLogoutAlert(true)}
             className="w-full flex items-center px-3 py-2 bg-transparent border-none cursor-pointer hover:bg-red-700/20 rounded-lg text-gray-400 hover:text-red-400 transition-colors"
           >
             <LogOut size={16} className="mr-2 flex-shrink-0" />
@@ -193,6 +190,26 @@ const NavBar = () => {
           </button>
         </div>
       </aside>
+
+      {/* Alerta de cierre de sesión */}
+      <LogoutAlert
+        show={showLogoutAlert}
+        onCancel={() => setShowLogoutAlert(false)}
+        onConfirm={async () => {
+          setShowLogoutAlert(false);
+          try {
+            const result = await logout();
+            if (result.success) {
+              toast.success(result.message || 'Sesión cerrada exitosamente');
+              navigate('/login');
+            } else {
+              toast.error(result.message || 'Error al cerrar sesión');
+            }
+          } catch {
+            toast.error('Error de conexión');
+          }
+        }}
+      />
     </>
   );
 };

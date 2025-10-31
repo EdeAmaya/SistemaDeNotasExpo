@@ -1,9 +1,12 @@
-// frontend/src/pages/Calendar/components/EventsList.jsx
+// Componente para listar eventos en el calendario con filtros y acciones de administración
 import React, { useState } from 'react';
 import { Calendar, Clock, Edit2, Trash2, ChevronRight, AlertCircle } from 'lucide-react';
+import ConfirmAlert from './ConfirmAlert'; // Componente de alerta de confirmación
 
 const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
-  const [filterStatus, setFilterStatus] = useState('all'); // all, active, upcoming, past
+  const [filterStatus, setFilterStatus] = useState('all'); // all, active, upcoming, past 
+  const [showAlert, setShowAlert] = useState(false); // Estado para mostrar la alerta de confirmación
+  const [eventToDelete, setEventToDelete] = useState(null); // Evento seleccionado para eliminar
 
   // Formatear fecha
   const formatDate = (date) => {
@@ -14,7 +17,7 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
     });
   };
 
-  // Calcular duración
+  // Calcular duración entre fechas
   const calculateDuration = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -23,7 +26,7 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
     return diffDays;
   };
 
-  // Determinar estado del evento
+  // Determinar estado del evento (activo, próximo o pasado)
   const getEventStatus = (event) => {
     const now = new Date();
     const start = new Date(event.startDate);
@@ -34,13 +37,15 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
     return 'active';
   };
 
-  // Filtrar eventos
-  const filteredEvents = events.filter(event => {
-    if (filterStatus === 'all') return true;
-    return getEventStatus(event) === filterStatus;
-  }).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+  // Filtrar eventos según el estado seleccionado
+  const filteredEvents = events
+    .filter(event => {
+      if (filterStatus === 'all') return true;
+      return getEventStatus(event) === filterStatus;
+    })
+    .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
-  // Estadísticas de filtros
+  // Calcular estadísticas de filtros
   const stats = {
     all: events.length,
     active: events.filter(e => getEventStatus(e) === 'active').length,
@@ -48,6 +53,7 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
     past: events.filter(e => getEventStatus(e) === 'past').length
   };
 
+  // Configuración de los botones de filtro
   const filterButtons = [
     { key: 'all', label: 'Todos', color: 'blue' },
     { key: 'active', label: 'Activos', color: 'green' },
@@ -55,8 +61,9 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
     { key: 'past', label: 'Pasados', color: 'gray' }
   ];
 
+  // Obtener badge visual para el estado del evento
   const getStatusBadge = (status) => {
-    switch(status) {
+    switch (status) {
       case 'active':
         return {
           color: 'bg-green-100 text-green-800 border-green-200',
@@ -86,7 +93,7 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      
+
       {/* Filtros */}
       <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {filterButtons.map(filter => (
@@ -103,11 +110,10 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
             `}
           >
             <span>{filter.label}</span>
-            <div className={`px-2 py-0.5 rounded-full text-xs font-black ${
-              filterStatus === filter.key
-                ? 'bg-white/30 text-white'
-                : 'bg-gray-100 text-gray-700'
-            }`}>
+            <div className={`px-2 py-0.5 rounded-full text-xs font-black ${filterStatus === filter.key
+              ? 'bg-white/30 text-white'
+              : 'bg-gray-100 text-gray-700'
+              }`}>
               {stats[filter.key]}
             </div>
           </button>
@@ -124,7 +130,7 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
             <div className="text-center space-y-2">
               <h3 className="text-xl sm:text-2xl font-black text-gray-900">No hay eventos</h3>
               <p className="text-sm sm:text-base text-gray-600 max-w-md">
-                {filterStatus === 'all' 
+                {filterStatus === 'all'
                   ? 'Aún no hay eventos registrados en el calendario'
                   : `No hay eventos en la categoría "${filterButtons.find(f => f.key === filterStatus)?.label}"`
                 }
@@ -146,16 +152,16 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
                 {/* Barra superior colorida */}
-                <div 
+                <div
                   className="h-2"
                   style={{ backgroundColor: event.color || '#3b82f6' }}
                 ></div>
 
                 <div className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                    
+
                     {/* Ícono de calendario con fecha */}
-                    <div 
+                    <div
                       className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl flex flex-col items-center justify-center shadow-md"
                       style={{ backgroundColor: event.color || '#3b82f6' }}
                     >
@@ -173,7 +179,7 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
                         <h3 className="text-lg sm:text-xl font-black text-gray-900 group-hover:text-blue-600 transition-colors">
                           {event.title}
                         </h3>
-                        
+
                         {/* Badge de estado */}
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border-2 ${statusInfo.color}`}>
                           <span>{statusInfo.icon}</span>
@@ -220,20 +226,20 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
                       <div className="flex sm:flex-col gap-2 self-end sm:self-auto">
                         <button
                           onClick={() => onEventClick(event)}
-                          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all"
+                          className="cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all"
                           title="Editar evento"
                         >
                           <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           <span className="hidden xl:inline">Editar</span>
                         </button>
-                        
+
                         <button
                           onClick={() => {
-                            if (window.confirm('¿Estás seguro de eliminar este evento?')) {
-                              onDeleteEvent(event._id);
-                            }
+                            // Se almacena el evento actual y se solicita mostrar la alerta.
+                            setEventToDelete(event);
+                            setShowAlert(true);
                           }}
-                          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all"
+                          className="cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all"
                           title="Eliminar evento"
                         >
                           <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -246,7 +252,7 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
                     {!isAdmin && (
                       <button
                         onClick={() => onEventClick(event)}
-                        className="self-end sm:self-center flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold text-xs sm:text-sm transition-all"
+                        className="cursor-pointer self-end sm:self-center flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold text-xs sm:text-sm transition-all"
                       >
                         <span>Ver más</span>
                         <ChevronRight className="w-4 h-4" />
@@ -283,8 +289,32 @@ const EventsList = ({ events, onEventClick, onDeleteEvent, isAdmin }) => {
           scrollbar-width: none;
         }
       `}</style>
+
+      {/* Alerta de confirmación para eliminar evento */}
+      {eventToDelete && (
+        <ConfirmAlert
+          show={showAlert}
+          title="Eliminar evento"
+          message={`¿Seguro que deseas eliminar el evento "${eventToDelete?.title || 'este evento'}"?`}
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          confirmColor="red"
+          onCancel={() => {
+            setShowAlert(false);
+            setEventToDelete(null);
+          }}
+          onConfirm={() => {
+            setShowAlert(false);
+            // Comprobación adicional antes de llamar a la función de eliminación
+            if (eventToDelete && eventToDelete._id) {
+              onDeleteEvent(eventToDelete._id);
+            }
+            setEventToDelete(null);
+          }}
+        />
+      )}
     </div>
   );
 };
 
-export default EventsList
+export default EventsList;

@@ -1,6 +1,6 @@
-// frontend/src/hooks/useConnectedUsers.jsx
+// Hook personalizado para gestionar usuarios conectados y su estado de presencia
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext'; // Importar el hook de autenticación
 
 const useConnectedUsers = () => {
   const [connectedUsers, setConnectedUsers] = useState([]);
@@ -13,12 +13,14 @@ const useConnectedUsers = () => {
     try {
       setLoading(true);
       
+      // Llamar al endpoint del backend para obtener usuarios conectados
       const response = await fetchWithCookies(`${API}/user-activities/connected-users?hours=2`);
       
       if (!response.ok) {
         throw new Error('Error al obtener usuarios conectados');
       }
       
+      // Parsear la respuesta JSON
       const connectedUsers = await response.json();
       setConnectedUsers(connectedUsers);
       
@@ -76,6 +78,7 @@ const useConnectedUsers = () => {
     }
   };
 
+  // Efecto para cargar usuarios conectados al montar el hook
   useEffect(() => {
     fetchConnectedUsers();
     
@@ -85,6 +88,7 @@ const useConnectedUsers = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Retornar datos y funciones del hook
   return {
     connectedUsers,
     loading,

@@ -1,3 +1,4 @@
+// Componente de ruta protegida que verifica autenticación y roles de usuario
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';

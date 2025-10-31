@@ -1,16 +1,17 @@
-// frontend/src/pages/Calendar/components/EventModal.jsx
+// Componente del modal para crear/editar eventos
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, Type, AlignLeft, Palette, Save, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import ConfirmAlert from './ConfirmAlert';
 
-const EventModal = ({ 
-  isOpen, 
-  onClose, 
-  onSave, 
-  onDelete, 
-  selectedDate, 
+const EventModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  onDelete,
+  selectedDate,
   editingEvent,
   getOccupiedDates,
-  isAdmin 
+  isAdmin
 }) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -20,12 +21,14 @@ const EventModal = ({
     color: '#3b82f6'
   });
 
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [occupiedDates, setOccupiedDates] = useState([]);
-  const [startPickerMonth, setStartPickerMonth] = useState(new Date());
-  const [endPickerMonth, setEndPickerMonth] = useState(new Date());
-  const [errors, setErrors] = useState({});
+  const [showAlert, setShowAlert] = useState(false); // Estado para mostrar la alerta de confirmación
+  const [eventToDelete, setEventToDelete] = useState(null); // Evento seleccionado para eliminar
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false); // Estado para mostrar el picker de fecha de inicio
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false); // Estado para mostrar el picker de fecha de fin
+  const [occupiedDates, setOccupiedDates] = useState([]); // Fechas ocupadas para validación
+  const [startPickerMonth, setStartPickerMonth] = useState(new Date()); // Mes mostrado en el picker de inicio
+  const [endPickerMonth, setEndPickerMonth] = useState(new Date()); // Mes mostrado en el picker de fin
+  const [errors, setErrors] = useState({}); // Errores de validación del formulario
 
   // Colores predefinidos
   const colorOptions = [
@@ -44,14 +47,16 @@ const EventModal = ({
     if (editingEvent) {
       const startDateObj = new Date(editingEvent.startDate);
       const endDateObj = new Date(editingEvent.endDate);
-      
+
+      // Ajustar fechas para evitar problemas de zona horaria
       const startDateStr = new Date(startDateObj.getTime() - startDateObj.getTimezoneOffset() * 60000)
         .toISOString()
         .split('T')[0];
       const endDateStr = new Date(endDateObj.getTime() - endDateObj.getTimezoneOffset() * 60000)
         .toISOString()
         .split('T')[0];
-      
+
+      // Rellenar formulario con datos del evento a editar
       setFormData({
         title: editingEvent.title,
         startDate: startDateStr,
@@ -66,7 +71,7 @@ const EventModal = ({
       const dateStr = new Date(dateObj.getTime() - dateObj.getTimezoneOffset() * 60000)
         .toISOString()
         .split('T')[0];
-      
+
       setFormData({
         title: '',
         startDate: dateStr,
@@ -86,12 +91,14 @@ const EventModal = ({
     }
   }, [showStartDatePicker, startPickerMonth]);
 
+  // Cargar fechas ocupadas para el picker de fin
   useEffect(() => {
     if (showEndDatePicker) {
       loadOccupiedDatesForPicker(endPickerMonth);
     }
   }, [showEndDatePicker, endPickerMonth]);
 
+  // Función para cargar fechas ocupadas
   const loadOccupiedDatesForPicker = async (pickerMonth) => {
     try {
       const year = pickerMonth.getFullYear();
@@ -136,7 +143,7 @@ const EventModal = ({
   // Manejar envío
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -149,8 +156,6 @@ const EventModal = ({
       description: formData.description.trim(),
       color: formData.color
     };
-
-    console.log('Enviando datos del evento:', eventData); // Debug
     onSave(eventData);
   };
 
@@ -158,13 +163,13 @@ const EventModal = ({
   const generatePickerDays = (pickerMonth) => {
     const year = pickerMonth.getFullYear();
     const month = pickerMonth.getMonth();
-    
+
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const firstDayOfWeek = firstDay.getDay();
-    
+
     const days = [];
-    
+
     const prevMonthLastDay = new Date(year, month, 0).getDate();
     for (let i = firstDayOfWeek - 1; i >= 0; i--) {
       days.push({
@@ -172,14 +177,14 @@ const EventModal = ({
         isCurrentMonth: false
       });
     }
-    
+
     for (let day = 1; day <= lastDay.getDate(); day++) {
       days.push({
         date: new Date(year, month, day),
         isCurrentMonth: true
       });
     }
-    
+
     const remainingDays = 42 - days.length;
     for (let day = 1; day <= remainingDays; day++) {
       days.push({
@@ -187,85 +192,96 @@ const EventModal = ({
         isCurrentMonth: false
       });
     }
-    
+
     return days;
   };
 
+  // Verificar si una fecha está ocupada
   const isDateOccupied = (date) => {
     const dateStr = date.toISOString().split('T')[0];
     return occupiedDates.some(d => d.date === dateStr);
   };
 
+  // Verificar si una fecha está seleccionada
   const isDateSelected = (date) => {
     const dateStr = date.toISOString().split('T')[0];
     return dateStr === formData.startDate || dateStr === formData.endDate;
   };
 
+  // Verificar si una fecha está en el rango seleccionado
   const isDateInRange = (date) => {
     if (!formData.startDate || !formData.endDate) return false;
-    
+
     const dateStr = date.toISOString().split('T')[0];
     const startDate = new Date(formData.startDate);
     const endDate = new Date(formData.endDate);
     const checkDate = new Date(dateStr);
-    
+
     return checkDate > startDate && checkDate < endDate;
   };
 
+  // Manejar selección de fechas
   const handleStartDateSelect = (date) => {
     const dateStr = date.toISOString().split('T')[0];
     setFormData(prev => ({ ...prev, startDate: dateStr }));
     setErrors({ ...errors, startDate: '' });
     setShowStartDatePicker(false);
-    
+
     // Si la fecha de fin es anterior a la nueva fecha de inicio, actualizarla
     if (formData.endDate) {
       const endDate = new Date(formData.endDate + 'T00:00:00');
       const selectedDate = new Date(dateStr + 'T00:00:00');
-      
+
       if (endDate < selectedDate) {
         setFormData(prev => ({ ...prev, startDate: dateStr, endDate: dateStr }));
       }
     }
   };
 
+  // Manejar selección de fecha de fin
   const handleEndDateSelect = (date) => {
     const dateStr = date.toISOString().split('T')[0];
-    
+
     if (!formData.startDate) {
       setErrors({ ...errors, endDate: 'Primero selecciona una fecha de inicio' });
       return;
     }
-    
+
+    // Validar que la fecha de fin sea posterior a la de inicio
     const startDate = new Date(formData.startDate + 'T00:00:00');
     const selectedDate = new Date(dateStr + 'T00:00:00');
-    
+
     if (selectedDate < startDate) {
       setErrors({ ...errors, endDate: 'La fecha de fin debe ser posterior a la de inicio' });
       return;
     }
-    
+
     setFormData(prev => ({ ...prev, endDate: dateStr }));
     setErrors({ ...errors, endDate: '' });
     setShowEndDatePicker(false);
   };
 
+  // Navegación del picker
   const goToPreviousMonthStart = () => {
     setStartPickerMonth(new Date(startPickerMonth.getFullYear(), startPickerMonth.getMonth() - 1, 1));
   };
 
+  // Navegación del picker de inicio
   const goToNextMonthStart = () => {
     setStartPickerMonth(new Date(startPickerMonth.getFullYear(), startPickerMonth.getMonth() + 1, 1));
   };
 
+  // Navegación del picker de fin
   const goToPreviousMonthEnd = () => {
     setEndPickerMonth(new Date(endPickerMonth.getFullYear(), endPickerMonth.getMonth() - 1, 1));
   };
 
+  // Navegación del picker de fin
   const goToNextMonthEnd = () => {
     setEndPickerMonth(new Date(endPickerMonth.getFullYear(), endPickerMonth.getMonth() + 1, 1));
   };
 
+  // Nombres de meses y días
   const monthNames = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -278,14 +294,14 @@ const EventModal = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Overlay */}
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       ></div>
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div 
+        <div
           className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all"
           onClick={(e) => e.stopPropagation()}
         >
@@ -309,7 +325,7 @@ const EventModal = ({
 
           {/* Contenido */}
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
-            
+
             {/* Título */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -322,9 +338,8 @@ const EventModal = ({
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className={`w-full px-4 py-3 bg-white border-2 rounded-lg focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium ${
-                  errors.title ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
-                }`}
+                className={`w-full px-4 py-3 bg-white border-2 rounded-lg focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium ${errors.title ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
+                  }`}
                 placeholder="Ej: Exposición de Proyectos"
                 disabled={!isAdmin}
                 required
@@ -354,14 +369,13 @@ const EventModal = ({
                         year: 'numeric'
                       }) : ''}
                       onClick={() => setShowStartDatePicker(!showStartDatePicker)}
-                      className={`w-full px-4 py-3 bg-white border-2 rounded-lg cursor-pointer focus:ring-4 focus:ring-blue-100 transition-all ${
-                        errors.startDate ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
-                      }`}
+                      className={`w-full px-4 py-3 bg-white border-2 rounded-lg cursor-pointer focus:ring-4 focus:ring-blue-100 transition-all ${errors.startDate ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
+                        }`}
                       placeholder="Seleccionar fecha"
                       readOnly
                       required
                     />
-                    
+
                     {/* Mini Calendario Picker - INICIO */}
                     {showStartDatePicker && (
                       <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-2xl border-2 border-gray-200 p-4 z-10 w-80">
@@ -409,8 +423,8 @@ const EventModal = ({
                                   ${!day.isCurrentMonth ? 'text-gray-300 cursor-not-allowed' : ''}
                                   ${selected ? 'bg-blue-600 text-white' : ''}
                                   ${occupied && !selected ? 'bg-red-50 text-red-600' : ''}
-                                  ${day.isCurrentMonth && !selected && !occupied 
-                                    ? 'hover:bg-gray-100 text-gray-900' 
+                                  ${day.isCurrentMonth && !selected && !occupied
+                                    ? 'hover:bg-gray-100 text-gray-900'
                                     : ''
                                   }
                                 `}
@@ -469,14 +483,13 @@ const EventModal = ({
                         year: 'numeric'
                       }) : ''}
                       onClick={() => setShowEndDatePicker(!showEndDatePicker)}
-                      className={`w-full px-4 py-3 bg-white border-2 rounded-lg cursor-pointer focus:ring-4 focus:ring-blue-100 transition-all ${
-                        errors.endDate ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
-                      }`}
+                      className={`w-full px-4 py-3 bg-white border-2 rounded-lg cursor-pointer focus:ring-4 focus:ring-blue-100 transition-all ${errors.endDate ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'
+                        }`}
                       placeholder="Seleccionar fecha"
                       readOnly
                       required
                     />
-                    
+
                     {/* Mini Calendario Picker */}
                     {showEndDatePicker && (
                       <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-2xl border-2 border-gray-200 p-4 z-10 w-80">
@@ -531,8 +544,8 @@ const EventModal = ({
                                   ${selected ? 'bg-blue-600 text-white' : ''}
                                   ${inRange && !selected ? 'bg-blue-100 text-blue-600' : ''}
                                   ${occupied && !selected && !isPastStart ? 'bg-red-50 text-red-600' : ''}
-                                  ${day.isCurrentMonth && !selected && !inRange && !occupied && !isPastStart 
-                                    ? 'hover:bg-gray-100 text-gray-900' 
+                                  ${day.isCurrentMonth && !selected && !inRange && !occupied && !isPastStart
+                                    ? 'hover:bg-gray-100 text-gray-900'
                                     : ''
                                   }
                                 `}
@@ -645,8 +658,8 @@ const EventModal = ({
                     Duración: {
                       Math.ceil((new Date(formData.endDate) - new Date(formData.startDate)) / (1000 * 60 * 60 * 24)) + 1
                     } {
-                      Math.ceil((new Date(formData.endDate) - new Date(formData.startDate)) / (1000 * 60 * 60 * 24)) + 1 === 1 
-                        ? 'día' 
+                      Math.ceil((new Date(formData.endDate) - new Date(formData.startDate)) / (1000 * 60 * 60 * 24)) + 1 === 1
+                        ? 'día'
                         : 'días'
                     }
                   </div>
@@ -659,12 +672,15 @@ const EventModal = ({
               {/* Botón eliminar (solo para edición) */}
               {isAdmin && editingEvent && (
                 <button
-                  type="button"
-                  onClick={() => onDelete(editingEvent._id)}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+                  onClick={() => {
+                    setEventToDelete(editingEvent); // corregido
+                    setShowAlert(true);
+                  }}
+                  className="cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all"
+                  title="Eliminar evento"
                 >
-                  <Trash2 className="w-5 h-5" />
-                  <span>Eliminar Evento</span>
+                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden xl:inline">Eliminar Evento</span>
                 </button>
               )}
 
@@ -675,7 +691,7 @@ const EventModal = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all"
+                className="cursor-pointer px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold shadow-md hover:shadow-lg transition-all"
               >
                 {isAdmin ? 'Cancelar' : 'Cerrar'}
               </button>
@@ -684,7 +700,7 @@ const EventModal = ({
               {isAdmin && (
                 <button
                   type="submit"
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+                  className="cursor-pointer flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
                 >
                   <Save className="w-5 h-5" />
                   <span>{editingEvent ? 'Actualizar Evento' : 'Crear Evento'}</span>
@@ -694,6 +710,26 @@ const EventModal = ({
           </form>
         </div>
       </div>
+      {/* Alerta de confirmación para eliminar evento */}
+      {eventToDelete && (
+        <ConfirmAlert
+          show={showAlert}
+          title="Eliminar evento"
+          message={`¿Seguro que deseas eliminar el evento "${eventToDelete.title}"?`} 
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          confirmColor="red"
+          onCancel={() => {
+            setShowAlert(false);
+            setEventToDelete(null);
+          }}
+          onConfirm={() => {
+            setShowAlert(false);
+            onDelete(eventToDelete._id); 
+            setEventToDelete(null);
+          }}
+        />
+      )}
     </div>
   );
 };

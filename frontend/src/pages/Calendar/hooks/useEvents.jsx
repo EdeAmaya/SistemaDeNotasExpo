@@ -1,13 +1,13 @@
-// frontend/src/pages/Calendar/hooks/useEvents.jsx
+// Hook personalizado para manejar eventos del calendario
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const useEvents = () => {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const { fetchWithCookies, API } = useAuth();
+  const [events, setEvents] = useState([]); // Lista de eventos
+  const [loading, setLoading] = useState(false); // Estado de carga
+  const [selectedEvent, setSelectedEvent] = useState(null); // Evento seleccionado
+  const { fetchWithCookies, API } = useAuth(); // Obtener funciones de autenticación
 
   // La URL base ya incluye /api, solo agregamos /events
   const EVENTS_API = `${API}/events`;
@@ -27,14 +27,17 @@ const useEvents = () => {
         params.append('endDate', filters.endDate);
       }
 
+      // Agregar parámetros a la URL si existen
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
 
+      // Realizar la solicitud fetch con credenciales
       const response = await fetch(url, {
         credentials: 'include'
       });
       
+      // Verificar respuesta
       if (!response.ok) {
         throw new Error('Error al obtener eventos');
       }
@@ -72,9 +75,8 @@ const useEvents = () => {
 
   // Crear nuevo evento
   const createEvent = async (eventData) => {
-    try {
-      console.log('Creando evento:', eventData);
-      
+    try {      
+      // Realizar la solicitud fetch con credenciales
       const response = await fetch(EVENTS_API, {
         method: 'POST',
         credentials: 'include',
@@ -84,14 +86,12 @@ const useEvents = () => {
         body: JSON.stringify(eventData)
       });
 
-      console.log('Respuesta del servidor:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error del servidor:', errorData);
         throw new Error(errorData.message || 'Error al crear evento');
       }
 
+      // Parsear la respuesta JSON
       const data = await response.json();
       toast.success('Evento creado exitosamente');
       await fetchEvents();
@@ -157,16 +157,19 @@ const useEvents = () => {
         endDate: endDate.toISOString()
       });
 
+      // Si se proporciona un ID de evento a excluir, agregarlo a los parámetros
       if (excludeEventId) {
         params.append('excludeEventId', excludeEventId);
       }
 
+      // Realizar la solicitud fetch con credenciales
       const response = await fetchWithCookies(`${EVENTS_API}/check-availability?${params}`);
       
       if (!response.ok) {
         throw new Error('Error al verificar disponibilidad');
       }
       
+      // Parsear la respuesta JSON
       const data = await response.json();
       return data;
     } catch (error) {
@@ -183,12 +186,14 @@ const useEvents = () => {
         endDate: endDate.toISOString()
       });
 
+      // Realizar la solicitud fetch con credenciales
       const response = await fetchWithCookies(`${EVENTS_API}/occupied-dates?${params}`);
       
       if (!response.ok) {
         throw new Error('Error al obtener fechas ocupadas');
       }
-      
+
+      // Parsear la respuesta JSON
       const data = await response.json();
       return data;
     } catch (error) {
@@ -202,6 +207,7 @@ const useEvents = () => {
     fetchEvents();
   }, []);
 
+  // Retornar estado y funciones del hook
   return {
     events,
     loading,

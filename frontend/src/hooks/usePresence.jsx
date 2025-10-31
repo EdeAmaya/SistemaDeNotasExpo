@@ -1,6 +1,6 @@
-// frontend/src/hooks/usePresence.jsx
+// Hook personalizado para gestionar la presencia del usuario (activo/ausente)
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext'; // Importar el hook de autenticación
 
 const usePresence = () => {
   const { fetchWithCookies, API, isAuthenticated } = useAuth();
@@ -18,12 +18,12 @@ const usePresence = () => {
   const sendHeartbeat = async (active = true) => {
     if (!isAuthenticated) return;
     
+    // Enviar el estado de actividad al backend
     try {
       await fetchWithCookies(`${API}/heartbeat`, {
         method: 'POST',
         body: JSON.stringify({ isActive: active })
       });
-      console.log(`Heartbeat enviado - Estado: ${active ? 'ACTIVO' : 'AUSENTE'}`);
     } catch (error) {
       console.error('Error enviando heartbeat:', error);
     }
@@ -33,8 +33,8 @@ const usePresence = () => {
   const handleUserActivity = () => {
     lastActivityTime.current = Date.now();
     
+    // Si el usuario estaba ausente, marcarlo como activo
     if (!isUserActive) {
-      console.log('👤 Usuario volvió a estar activo');
       setIsUserActive(true);
       sendHeartbeat(true);
     }
@@ -45,13 +45,14 @@ const usePresence = () => {
     const now = Date.now();
     const timeSinceLastActivity = now - lastActivityTime.current;
     
+    // Si ha pasado el umbral de inactividad y el usuario está marcado como activo
     if (timeSinceLastActivity > AWAY_THRESHOLD && isUserActive) {
-      console.log('Usuario marcado como ausente por inactividad');
       setIsUserActive(false);
       sendHeartbeat(false);
     }
   };
 
+  // Configurar listeners e intervalos al montar el hook
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -91,6 +92,7 @@ const usePresence = () => {
     };
   }, [isAuthenticated, isUserActive]);
 
+  // Retornar el estado de actividad y la función para enviar heartbeat manualmente
   return {
     isUserActive,
     sendHeartbeat
